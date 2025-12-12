@@ -1,0 +1,29 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  @apply bg-slate-100 text-slate-900;
+}
+
+.a4-preview {
+  /* A4 @ 96dpi approx 794x1123 */
+  width: 794px;
+  height: 1123px;
+}
+
+@media (max-width: 1024px) {
+  .a4-preview {
+    width: 100%;
+    height: auto;
+  }
+}
+
+.invoice-paper {
+  @apply bg-white shadow-a4 mx-auto;
+}
+
+.invoice-table th,
+.invoice-table td {
+  @apply text-xs align-top;
+}
