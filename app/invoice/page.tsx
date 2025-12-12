@@ -8,43 +8,48 @@ import { downloadInvoicePdf } from "../../lib/pdf";
 
 const initialInvoiceData: InvoiceData = {
   logoDataUrl: undefined,
+
+  // Label stays fixed
   invoiceTo: "INVOICE TO:",
-  invoiceToCompany: "MR.BILAL (SERANDIB GLOBAL)",
-  invoiceToAddress: "Dubai. U.A.E.",
-  invoiceNumber: "084",
+
+  // ❌ NO default values (empty)
+  invoiceToCompany: "",
+  invoiceToAddress: "",
+  invoiceNumber: "",
+  subject: "",
+
+  // ✅ Always today
   date: new Date().toISOString().slice(0, 10),
-  subject: "WEBSITE, SOCIAL MEDIA MARKETING",
+
+  // ✅ Company info locked
   fromCompanyName: "Just Search LLC.",
   fromCompanyAddress:
     "Damas Tower, 305, Al Maktoum Road,\nDeira, Rigga Al Buteen, Dubai. P.O. box 13500.",
-  lineItems: [
-    {
-      id: "1",
-      description: "WEBSITE CREATION (499 Package)",
-      amount: "499"
-    },
-    {
-      id: "2",
-      description: "SOCIAL MEDIA MARKETING 1000/Monthly",
-      amount: "1000"
-    }
-  ],
+
+  // ❌ NO default line items
+  lineItems: [],
+
+  // ✅ Currency default
   currency: "AED",
-  overrideTotal: "1499.00",
+
+  // ❌ Let system calculate total (VAT logic)
+  overrideTotal: "",
+
   footerNote: "Computer Generated",
+
   bankDetails: {
     companyName: "HELLO VISION EVENTS LLC",
     bankName: "ADCB",
     bankLabel: "Bank",
     accountIban: "AE720030014006537820001",
-    accountNumber: "14006537820001"
+    accountNumber: "14006537820001",
   },
-  signatureLabel: "Computer Generated"
+
+  signatureLabel: "Computer Generated",
 };
 
 export default function InvoicePage() {
-  const [invoice, setInvoice] =
-    useState<InvoiceData>(initialInvoiceData);
+  const [invoice, setInvoice] = useState<InvoiceData>(initialInvoiceData);
   const previewRef = useRef<HTMLDivElement | null>(null);
 
   const handleDownload = async () => {
@@ -56,9 +61,7 @@ export default function InvoicePage() {
     <main className="min-h-screen bg-slate-100 p-4 lg:p-8">
       <div className="mx-auto flex max-w-6xl flex-col gap-6 lg:flex-row">
         <section className="w-full lg:w-[360px]">
-          <h1 className="mb-4 text-xl font-semibold">
-            Invoice editor
-          </h1>
+          <h1 className="mb-4 text-xl font-semibold">Invoice editor</h1>
           <InvoiceForm
             value={invoice}
             onChange={setInvoice}

@@ -10,17 +10,21 @@ interface InvoicePreviewProps {
 
 export const InvoicePreview: React.FC<InvoicePreviewProps> = ({
   value,
-  forwardRef
+  forwardRef,
 }) => {
   const computedTotal = value.lineItems.reduce((sum, item) => {
     const n = parseFloat(item.amount);
     if (!isNaN(n)) return sum + n;
     return sum;
   }, 0);
+
+  const vatRate = 0.05;
+  const vatAmount = computedTotal * vatRate;
+
   const totalText =
     value.overrideTotal && value.overrideTotal.trim().length > 0
       ? value.overrideTotal
-      : computedTotal.toFixed(2);
+      : (computedTotal + vatAmount).toFixed(2);
 
   return (
     <div
@@ -29,19 +33,18 @@ export const InvoicePreview: React.FC<InvoicePreviewProps> = ({
     >
       {/* Logo */}
       <header className="flex flex-col items-center gap-2">
-        {value.logoDataUrl ? (
-          <img
-            src={value.logoDataUrl}
-            alt="Logo"
-            className="h-12 object-contain"
-          />
-        ) : (
-          <div className="h-12 text-xs font-semibold uppercase tracking-wide text-slate-400">
-            Your logo here
-          </div>
-        )}
+        <img
+          src={
+            value.logoDataUrl && value.logoDataUrl.trim().length > 0
+              ? value.logoDataUrl
+              : "/logo-js.png"
+          }
+          alt="Logo"
+          className="h-12 object-contain"
+        />
+
         <h1 className="mt-4 text-3xl font-semibold tracking-wide">
-          INVOICE
+          TAX INVOICE
         </h1>
       </header>
 
@@ -52,24 +55,22 @@ export const InvoicePreview: React.FC<InvoicePreviewProps> = ({
             <span className="font-semibold">INVOICE TO:</span>{" "}
             <span className="font-semibold">{value.invoiceToCompany}</span>
           </div>
-          <div>{value.invoiceToAddress}</div>
+          <div className="whitespace-pre-line break-words">
+            {value.invoiceToAddress}
+          </div>
         </div>
         <div className="space-y-1 text-right">
           <div>
             <span className="mr-1 text-[10px] uppercase tracking-wide">
               Invoice #
             </span>
-            <span className="font-semibold">
-              {value.invoiceNumber || " "}
-            </span>
+            <span className="font-semibold">{value.invoiceNumber || " "}</span>
           </div>
           <div>
             <span className="mr-1 text-[10px] uppercase tracking-wide">
               Date:
             </span>
-            <span className="font-semibold">
-              {value.date || " "}
-            </span>
+            <span className="font-semibold">{value.date || " "}</span>
           </div>
         </div>
       </section>
@@ -99,28 +100,31 @@ export const InvoicePreview: React.FC<InvoicePreviewProps> = ({
           <tbody>
             {value.lineItems.map((item, index) => (
               <tr key={item.id} className="border-b border-slate-300">
-                <td className="px-2 py-2 align-top text-[11px]">
-                  {index + 1}
-                </td>
+                <td className="px-2 py-2 align-top text-[11px]">{index + 1}</td>
                 <td className="px-2 py-2">
                   <div className="whitespace-pre-line">
-                    {item.description || " "}
+                    {item.description || " "}
                   </div>
                 </td>
                 <td className="px-2 py-2 text-right tabular-nums">
                   {item.amount
-                    ? `${value.currency} ${parseFloat(
-                        item.amount
-                      ).toFixed(2)}`
-                    : " "}
+                    ? `${value.currency} ${parseFloat(item.amount).toFixed(2)}`
+                    : " "}
                 </td>
               </tr>
             ))}
           </tbody>
         </table>
 
-        {/* Total */}
+        {/* VAT */}
         <div className="mt-4 flex justify-end">
+          <div className="text-xs font-semibold">
+            VAT (5%) {value.currency} {vatAmount.toFixed(2)}
+          </div>
+        </div>
+
+        {/* Total */}
+        <div className="mt-2 flex justify-end">
           <div className="text-xs font-semibold">
             Total {value.currency} {totalText}
           </div>
@@ -131,14 +135,10 @@ export const InvoicePreview: React.FC<InvoicePreviewProps> = ({
       <section className="mt-12 flex justify-between text-[11px]">
         <div className="space-y-1">
           <div className="font-semibold">{value.fromCompanyName}</div>
-          <div className="whitespace-pre-line">
-            {value.fromCompanyAddress}
-          </div>
+          <div className="whitespace-pre-line">{value.fromCompanyAddress}</div>
         </div>
         <div className="space-y-1 text-[11px]">
-          <div className="font-semibold uppercase">
-            Payment method
-          </div>
+          <div className="font-semibold uppercase">Payment method</div>
           <div>
             <span className="font-semibold">Company Name:</span>{" "}
             {value.bankDetails.companyName}
@@ -162,9 +162,6 @@ export const InvoicePreview: React.FC<InvoicePreviewProps> = ({
 
       {/* Footer */}
       <footer className="absolute bottom-16 left-12 right-12 text-[10px]">
-        <div className="mb-8 text-[10px] text-slate-600">
-          {value.footerNote}
-        </div>
         <div className="flex items-center justify-center gap-4 text-[10px]">
           <div className="h-px w-40 bg-slate-500" />
           <span>{value.signatureLabel}</span>

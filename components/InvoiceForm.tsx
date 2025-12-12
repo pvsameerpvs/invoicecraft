@@ -16,12 +16,12 @@ interface InvoiceFormProps {
 export const InvoiceForm: React.FC<InvoiceFormProps> = ({
   value,
   onChange,
-  onDownloadPdf
+  onDownloadPdf,
 }) => {
-  const handleFieldChange = (
-    field: keyof InvoiceData,
-    newValue: string
-  ) => {
+  const [isEditingLockedFields, setIsEditingLockedFields] =
+    React.useState(false);
+
+  const handleFieldChange = (field: keyof InvoiceData, newValue: string) => {
     onChange({ ...value, [field]: newValue });
   };
 
@@ -40,7 +40,7 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({
     const newItem: LineItem = {
       id: crypto.randomUUID(),
       description: "",
-      amount: ""
+      amount: "",
     };
     onChange({ ...value, lineItems: [...value.lineItems, newItem] });
   };
@@ -50,9 +50,7 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({
     onChange({ ...value, lineItems });
   };
 
-  const onLogoSelected: React.ChangeEventHandler<HTMLInputElement> = (
-    e
-  ) => {
+  const onLogoSelected: React.ChangeEventHandler<HTMLInputElement> = (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
     const reader = new FileReader();
@@ -69,31 +67,61 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({
     return sum;
   }, 0);
 
+  const lockedDisabled = !isEditingLockedFields;
+
+  const liveTotalText =
+    value.overrideTotal && value.overrideTotal.trim().length > 0
+      ? value.overrideTotal
+      : computedTotal.toFixed(2);
+
   return (
     <div className="space-y-6">
+      {/* Edit button for locked fields */}
+      <div className="flex justify-end">
+        <Button
+          type="button"
+          onClick={() => setIsEditingLockedFields((v) => !v)}
+          className="h-8 px-3 text-xs"
+        >
+          {isEditingLockedFields ? "Lock fields" : "Edit locked fields"}
+        </Button>
+      </div>
+
       <section className="space-y-2 rounded-lg border border-slate-200 bg-white p-4">
         <h2 className="text-sm font-semibold">Branding</h2>
         <div className="space-y-3">
           <div>
             <Label htmlFor="logo">Logo (PNG/JPEG)</Label>
-            <Input id="logo" type="file" accept="image/*" onChange={onLogoSelected} />
+            <Input
+              id="logo"
+              type="file"
+              accept="image/*"
+              onChange={onLogoSelected}
+              disabled={lockedDisabled}
+            />
           </div>
+
           <div>
             <Label htmlFor="fromCompanyName">From company</Label>
             <Input
               id="fromCompanyName"
               value={value.fromCompanyName}
+              disabled={lockedDisabled}
+              className="disabled:opacity-70"
               onChange={(e) =>
                 handleFieldChange("fromCompanyName", e.target.value)
               }
             />
           </div>
+
           <div>
             <Label htmlFor="fromCompanyAddress">From address</Label>
             <Textarea
               id="fromCompanyAddress"
               rows={2}
               value={value.fromCompanyAddress}
+              disabled={lockedDisabled}
+              className="disabled:opacity-70"
               onChange={(e) =>
                 handleFieldChange("fromCompanyAddress", e.target.value)
               }
@@ -110,11 +138,12 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({
             <Input
               id="invoiceTo"
               value={value.invoiceTo}
-              onChange={(e) =>
-                handleFieldChange("invoiceTo", e.target.value)
-              }
+              disabled={lockedDisabled}
+              className="disabled:opacity-70"
+              onChange={(e) => handleFieldChange("invoiceTo", e.target.value)}
             />
           </div>
+
           <div>
             <Label htmlFor="invoiceToCompany">Client name</Label>
             <Input
@@ -125,17 +154,20 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({
               }
             />
           </div>
+
           <div className="col-span-2">
             <Label htmlFor="invoiceToAddress">Client address</Label>
             <Textarea
               id="invoiceToAddress"
               rows={2}
               value={value.invoiceToAddress}
+              className="whitespace-pre-wrap break-words"
               onChange={(e) =>
                 handleFieldChange("invoiceToAddress", e.target.value)
               }
             />
           </div>
+
           <div>
             <Label htmlFor="invoiceNumber">Invoice #</Label>
             <Input
@@ -146,6 +178,7 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({
               }
             />
           </div>
+
           <div>
             <Label htmlFor="date">Date</Label>
             <Input
@@ -155,14 +188,13 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({
               onChange={(e) => handleFieldChange("date", e.target.value)}
             />
           </div>
+
           <div className="col-span-2">
             <Label htmlFor="subject">Subject</Label>
             <Input
               id="subject"
               value={value.subject}
-              onChange={(e) =>
-                handleFieldChange("subject", e.target.value)
-              }
+              onChange={(e) => handleFieldChange("subject", e.target.value)}
             />
           </div>
         </div>
@@ -171,10 +203,15 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({
       <section className="space-y-2 rounded-lg border border-slate-200 bg-white p-4">
         <div className="flex items-center justify-between">
           <h2 className="text-sm font-semibold">Line items</h2>
-          <Button type="button" onClick={addLineItem} className="h-7 px-2 text-[11px]">
+          <Button
+            type="button"
+            onClick={addLineItem}
+            className="h-7 px-2 text-[11px]"
+          >
             + Add item
           </Button>
         </div>
+
         <div className="space-y-3">
           {value.lineItems.map((item, index) => (
             <div
@@ -187,14 +224,11 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({
                   rows={2}
                   value={item.description}
                   onChange={(e) =>
-                    handleLineItemChange(
-                      item.id,
-                      "description",
-                      e.target.value
-                    )
+                    handleLineItemChange(item.id, "description", e.target.value)
                   }
                 />
               </div>
+
               <div>
                 <Label>Amount</Label>
                 <Input
@@ -206,6 +240,7 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({
                   }
                 />
               </div>
+
               <div className="mt-5">
                 <Button
                   type="button"
@@ -225,26 +260,24 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({
             <Input
               id="currency"
               value={value.currency}
-              onChange={(e) =>
-                handleFieldChange("currency", e.target.value)
-              }
+              onChange={(e) => handleFieldChange("currency", e.target.value)}
+              disabled={lockedDisabled}
             />
           </div>
+
           <div>
-            <Label htmlFor="overrideTotal">
-              Override total (optional)
-            </Label>
+            <Label htmlFor="overrideTotal">Override total (optional)</Label>
             <Input
               id="overrideTotal"
               placeholder={computedTotal.toFixed(2)}
               value={value.overrideTotal ?? ""}
+              disabled={lockedDisabled}
               onChange={(e) =>
                 handleFieldChange("overrideTotal", e.target.value)
               }
             />
             <p className="mt-1 text-[10px] text-slate-500">
-              If empty, total will be calculated from line items:{" "}
-              {computedTotal.toFixed(2)}
+              Live total: <span className="font-semibold">{liveTotalText}</span>
             </p>
           </div>
         </div>
@@ -252,6 +285,7 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({
 
       <section className="space-y-2 rounded-lg border border-slate-200 bg-white p-4">
         <h2 className="text-sm font-semibold">Payment / signature</h2>
+
         <div className="space-y-3">
           <div>
             <Label htmlFor="footerNote">Footer note</Label>
@@ -259,98 +293,116 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({
               id="footerNote"
               rows={2}
               value={value.footerNote}
-              onChange={(e) =>
-                handleFieldChange("footerNote", e.target.value)
-              }
+              disabled={lockedDisabled}
+              className="disabled:opacity-70"
+              onChange={(e) => handleFieldChange("footerNote", e.target.value)}
             />
           </div>
+
           <div>
             <Label htmlFor="signatureLabel">Signature label</Label>
             <Input
               id="signatureLabel"
               value={value.signatureLabel}
+              disabled={lockedDisabled}
+              className="disabled:opacity-70"
               onChange={(e) =>
                 handleFieldChange("signatureLabel", e.target.value)
               }
             />
           </div>
+
           <div className="grid grid-cols-2 gap-3">
             <div>
               <Label htmlFor="bankCompanyName">Bank company name</Label>
               <Input
                 id="bankCompanyName"
                 value={value.bankDetails.companyName}
+                disabled={lockedDisabled}
+                className="disabled:opacity-70"
                 onChange={(e) =>
                   onChange({
                     ...value,
                     bankDetails: {
                       ...value.bankDetails,
-                      companyName: e.target.value
-                    }
+                      companyName: e.target.value,
+                    },
                   })
                 }
               />
             </div>
+
             <div>
               <Label htmlFor="bankName">Bank name</Label>
               <Input
                 id="bankName"
                 value={value.bankDetails.bankName}
+                disabled={lockedDisabled}
+                className="disabled:opacity-70"
                 onChange={(e) =>
                   onChange({
                     ...value,
                     bankDetails: {
                       ...value.bankDetails,
-                      bankName: e.target.value
-                    }
+                      bankName: e.target.value,
+                    },
                   })
                 }
               />
             </div>
+
             <div>
               <Label htmlFor="bankLabel">Bank label</Label>
               <Input
                 id="bankLabel"
                 value={value.bankDetails.bankLabel}
+                disabled={lockedDisabled}
+                className="disabled:opacity-70"
                 onChange={(e) =>
                   onChange({
                     ...value,
                     bankDetails: {
                       ...value.bankDetails,
-                      bankLabel: e.target.value
-                    }
+                      bankLabel: e.target.value,
+                    },
                   })
                 }
               />
             </div>
+
             <div>
               <Label htmlFor="iban">Account IBAN</Label>
               <Input
                 id="iban"
                 value={value.bankDetails.accountIban}
+                disabled={lockedDisabled}
+                className="disabled:opacity-70"
                 onChange={(e) =>
                   onChange({
                     ...value,
                     bankDetails: {
                       ...value.bankDetails,
-                      accountIban: e.target.value
-                    }
+                      accountIban: e.target.value,
+                    },
                   })
                 }
               />
             </div>
+
             <div className="col-span-2">
               <Label htmlFor="accountNumber">Account number</Label>
               <Input
                 id="accountNumber"
                 value={value.bankDetails.accountNumber}
+                disabled={lockedDisabled}
+                className="disabled:opacity-70"
                 onChange={(e) =>
                   onChange({
                     ...value,
                     bankDetails: {
                       ...value.bankDetails,
-                      accountNumber: e.target.value
-                    }
+                      accountNumber: e.target.value,
+                    },
                   })
                 }
               />
