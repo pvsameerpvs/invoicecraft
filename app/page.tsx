@@ -12,39 +12,36 @@ export default function HomePage() {
   const [error, setError] = React.useState("");
 
   const handleLogin = async (e: React.FormEvent) => {
-  e.preventDefault();
-  setError("");
+    e.preventDefault();
+    setError("");
 
-  const res = await fetch("/api/login", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ username, password }),
-  });
+    const res = await fetch("/api/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ username, password }),
+    });
 
-  if (res.ok) {
-    router.push("/invoice");
-    return;
-  }
+    if (res.ok) {
+      router.push("/invoice");
+      return;
+    }
 
-  setError("Invalid username or password.");
-};
-
-
-
+    setError("Invalid username or password.");
+  };
 
   return (
-    <main className="min-h-screen bg-slate-100">
-      <div className="mx-auto flex min-h-screen max-w-6xl items-center justify-center p-6">
-        <div className="w-full max-w-xl overflow-hidden rounded-2xl bg-white shadow-lg">
+    <main className="min-h-screen bg-slate-100 px-4 py-10 sm:py-12">
+      <div className="mx-auto flex min-h-[calc(100vh-6rem)] max-w-6xl items-center justify-center">
+        <div className="w-full max-w-md sm:max-w-xl overflow-hidden rounded-2xl bg-white shadow-lg">
           {/* Header */}
-          <div className="flex items-center gap-4 border-b border-slate-100 p-6">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 border-b border-slate-100 p-5 sm:p-6">
             <img
               src="/logo-js.png"
               alt="JS InvoiceCraft"
               className="h-10 w-auto object-contain"
             />
             <div>
-              <h1 className="text-xl font-semibold text-slate-900">
+              <h1 className="text-lg sm:text-xl font-semibold text-slate-900">
                 JS InvoiceCraft
               </h1>
               <p className="text-sm text-slate-500">
@@ -54,7 +51,7 @@ export default function HomePage() {
           </div>
 
           {/* Body */}
-          <div className="space-y-4 p-6">
+          <div className="space-y-4 p-5 sm:p-6">
             <div className="rounded-xl bg-slate-50 p-4">
               <ul className="space-y-2 text-sm text-slate-700">
                 <li className="flex items-start gap-2">
@@ -83,6 +80,7 @@ export default function HomePage() {
                   onChange={(e) => setUsername(e.target.value)}
                   className="mt-1 h-11 w-full rounded-xl border border-slate-200 px-3 text-sm outline-none focus:ring-2 focus:ring-slate-300"
                   placeholder="Enter username"
+                  autoComplete="username"
                 />
               </div>
 
@@ -96,6 +94,7 @@ export default function HomePage() {
                   onChange={(e) => setPassword(e.target.value)}
                   className="mt-1 h-11 w-full rounded-xl border border-slate-200 px-3 text-sm outline-none focus:ring-2 focus:ring-slate-300"
                   placeholder="Enter password"
+                  autoComplete="current-password"
                 />
               </div>
 
@@ -112,7 +111,6 @@ export default function HomePage() {
                 Login & Open Invoice Editor
               </button>
 
-              {/* Optional: keep link but disabled style */}
               <div className="text-center text-xs text-slate-500">
                 <span className="mr-1">Need access?</span>
                 <Link
@@ -130,8 +128,8 @@ export default function HomePage() {
           </div>
 
           {/* Footer */}
-          <div className="border-t border-slate-100 px-6 py-4 text-center text-xs text-slate-500">
-            © {new Date().getFullYear()} Just Search LLC.
+          <div className="border-t border-slate-100 px-5 sm:px-6 py-4 text-center text-xs text-slate-500">
+            © {new Date().getFullYear()} Just Search Web design L.L.C.
           </div>
         </div>
       </div>

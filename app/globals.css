@@ -6,28 +6,49 @@ body {
   @apply bg-slate-100 text-slate-900;
 }
 
-/* SCREEN preview */
+/* =========================
+   SCREEN preview (Desktop)
+   ========================= */
 .a4-preview {
-  width: 794px;   /* A4 @ ~96dpi preview only */
+  /* A4 preview size (approx @ 96dpi) */
+  width: 794px;
   min-height: 1123px;
   height: auto;
   box-sizing: border-box;
   overflow: hidden;
 }
 
-/* Mobile */
+/* =========================
+   Mobile preview (scale)
+   - Keeps A4 ratio
+   - Allows horizontal scroll if needed
+   ========================= */
 @media (max-width: 1024px) {
+  /* keep original A4 preview size inside scaled wrapper */
   .a4-preview {
+    width: 794px;
+    min-height: 1123px;
+  }
+
+  .a4-mobile-fit {
     width: 100%;
-    min-height: auto;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .a4-mobile-scale {
+    transform-origin: top center;
+    transform: scale(var(--a4-scale, 0.55));
   }
 }
 
-/* PRINT / PDF */
+/* =========================
+   PRINT / PDF
+   ========================= */
 @media print {
   .a4-preview {
-    width: 210mm !important;      /* ✅ exact A4 width */
-    min-height: 297mm !important; /* ✅ exact A4 height */
+    width: 210mm !important;
+    min-height: 297mm !important;
     height: auto !important;
 
     transform: none !important;
@@ -37,7 +58,6 @@ body {
     overflow: hidden !important;
   }
 
-  /* remove page margins that can cause clipping */
   @page {
     size: A4;
     margin: 0;
@@ -48,10 +68,12 @@ body {
   }
 }
 
+/* Paper card */
 .invoice-paper {
   @apply bg-white shadow-a4 mx-auto;
 }
 
+/* Table typography */
 .invoice-table th,
 .invoice-table td {
   @apply text-xs align-top;

@@ -4,17 +4,17 @@ import React from "react";
 
 export const metadata: Metadata = {
   title: "JS InvoiceCraft",
-  description: "Editable invoice builder with PDF export"
+  description: "Editable invoice builder with PDF export",
 };
 
 export default function RootLayout({
-  children
+  children,
 }: {
   children: React.ReactNode;
 }) {
   return (
     <html lang="en">
-      <body className="min-h-screen font-sans antialiased">
+      <body className="min-h-screen font-sans antialiased bg-slate-100">
         {children}
       </body>
     </html>
