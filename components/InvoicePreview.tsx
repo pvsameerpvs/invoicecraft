@@ -98,7 +98,7 @@ const pagesSafe = pages.length > 0 ? pages : [[]]; // ✅ always at least 1 page
                   <div className="space-y-1 text-right">
                     <div>
                       <span className="mr-1 text-[10px] uppercase tracking-wide">
-                        Invoice #
+                       Tax Invoice #
                       </span>
                       <span className="font-semibold">
                         {value.invoiceNumber || " "}
@@ -164,25 +164,24 @@ const pagesSafe = pages.length > 0 ? pages : [[]]; // ✅ always at least 1 page
 
               {/* Subtotal / VAT / Total ONLY on last page */}
               {isLastPage && (
-                <div className="mt-4 flex justify-end">
-                  <div className="w-72 space-y-2 text-right">
-                    <div className="text-xs font-semibold tabular-nums whitespace-nowrap">
-                      Subtotal (without VAT) {currency}{" "}
-                      {Number.isFinite(computedTotal)
-                        ? computedTotal.toFixed(2)
-                        : "0.00"}
-                    </div>
+  <div className="mt-4 flex justify-end">
+    <div className="w-72 space-y-2 text-right">
+      <div className="text-xs font-semibold tabular-nums whitespace-nowrap">
+        Subtotal (Excl. VAT) {currency}{" "}
+        {Number.isFinite(computedTotal) ? computedTotal.toFixed(2) : "0.00"}
+      </div>
 
-                    <div className="text-xs font-semibold tabular-nums whitespace-nowrap">
-                      VAT (5%) {currency} {vatAmount.toFixed(2)}
-                    </div>
+      <div className="text-xs font-semibold tabular-nums whitespace-nowrap">
+        VAT (5%) {currency} {vatAmount.toFixed(2)}
+      </div>
 
-                    <div className="text-xs font-semibold tabular-nums whitespace-nowrap">
-                      Total (including VAT) {currency} {totalText}
-                    </div>
-                  </div>
-                </div>
-              )}
+      <div className="text-xs font-semibold tabular-nums whitespace-nowrap">
+        Total (Incl. VAT) {currency} {totalText}
+      </div>
+    </div>
+  </div>
+)}
+
             </section>
 
             {/* Bottom company + bank info (only on last page so it stays in same area and doesn't push footer) */}
