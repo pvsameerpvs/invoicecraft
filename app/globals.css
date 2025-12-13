@@ -20,8 +20,6 @@ body {
 
 /* =========================
    Mobile preview (scale)
-   - Keeps A4 ratio
-   - Allows horizontal scroll if needed
    ========================= */
 @media (max-width: 1024px) {
   /* keep original A4 preview size inside scaled wrapper */
@@ -43,7 +41,21 @@ body {
 }
 
 /* =========================
-   PRINT / PDF
+   ✅ PDF EXPORT FIX
+   - disable transforms during capture
+   ========================= */
+.pdf-export .a4-mobile-fit {
+  overflow: visible !important;
+}
+.pdf-export .a4-mobile-scale {
+  transform: none !important;
+}
+.pdf-export .invoice-paper {
+  box-shadow: none !important;
+}
+
+/* =========================
+   PRINT / PDF (browser print)
    ========================= */
 @media print {
   .a4-preview {
