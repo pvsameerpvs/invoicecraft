@@ -52,14 +52,17 @@ const pagesSafe = pages.length > 0 ? pages : [[]]; // ✅ always at least 1 page
 
 
         return (
-          <div
-            key={pageIndex}
-            className="invoice-paper a4-preview relative bg-white px-12 py-10 text-[11px] leading-relaxed"
-            style={{
-              pageBreakAfter: isLastPage ? "auto" : "always",
-              breakAfter: isLastPage ? "auto" : "page",
-            }}
-          >
+         <div
+  key={pageIndex}
+  className="invoice-paper a4-preview relative mx-auto box-border bg-white px-12 py-10 text-[11px] leading-relaxed overflow-hidden"
+  style={{
+    width: "210mm",          // ✅ exact A4 width
+    minHeight: "297mm",      // ✅ exact A4 height
+    pageBreakAfter: isLastPage ? "auto" : "always",
+    breakAfter: isLastPage ? "auto" : "page",
+  }}
+>
+
             {/* Logo */}
             <header className="flex flex-col items-center gap-2">
               <img
@@ -120,7 +123,7 @@ const pagesSafe = pages.length > 0 ? pages : [[]]; // ✅ always at least 1 page
 
             {/* Items table */}
             <section className={pageIndex === 0 ? "mt-4" : "mt-8"}>
-              <table className="invoice-table w-full border-collapse">
+              <table className="invoice-table w-full table-fixed border-collapse">
                 <thead>
                   <tr>
                     <th className="w-10 bg-black px-2 py-2 text-left text-[11px] font-semibold uppercase text-white">

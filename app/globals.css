@@ -6,16 +6,45 @@ body {
   @apply bg-slate-100 text-slate-900;
 }
 
+/* SCREEN preview */
 .a4-preview {
-  /* A4 @ 96dpi approx 794x1123 */
-  width: 794px;
-  height: 1123px;
+  width: 794px;   /* A4 @ ~96dpi preview only */
+  min-height: 1123px;
+  height: auto;
+  box-sizing: border-box;
+  overflow: hidden;
 }
 
+/* Mobile */
 @media (max-width: 1024px) {
   .a4-preview {
     width: 100%;
-    height: auto;
+    min-height: auto;
+  }
+}
+
+/* PRINT / PDF */
+@media print {
+  .a4-preview {
+    width: 210mm !important;      /* ✅ exact A4 width */
+    min-height: 297mm !important; /* ✅ exact A4 height */
+    height: auto !important;
+
+    transform: none !important;
+    zoom: 1 !important;
+
+    box-sizing: border-box !important;
+    overflow: hidden !important;
+  }
+
+  /* remove page margins that can cause clipping */
+  @page {
+    size: A4;
+    margin: 0;
+  }
+
+  body {
+    background: white !important;
   }
 }
 
