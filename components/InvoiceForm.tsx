@@ -13,6 +13,32 @@ interface InvoiceFormProps {
   onDownloadPdf: () => void;
 }
 
+const PRESET_LINE_ITEMS: Array<{ label: string; amount: string }> = [
+  { label: "Website AI", amount: "299" },
+  { label: "Website 5 Page Plan", amount: "99" },
+  { label: "Website 10 Page Plan", amount: "" },
+  { label: "Website 15 Page Plan", amount: "15" },
+  { label: "Website 20 Page Plan", amount: "1" },
+  { label: "RESTAURANT QR CODE MENU", amount: "500" },
+  { label: "E Commerce Up 20 Products", amount: "1000" },
+  { label: "E Commerce Up 40 Products", amount: "2000" },
+  { label: "E Commerce Up 60 Products", amount: "3000" },
+  { label: "E Commerce Complete Managed", amount: "4000" },
+  { label: "SEO Try N Buy Offer", amount: "999" },
+  { label: "Digital Marketing Try N Buy Bundle", amount: "4000" },
+  { label: "Dedicated Website Managed Solution", amount: "8000" },
+  { label: "Dedicated SEO Managed Solution", amount: "8000" },
+  { label: "Dedicated Social Media Managed Solution", amount: "" },
+  { label: "Old E Commerce Plan", amount: "" },
+  { label: "Old Website Plan", amount: "" },
+  { label: "Old SEO Plan", amount: "" },
+  { label: "OLD SMM PLan", amount: "" },
+  { label: "Google Ads", amount: "200" },
+  { label: "Google My Business - GMB", amount: "200" },
+  { label: "Portfolio", amount: "200" },
+  { label: "Meta ads", amount: "" },
+];
+
 export const InvoiceForm: React.FC<InvoiceFormProps> = ({
   value,
   onChange,
@@ -20,6 +46,8 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({
 }) => {
   const [isEditingLockedFields, setIsEditingLockedFields] =
     React.useState(false);
+
+  const [isAddItemPickerOpen, setIsAddItemPickerOpen] = React.useState(false);
 
   const handleFieldChange = (field: keyof InvoiceData, newValue: string) => {
     onChange({ ...value, [field]: newValue });
@@ -41,6 +69,15 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({
       id: crypto.randomUUID(),
       description: "",
       amount: "",
+    };
+    onChange({ ...value, lineItems: [...value.lineItems, newItem] });
+  };
+
+  const addPresetLineItem = (preset: { label: string; amount: string }) => {
+    const newItem: LineItem = {
+      id: crypto.randomUUID(),
+      description: preset.label,
+      amount: preset.amount,
     };
     onChange({ ...value, lineItems: [...value.lineItems, newItem] });
   };
@@ -203,14 +240,70 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({
       <section className="space-y-2 rounded-lg border border-slate-200 bg-white p-4">
         <div className="flex items-center justify-between">
           <h2 className="text-sm font-semibold">Line items</h2>
-          <Button
-            type="button"
-            onClick={addLineItem}
-            className="h-7 px-2 text-[11px]"
-          >
-            + Add item
-          </Button>
+
+          <div className="flex items-center gap-2">
+            <Button
+              type="button"
+              onClick={() => setIsAddItemPickerOpen((v) => !v)}
+              className="h-7 px-2 text-[11px]"
+            >
+              + Add item
+            </Button>
+          </div>
         </div>
+
+        {isAddItemPickerOpen && (
+          <div className="mt-2 grid grid-cols-1 gap-2">
+            <Label>Select an item</Label>
+            <select
+              className="h-9 w-full rounded-md border border-slate-200 bg-white px-3 text-sm outline-none focus:ring-2 focus:ring-slate-300"
+              defaultValue=""
+              onChange={(e) => {
+                const v = e.target.value;
+                if (!v) return;
+
+                if (v === "__custom__") {
+                  addLineItem();
+                  setIsAddItemPickerOpen(false);
+                  e.currentTarget.value = "";
+                  return;
+                }
+
+                const preset = PRESET_LINE_ITEMS.find((p) => p.label === v);
+                if (preset) {
+                  addPresetLineItem(preset);
+                  setIsAddItemPickerOpen(false);
+                  e.currentTarget.value = "";
+                }
+              }}
+            >
+              <option value="" disabled>
+                Choose…
+              </option>
+
+              {PRESET_LINE_ITEMS.map((p) => (
+                <option key={p.label} value={p.label}>
+                  {p.label}
+                  {p.amount && p.amount.trim().length > 0
+                    ? ` - ${p.amount}`
+                    : ""}
+                </option>
+              ))}
+
+              <option value="__custom__">Custom item…</option>
+            </select>
+
+            <div className="flex justify-end">
+              <Button
+                type="button"
+                className="h-7 px-2 text-[11px] border-slate-300 bg-white text-slate-700 hover:bg-slate-50"
+                onClick={() => setIsAddItemPickerOpen(false)}
+              >
+                Close
+              </Button>
+            </div>
+          </div>
+        )}
 
         <div className="space-y-3">
           {value.lineItems.map((item, index) => (
