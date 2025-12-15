@@ -18,3 +18,8 @@ pnpm-debug.log*
 
 # jest
 /coverage
+
+# secrets
+just-search-scrapper-e257ad504ec9.json
+app/api/old-service-account.json
+app/api/service-account.json

@@ -1,10 +1,12 @@
 "use client";
 
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { InvoiceForm } from "../../components/InvoiceForm";
 import { InvoicePreview } from "../../components/InvoicePreview";
 import { InvoiceData } from "../../lib/types";
 import { downloadInvoicePdf } from "../../lib/pdf";
+
+const STORAGE_KEY = "invoicecraft:editInvoicePayload";
 
 const initialInvoiceData: InvoiceData = {
   logoDataUrl: undefined,
@@ -14,7 +16,7 @@ const initialInvoiceData: InvoiceData = {
   invoiceNumber: "",
   subject: "",
   date: new Date().toISOString().slice(0, 10),
-  fromCompanyName: "Just Search Web design L.L.C.",
+  fromCompanyName: "Just Search LLC.",
   fromCompanyAddress:
     "Damas Tower, 305, Al Maktoum Road,\nDeira, Rigga Al Buteen, Dubai. P.O. box 13500.",
   lineItems: [],
@@ -35,20 +37,43 @@ export default function InvoicePage() {
   const [invoice, setInvoice] = useState<InvoiceData>(initialInvoiceData);
   const previewRef = useRef<HTMLDivElement | null>(null);
 
+  // ✅ Load invoice for editing (from History)
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return;
+
+      const parsed = JSON.parse(raw);
+
+      if (parsed && typeof parsed === "object") {
+        // merge with initial to avoid missing fields
+        setInvoice({ ...initialInvoiceData, ...parsed });
+      }
+
+      localStorage.removeItem(STORAGE_KEY);
+    } catch {
+      // ignore
+    }
+  }, []);
+
   const handleDownload = async () => {
+    // ✅ Save to sheet first (optional if you already do)
+    await fetch("/api/invoice-history", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(invoice),
+    });
+
     if (!previewRef.current) return;
     await downloadInvoicePdf(previewRef.current);
   };
 
   return (
-    <main className="min-h-screen bg-slate-100 p-3 sm:p-4 lg:p-8">
+    <main className="min-h-screen bg-slate-100 p-4 lg:p-8">
       <div className="mx-auto max-w-6xl">
-        <div className="flex flex-col gap-4 lg:gap-6 lg:flex-row lg:h-[calc(100vh-4rem)] lg:overflow-hidden">
-          {/* Form panel (more narrow on desktop, full on mobile) */}
-          <section className="w-full lg:w-[300px] xl:w-[280px] lg:h-full lg:overflow-auto">
-            <h1 className="mb-3 sm:mb-4 text-lg sm:text-xl font-semibold">
-              Invoice editor
-            </h1>
+        <div className="flex flex-col gap-6 lg:flex-row lg:h-[calc(100vh-4rem)] lg:overflow-hidden">
+          <section className="w-full lg:w-[280px] xl:w-[260px] lg:h-full lg:overflow-auto">
+            <h1 className="mb-4 text-xl font-semibold">Invoice editor</h1>
             <InvoiceForm
               value={invoice}
               onChange={setInvoice}
@@ -56,9 +81,8 @@ export default function InvoicePage() {
             />
           </section>
 
-          {/* Preview panel */}
           <section className="w-full flex-1 lg:h-full lg:overflow-auto">
-            <div className="flex justify-center lg:justify-end px-1 sm:px-2 lg:px-0">
+            <div className="flex justify-center lg:justify-end">
               <InvoicePreview value={invoice} forwardRef={previewRef} />
             </div>
           </section>

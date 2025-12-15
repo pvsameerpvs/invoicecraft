@@ -113,16 +113,24 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({
 
   return (
     <div className="space-y-6">
-      {/* Edit button for locked fields */}
-      <div className="flex justify-end">
-        <Button
-          type="button"
-          onClick={() => setIsEditingLockedFields((v) => !v)}
-          className="h-8 px-3 text-xs"
-        >
-          {isEditingLockedFields ? "Lock fields" : "Edit locked fields"}
-        </Button>
-      </div>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+  <Button
+    type="button"
+    onClick={() => window.location.assign("/history")}
+    className="h-10 rounded-xl bg-white px-4 text-sm font-medium text-slate-900 shadow-sm ring-1 ring-slate-200 hover:bg-slate-50"
+  >
+    History
+  </Button>
+
+  <Button
+    type="button"
+    onClick={() => setIsEditingLockedFields((v) => !v)}
+    className="h-10 px-4 text-sm"
+  >
+    {isEditingLockedFields ? "Lock fields" : "Edit locked fields"}
+  </Button>
+</div>
+
 
       <section className="space-y-2 rounded-lg border border-slate-200 bg-white p-4">
         <h2 className="text-sm font-semibold">Branding</h2>
@@ -238,143 +246,145 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({
       </section>
 
       <section className="space-y-2 rounded-lg border border-slate-200 bg-white p-4">
-        <div className="flex items-center justify-between">
-          <h2 className="text-sm font-semibold">Line items</h2>
+  <div className="flex items-center justify-between">
+    <h2 className="text-sm font-semibold">Line items</h2>
 
-          <div className="flex items-center gap-2">
-            <Button
-              type="button"
-              onClick={() => setIsAddItemPickerOpen((v) => !v)}
-              className="h-7 px-2 text-[11px]"
-            >
-              + Add item
-            </Button>
-          </div>
+    <div className="flex items-center gap-2">
+      <Button
+        type="button"
+        onClick={() => setIsAddItemPickerOpen((v) => !v)}
+        className="h-7 px-2 text-[11px]"
+      >
+        + Add item
+      </Button>
+    </div>
+  </div>
+
+  {isAddItemPickerOpen && (
+    <div className="mt-2 grid grid-cols-1 gap-2 rounded-lg border border-slate-200 bg-slate-50 p-3">
+      <Label>Select an item</Label>
+      <select
+        className="h-10 w-full rounded-md border border-slate-200 bg-white px-3 text-sm outline-none focus:ring-2 focus:ring-slate-300"
+        defaultValue=""
+        onChange={(e) => {
+          const v = e.target.value;
+          if (!v) return;
+
+          if (v === "__custom__") {
+            addLineItem();
+            setIsAddItemPickerOpen(false);
+            e.currentTarget.value = "";
+            return;
+          }
+
+          const preset = PRESET_LINE_ITEMS.find((p) => p.label === v);
+          if (preset) {
+            addPresetLineItem(preset);
+            setIsAddItemPickerOpen(false);
+            e.currentTarget.value = "";
+          }
+        }}
+      >
+        <option value="" disabled>
+          Choose…
+        </option>
+
+        {PRESET_LINE_ITEMS.map((p) => (
+          <option key={p.label} value={p.label}>
+            {p.label}
+            {p.amount && p.amount.trim().length > 0 ? ` - ${p.amount}` : ""}
+          </option>
+        ))}
+
+        <option value="__custom__">Custom item…</option>
+      </select>
+
+      <div className="flex justify-end">
+        <Button
+          type="button"
+          className="h-8 px-3 text-[11px] border-slate-300 bg-white text-slate-700 hover:bg-slate-50"
+          onClick={() => setIsAddItemPickerOpen(false)}
+        >
+          Close
+        </Button>
+      </div>
+    </div>
+  )}
+
+  {/* ✅ Each item is a card + inputs in column */}
+  <div className="space-y-3">
+    {value.lineItems.map((item, index) => (
+      <div
+        key={item.id}
+        className="rounded-xl border border-slate-200 bg-white p-3 shadow-sm"
+      >
+        <div className="mb-2 flex items-center justify-between">
+          <p className="text-sm font-semibold text-slate-900">
+            Item {index + 1}
+          </p>
+          <Button
+            type="button"
+            className="h-8 px-3 border-slate-300 bg-white text-xs text-slate-700 hover:bg-slate-50"
+            onClick={() => removeLineItem(item.id)}
+          >
+            ✕ Remove
+          </Button>
         </div>
 
-        {isAddItemPickerOpen && (
-          <div className="mt-2 grid grid-cols-1 gap-2">
-            <Label>Select an item</Label>
-            <select
-              className="h-9 w-full rounded-md border border-slate-200 bg-white px-3 text-sm outline-none focus:ring-2 focus:ring-slate-300"
-              defaultValue=""
-              onChange={(e) => {
-                const v = e.target.value;
-                if (!v) return;
-
-                if (v === "__custom__") {
-                  addLineItem();
-                  setIsAddItemPickerOpen(false);
-                  e.currentTarget.value = "";
-                  return;
-                }
-
-                const preset = PRESET_LINE_ITEMS.find((p) => p.label === v);
-                if (preset) {
-                  addPresetLineItem(preset);
-                  setIsAddItemPickerOpen(false);
-                  e.currentTarget.value = "";
-                }
-              }}
-            >
-              <option value="" disabled>
-                Choose…
-              </option>
-
-              {PRESET_LINE_ITEMS.map((p) => (
-                <option key={p.label} value={p.label}>
-                  {p.label}
-                  {p.amount && p.amount.trim().length > 0
-                    ? ` - ${p.amount}`
-                    : ""}
-                </option>
-              ))}
-
-              <option value="__custom__">Custom item…</option>
-            </select>
-
-            <div className="flex justify-end">
-              <Button
-                type="button"
-                className="h-7 px-2 text-[11px] border-slate-300 bg-white text-slate-700 hover:bg-slate-50"
-                onClick={() => setIsAddItemPickerOpen(false)}
-              >
-                Close
-              </Button>
-            </div>
-          </div>
-        )}
-
-        <div className="space-y-3">
-          {value.lineItems.map((item, index) => (
-            <div
-              key={item.id}
-              className="grid grid-cols-[minmax(0,1fr)_90px_32px] items-start gap-2"
-            >
-              <div>
-                <Label>Item {index + 1}</Label>
-                <Textarea
-                  rows={2}
-                  value={item.description}
-                  onChange={(e) =>
-                    handleLineItemChange(item.id, "description", e.target.value)
-                  }
-                />
-              </div>
-
-              <div>
-                <Label>Amount</Label>
-                <Input
-                  type="number"
-                  step="0.01"
-                  value={item.amount}
-                  onChange={(e) =>
-                    handleLineItemChange(item.id, "amount", e.target.value)
-                  }
-                />
-              </div>
-
-              <div className="mt-5">
-                <Button
-                  type="button"
-                  className="h-7 w-full border-slate-300 bg-white text-[11px] text-slate-700 hover:bg-slate-50"
-                  onClick={() => removeLineItem(item.id)}
-                >
-                  ✕
-                </Button>
-              </div>
-            </div>
-          ))}
-        </div>
-
-        <div className="mt-3 grid grid-cols-2 gap-3 border-t border-dashed border-slate-200 pt-3 text-xs">
+        <div className="flex flex-col gap-3">
           <div>
-            <Label htmlFor="currency">Currency label</Label>
-            <Input
-              id="currency"
-              value={value.currency}
-              onChange={(e) => handleFieldChange("currency", e.target.value)}
-              disabled={lockedDisabled}
-            />
-          </div>
-
-          <div>
-            <Label htmlFor="overrideTotal">Override total (optional)</Label>
-            <Input
-              id="overrideTotal"
-              placeholder={computedTotal.toFixed(2)}
-              value={value.overrideTotal ?? ""}
-              disabled={lockedDisabled}
+            <Label>Description</Label>
+            <Textarea
+              rows={3}
+              value={item.description}
               onChange={(e) =>
-                handleFieldChange("overrideTotal", e.target.value)
+                handleLineItemChange(item.id, "description", e.target.value)
               }
             />
-            <p className="mt-1 text-[10px] text-slate-500">
-              Live total: <span className="font-semibold">{liveTotalText}</span>
-            </p>
+          </div>
+
+          <div>
+            <Label>Amount</Label>
+            <Input
+              type="number"
+              step="0.01"
+              value={item.amount}
+              onChange={(e) =>
+                handleLineItemChange(item.id, "amount", e.target.value)
+              }
+            />
           </div>
         </div>
-      </section>
+      </div>
+    ))}
+  </div>
+
+  <div className="mt-3 grid grid-cols-1 gap-3 border-t border-dashed border-slate-200 pt-3 text-xs sm:grid-cols-2">
+    <div>
+      <Label htmlFor="currency">Currency label</Label>
+      <Input
+        id="currency"
+        value={value.currency}
+        onChange={(e) => handleFieldChange("currency", e.target.value)}
+        disabled={lockedDisabled}
+      />
+    </div>
+
+    <div>
+      <Label htmlFor="overrideTotal">Override total (optional)</Label>
+      <Input
+        id="overrideTotal"
+        placeholder={computedTotal.toFixed(2)}
+        value={value.overrideTotal ?? ""}
+        disabled={lockedDisabled}
+        onChange={(e) => handleFieldChange("overrideTotal", e.target.value)}
+      />
+      <p className="mt-1 text-[10px] text-slate-500">
+        Live total: <span className="font-semibold">{liveTotalText}</span>
+      </p>
+    </div>
+  </div>
+</section>
 
       <section className="space-y-2 rounded-lg border border-slate-200 bg-white p-4">
         <h2 className="text-sm font-semibold">Payment / signature</h2>
