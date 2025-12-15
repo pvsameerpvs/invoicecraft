@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import { google } from "googleapis";
 import { GoogleAuth } from "google-auth-library";
-import serviceAccount from "../service-account.json";
 
 export const runtime = "nodejs";
 
@@ -11,54 +10,25 @@ function money(n: number) {
 }
 
 function getSheetsClient() {
-  const { client_email: clientEmail, private_key: privateKeyRaw } = serviceAccount;
-  console.info("clientEmail", clientEmail);
-  console.info("privateKeyRaw", privateKeyRaw);
+  const clientEmail = process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL;
+  const privateKeyRaw = process.env.GOOGLE_PRIVATE_KEY;
 
   if (!clientEmail || !privateKeyRaw) {
     throw new Error("Missing GOOGLE_SERVICE_ACCOUNT_EMAIL or GOOGLE_PRIVATE_KEY");
   }
 
-  let privateKey: string;
+  // Handle both escaped newline strings (e.g. from Vercel env) and actual newlines
+  const privateKey = privateKeyRaw.replace(/\\n/g, "\n");
 
-  try {
-    // ✅ Check if the key is Base64 encoded (no PEM headers)
-    // if (!privateKeyRaw.includes("BEGIN PRIVATE KEY")) {
-    //   // Assume it's Base64 encoded, decode it
-    //   privateKey = Buffer.from(privateKeyRaw, "base64").toString("utf-8");
-    // } else {
-    //   // Handle escaped newlines, remove carriage returns, and trim whitespace
-    //   privateKey = privateKeyRaw
-    //     .replace(/\\n/g, "\n")  // Convert literal \n to actual newlines
-    //     .replace(/\r/g, "")      // Remove any carriage returns
-    //     .trim();
+  const auth = new GoogleAuth({
+    credentials: {
+      client_email: clientEmail,
+      private_key: privateKey,
+    },
+    scopes: ["https://www.googleapis.com/auth/spreadsheets"],
+  });
 
-    //   // Ensure proper PEM format with newlines after header/footer
-    //   if (!privateKey.includes("\n")) {
-    //     privateKey = privateKey
-    //       .replace("-----BEGIN PRIVATE KEY-----", "-----BEGIN PRIVATE KEY-----\n")
-    //       .replace("-----END PRIVATE KEY-----", "\n-----END PRIVATE KEY-----");
-    //   }
-    // }
-
-    // const auth = new google.auth.JWT({
-    //   email: clientEmail,
-    //   key: privateKeyRaw.replace(/\\n/g, '\n'),
-    //   scopes: ["https://www.googleapis.com/auth/spreadsheets"],
-    // });
-
-    const auth = new GoogleAuth({
-      credentials: {
-        client_email: clientEmail,
-        private_key: privateKeyRaw,
-      },
-      scopes: ["https://www.googleapis.com/auth/spreadsheets"],
-    });
-
-    return google.sheets({ version: "v4", auth });
-  } catch (error: any) {
-    throw new Error(`Failed to initialize Google Sheets client: ${error.message}`);
-  }
+  return google.sheets({ version: "v4", auth });
 }
 
 /**
