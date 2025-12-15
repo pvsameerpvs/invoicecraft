@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import React from "react";
+import toast from "react-hot-toast";
 
 export default function HomePage() {
   const router = useRouter();
@@ -14,19 +15,26 @@ export default function HomePage() {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
+    const t = toast.loading("Logging in…");
 
-    const res = await fetch("/api/login", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ username, password }),
-    });
+    try {
+      const res = await fetch("/api/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, password }),
+      });
 
-    if (res.ok) {
-      router.push("/invoice");
-      return;
+      if (res.ok) {
+        toast.success("Login successful!", { id: t });
+        router.push("/invoice");
+        return;
+      }
+
+      throw new Error("Invalid username or password.");
+    } catch (err: any) {
+      setError(err.message);
+      toast.error(err.message, { id: t });
     }
-
-    setError("Invalid username or password.");
   };
 
   return (

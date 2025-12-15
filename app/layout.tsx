@@ -1,6 +1,7 @@
 import "./globals.css";
 import type { Metadata } from "next";
 import React from "react";
+import { Toaster } from "react-hot-toast";
 
 export const metadata: Metadata = {
   title: "JS InvoiceCraft",
@@ -14,6 +15,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <link rel="icon" href="/logo-js-old.png" />
       </head>
       <body className="min-h-screen font-sans antialiased bg-slate-100">
+        <Toaster position="top-center" />
         {children}
       </body>
     </html>

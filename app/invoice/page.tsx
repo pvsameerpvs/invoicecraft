@@ -5,6 +5,7 @@ import { InvoiceForm } from "../../components/InvoiceForm";
 import { InvoicePreview } from "../../components/InvoicePreview";
 import { InvoiceData } from "../../lib/types";
 import { downloadInvoicePdf } from "../../lib/pdf";
+import toast from "react-hot-toast";
 
 const STORAGE_KEY = "invoicecraft:editInvoicePayload";
 
@@ -37,6 +38,9 @@ export default function InvoicePage() {
   const [invoice, setInvoice] = useState<InvoiceData>(initialInvoiceData);
   const previewRef = useRef<HTMLDivElement | null>(null);
 
+  /* New State for tracking origin of edit */
+  const [originalInvoiceNumber, setOriginalInvoiceNumber] = useState<string | null>(null);
+
   // ✅ Load invoice for editing (from History)
   useEffect(() => {
     try {
@@ -48,6 +52,13 @@ export default function InvoicePage() {
       if (parsed && typeof parsed === "object") {
         // merge with initial to avoid missing fields
         setInvoice({ ...initialInvoiceData, ...parsed });
+        
+        // Track original invoice number if it exists
+        if (parsed.invoiceNumber) {
+            setOriginalInvoiceNumber(parsed.invoiceNumber);
+        }
+        
+        toast.success("Invoice loaded for editing");
       }
 
       localStorage.removeItem(STORAGE_KEY);
@@ -57,15 +68,44 @@ export default function InvoicePage() {
   }, []);
 
   const handleDownload = async () => {
-    // ✅ Save to sheet first (optional if you already do)
-    await fetch("/api/invoice-history", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(invoice),
-    });
+    const t = toast.loading("Saving & Generating PDF…");
+    const isUpdate = originalInvoiceNumber && invoice.invoiceNumber === originalInvoiceNumber;
 
-    if (!previewRef.current) return;
-    await downloadInvoicePdf(previewRef.current);
+    try {
+      let res;
+      
+      if (isUpdate) {
+        // ✅ UPDATE existing invoice
+         res = await fetch("/api/invoice-history", {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            originalInvoiceNumber,
+            invoice
+          }),
+        });
+      } else {
+        // ✅ CREATE new invoice (or if invoice number changed)
+        res = await fetch("/api/invoice-history", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(invoice),
+        });
+      }
+
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || "Failed to save invoice history");
+      }
+
+      if (!previewRef.current) throw new Error("Preview not ready");
+      await downloadInvoicePdf(previewRef.current);
+
+      toast.success("Downloaded successfully!", { id: t });
+    } catch (e: any) {
+      console.error(e);
+      toast.error(e.message || "Failed to download", { id: t });
+    }
   };
 
   return (

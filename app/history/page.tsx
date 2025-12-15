@@ -2,6 +2,7 @@
 
 import React from "react";
 import { useRouter } from "next/navigation";
+import toast from "react-hot-toast";
 
 type InvoiceHistoryRow = {
   createdAt: string;
@@ -40,21 +41,23 @@ export default function HistoryPage() {
   const load = React.useCallback(async () => {
     setLoading(true);
     setError("");
+    const t = toast.loading("Loading history…");
     try {
       const res = await fetch("/api/invoice-history", { cache: "no-store" });
       const data = await res.json();
 
       if (!res.ok) {
-        setError(data?.error || "Failed to load history");
-        setRows([]);
-        return;
+        throw new Error(data?.error || "Failed to load history");
       }
 
       // API returns array
       setRows(Array.isArray(data) ? data : []);
+      toast.success("History loaded", { id: t });
     } catch (e: any) {
+      console.error(e);
       setError(e?.message || "Failed to load history");
       setRows([]);
+      toast.error(e?.message || "Failed to load history", { id: t });
     } finally {
       setLoading(false);
     }
@@ -73,9 +76,16 @@ export default function HistoryPage() {
   const onEdit = (row: InvoiceHistoryRow) => {
     // Store full payload in localStorage and go to /invoice
     try {
+      if (!row.payloadJson) {
+        toast.error("Cannot edit: missing invoice data");
+        return;
+      }
       localStorage.setItem(STORAGE_KEY, row.payloadJson || "");
-    } catch {}
-    router.push("/invoice");
+      toast.success("Loading invoice details…");
+      router.push("/invoice");
+    } catch (e) {
+      toast.error("Failed to prepare invoice for editing");
+    }
   };
 
   return (
