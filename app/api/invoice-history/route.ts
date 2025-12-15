@@ -193,13 +193,19 @@ export async function PUT(req: Request) {
 
     const rows = res.data.values || [];
     // rows are like: [ ["Invoice #"], ["INV-001"], ["INV-002"] ]
-    // Row 1 is header. Data starts at row 2.
-    // Index in array + 1 = Excel Row Number
-    const rowIndex = rows.findIndex((r) => r[0] === originalInvoiceNumber);
+    
+    console.log("Searching for:", originalInvoiceNumber);
+    
+    const rowIndex = rows.findIndex((r) => {
+        const sheetVal = (r[0] || "").toString().trim();
+        const searchVal = (originalInvoiceNumber || "").toString().trim();
+        return sheetVal === searchVal;
+    });
 
     if (rowIndex === -1) {
+      console.log("Invoice numbers in sheet:", rows.map(r => r[0]));
       return NextResponse.json(
-        { ok: false, error: "Original invoice not found" },
+        { ok: false, error: `Original invoice "${originalInvoiceNumber}" not found in sheet` },
         { status: 404 }
       );
     }
