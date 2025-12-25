@@ -4,6 +4,9 @@ import React from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { UserMenu } from "../../components/UserMenu";
+import { InvoicePreview } from "../../components/InvoicePreview";
+import { downloadInvoicePdf } from "../../lib/pdf";
+import { InvoiceData } from "../../lib/types";
 import toast from "react-hot-toast";
 
 type InvoiceHistoryRow = {
@@ -42,6 +45,10 @@ export default function HistoryPage() {
   const [search, setSearch] = React.useState("");
   const [deleteTarget, setDeleteTarget] = React.useState<InvoiceHistoryRow | null>(null);
   const [currentUser, setCurrentUser] = React.useState("");
+
+  // Preview Modal State
+  const [previewInvoice, setPreviewInvoice] = React.useState<InvoiceData | null>(null);
+  const previewRef = React.useRef<HTMLDivElement>(null);
 
   const load = React.useCallback(async () => {
     setLoading(true);
@@ -99,6 +106,31 @@ export default function HistoryPage() {
       router.push("/invoice");
     } catch (e) {
       toast.error("Failed to prepare invoice for editing");
+    }
+  };
+
+  const onPreview = (row: InvoiceHistoryRow) => {
+    try {
+      if (!row.payloadJson) {
+        toast.error("Missing invoice data");
+        return;
+      }
+      const data = JSON.parse(row.payloadJson);
+      setPreviewInvoice(data);
+    } catch (e) {
+      toast.error("Failed to load preview");
+    }
+  };
+
+  const downloadPreview = async () => {
+    if (!previewRef.current) return;
+    const t = toast.loading("Generating PDF...");
+    try {
+      await downloadInvoicePdf(previewRef.current);
+      toast.success("Downloaded", { id: t });
+    } catch (e) {
+      console.error(e);
+      toast.error("Failed to download", { id: t });
     }
   };
 
@@ -226,7 +258,12 @@ export default function HistoryPage() {
                       </td>
 
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <span className="font-semibold text-slate-900">{r.invoiceNumber}</span>
+                        <button
+                          onClick={() => onPreview(r)}
+                          className="font-semibold text-brand-primary hover:underline"
+                        >
+                          {r.invoiceNumber}
+                        </button>
                       </td>
 
                       <td className="px-6 py-4 whitespace-nowrap text-slate-600">{r.date}</td>
@@ -267,6 +304,12 @@ export default function HistoryPage() {
                             Delete
                           </button>
                         )}
+                        <button
+                            onClick={() => onPreview(r)}
+                            className="rounded-lg bg-orange-50 px-3 py-1.5 text-xs font-semibold text-orange-600 shadow-sm ring-1 ring-inset ring-orange-100 hover:bg-orange-100"
+                          >
+                            View
+                          </button>
                         </div>
                       </td>
                     </tr>
@@ -324,6 +367,44 @@ export default function HistoryPage() {
               >
                 Delete
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+
+      {/* Preview Modal */}
+      {previewInvoice && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
+          <div className="flex h-[90vh] w-full max-w-5xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl">
+            {/* Modal Header */}
+            <div className="flex flex-none items-center justify-between border-b border-slate-200 px-6 py-4">
+               <div>
+                  <h3 className="text-lg font-bold text-slate-900">
+                    Invoice Preview: {previewInvoice.invoiceNumber}
+                  </h3>
+               </div>
+               <div className="flex gap-2">
+                 <button
+                    onClick={downloadPreview}
+                    className="rounded-lg bg-brand-primary px-4 py-2 text-sm font-semibold text-white hover:bg-brand-primary/90"
+                 >
+                    Download PDF
+                 </button>
+                 <button
+                    onClick={() => setPreviewInvoice(null)}
+                    className="rounded-lg bg-slate-100 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-200"
+                 >
+                    Close
+                 </button>
+               </div>
+            </div>
+
+            {/* Modal Content - Scrollable */}
+            <div className="flex-1 overflow-y-auto bg-slate-100 p-8">
+               <div className="mx-auto w-fit shadow-xl">
+                 <InvoicePreview value={previewInvoice} forwardRef={previewRef} />
+               </div>
             </div>
           </div>
         </div>
