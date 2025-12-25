@@ -125,7 +125,7 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({
   <Button
     type="button"
     onClick={() => setIsEditingLockedFields((v) => !v)}
-    className="h-10 px-4 text-sm text-brand-primary hover:bg-orange-50"
+    className="h-10 rounded-xl bg-white px-4 text-sm font-medium text-brand-primary shadow-sm ring-1 ring-orange-200 hover:bg-orange-50"
   >
     {isEditingLockedFields ? "Lock fields" : "Edit locked fields"}
   </Button>
