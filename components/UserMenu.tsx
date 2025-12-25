@@ -41,7 +41,7 @@ export function UserMenu() {
   if (!username) return null;
 
   return (
-    <div className="relative mb-4" ref={menuRef}>
+    <div className="relative" ref={menuRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
         className="flex items-center gap-3 rounded-xl bg-white p-2 pr-4 shadow-sm ring-1 ring-orange-200 hover:ring-brand-primary/50 transition-all"

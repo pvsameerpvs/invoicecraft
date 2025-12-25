@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useRef, useState } from "react";
+import Image from "next/image";
 import { InvoiceForm } from "../../components/InvoiceForm";
 import { InvoicePreview } from "../../components/InvoicePreview";
 import { UserMenu } from "../../components/UserMenu";
@@ -113,26 +114,41 @@ export default function InvoicePage() {
   };
 
   return (
-    <main className="min-h-screen bg-orange-50/50 p-4 lg:p-8">
-      <div className="mx-auto max-w-6xl">
-        <div className="flex flex-col gap-6 lg:flex-row lg:h-[calc(100vh-4rem)] lg:overflow-hidden">
-          <section className="w-full lg:w-[280px] xl:w-[260px] lg:h-full lg:overflow-auto">
-            <UserMenu />
-            <h1 className="mb-4 text-xl font-semibold">Invoice editor</h1>
-            <InvoiceForm
+    <div className="flex h-screen flex-col bg-slate-50 text-slate-900">
+      {/* 1. Header */}
+      <header className="flex h-16 flex-none items-center justify-between border-b border-slate-200 bg-white px-6">
+        <div className="flex items-center gap-4">
+        <Image src="/logo-js.png" alt="Logo" width={150} height={150} />
+          <span className="rounded-full bg-orange-100 px-2.5 py-0.5 text-xs font-medium text-brand-primary">
+            v1.0 Editor
+          </span>
+        </div>
+        <UserMenu />
+      </header>
+
+      {/* 2. Main Layout (Sidebar + Preview) */}
+      <main className="flex flex-1 overflow-hidden">
+        {/* Left Sidebar: Form */}
+        <aside className="w-[500px] flex-none overflow-y-auto border-r border-slate-200 bg-white p-6 scrollbar-thin scrollbar-thumb-slate-200 hover:scrollbar-thumb-slate-300">
+           <div className="mb-6 flex items-center justify-between">
+              <h2 className="text-lg font-semibold text-slate-900">Invoice Details</h2>
+              <div className="text-xs text-slate-500">Auto-saving...</div>
+           </div>
+           
+           <InvoiceForm
               value={invoice}
               onChange={setInvoice}
               onDownloadPdf={handleDownload}
             />
-          </section>
+        </aside>
 
-          <section className="w-full flex-1 lg:h-full lg:overflow-auto">
-            <div className="flex justify-center lg:justify-end">
-              <InvoicePreview value={invoice} forwardRef={previewRef} />
+        {/* Right Content: PDF Preview */}
+        <section className="flex flex-1 justify-center overflow-y-auto bg-slate-100/50 p-8 lg:p-12">
+            <div className="h-fit">
+               <InvoicePreview value={invoice} forwardRef={previewRef} />
             </div>
-          </section>
-        </div>
-      </div>
-    </main>
+        </section>
+      </main>
+    </div>
   );
 }
