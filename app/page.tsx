@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import React from "react";
 import toast from "react-hot-toast";
+import Image from "next/image";
 
 export default function HomePage() {
   const router = useRouter();
@@ -40,107 +41,70 @@ export default function HomePage() {
   };
 
   return (
-    <main className="min-h-screen bg-slate-100 px-4 py-10 sm:py-12">
-      <div className="mx-auto flex min-h-[calc(100vh-6rem)] max-w-6xl items-center justify-center">
-        <div className="w-full max-w-md sm:max-w-xl overflow-hidden rounded-2xl bg-white shadow-lg">
-          {/* Header */}
-          <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 border-b border-slate-100 p-5 sm:p-6">
-            <img
-              src="/logo-js.png"
-              alt="JS InvoiceCraft"
-              className="h-10 w-auto object-contain"
-            />
-            <div>
-              <h1 className="text-lg sm:text-xl font-semibold text-slate-900">
-                JS InvoiceCraft
-              </h1>
-              <p className="text-sm text-slate-500">
-                Create professional A4 tax invoices and export to PDF.
-              </p>
-            </div>
-          </div>
+    <main className="min-h-screen flex items-center justify-center bg-orange-50 relative selection:bg-orange-100 selection:text-orange-900 p-4">
+      {/* Background decoration */}
+      <div className="absolute top-0 left-0 w-full h-1/2 bg-gradient-to-br from-brand-start to-brand-end z-0" />
+      
+      <div className="relative z-10 w-full max-w-md bg-white rounded-3xl shadow-2xl shadow-orange-200/50 p-6 sm:p-10 border border-orange-100">
+        {/* Header */}
+        <div className="flex flex-col items-center text-center gap-4 mb-8">
+             <Image src="/logo-js.png" alt="Logo" width={150} height={150} />
+          
+           <div>
+             <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Welcome Back</h1>
+             <p className="text-slate-500 text-sm mt-1">Sign in to manage your invoices</p>
+           </div>
+        </div>
 
-          {/* Body */}
-          <div className="space-y-4 p-5 sm:p-6">
-            <div className="rounded-xl bg-slate-50 p-4">
-              <ul className="space-y-2 text-sm text-slate-700">
-                <li className="flex items-start gap-2">
-                  <span className="mt-1 inline-block h-2 w-2 rounded-full bg-slate-900" />
-                  Add preset services or custom items
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="mt-1 inline-block h-2 w-2 rounded-full bg-slate-900" />
-                  Automatic VAT (5%) calculation
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="mt-1 inline-block h-2 w-2 rounded-full bg-slate-900" />
-                  Multi-page A4 preview and PDF export
-                </li>
-              </ul>
-            </div>
-
-            {/* Login */}
-            <form onSubmit={handleLogin} className="space-y-3">
-              <div>
-                <label className="text-xs font-medium text-slate-700">
-                  Username
-                </label>
+        {/* Login Form */}
+        <form onSubmit={handleLogin} className="space-y-5">
+           <div className="space-y-1.5">
+             <label className="text-xs font-semibold text-slate-900 uppercase tracking-wider">Username</label>
+             <div className="relative">
                 <input
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
-                  className="mt-1 h-11 w-full rounded-xl border border-slate-200 px-3 text-sm outline-none focus:ring-2 focus:ring-slate-300"
-                  placeholder="Enter username"
+                  className="w-full h-12 rounded-xl bg-slate-50 border border-slate-200 px-4 text-sm font-medium text-slate-800 focus:bg-white focus:ring-2 focus:ring-brand-primary/20 focus:border-brand-primary transition-all outline-none placeholder:text-slate-400"
+                  placeholder="Enter your username"
                   autoComplete="username"
+                  autoFocus
                 />
-              </div>
+             </div>
+           </div>
 
-              <div>
-                <label className="text-xs font-medium text-slate-700">
-                  Password
-                </label>
+           <div className="space-y-1.5">
+             <label className="text-xs font-semibold text-slate-900 uppercase tracking-wider">Password</label>
+             <div className="relative">
                 <input
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="mt-1 h-11 w-full rounded-xl border border-slate-200 px-3 text-sm outline-none focus:ring-2 focus:ring-slate-300"
-                  placeholder="Enter password"
+                  className="w-full h-12 rounded-xl bg-slate-50 border border-slate-200 px-4 text-sm font-medium text-slate-800 focus:bg-white focus:ring-2 focus:ring-brand-primary/20 focus:border-brand-primary transition-all outline-none placeholder:text-slate-400"
+                  placeholder="Enter your password"
                   autoComplete="current-password"
                 />
-              </div>
+             </div>
+           </div>
 
-              {error && (
-                <div className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700">
-                  {error}
-                </div>
-              )}
+           {error && (
+             <div className="text-center rounded-xl bg-red-50 p-3 text-xs font-medium text-red-600 border border-red-100">
+               {error}
+             </div>
+           )}
 
-              <button
-                type="submit"
-                className="inline-flex h-11 w-full items-center justify-center rounded-xl bg-slate-900 px-5 text-sm font-medium text-white shadow-sm hover:bg-slate-800"
-              >
-                Login & Open Invoice Editor
-              </button>
-
-              <div className="text-center text-xs text-slate-500">
-                <span className="mr-1">Need access?</span>
-                <Link
-                  href="/invoice"
-                  className="pointer-events-none text-slate-300 underline"
-                >
-                  Open Invoice Editor
-                </Link>
-              </div>
-            </form>
-
-            <div className="text-xs text-slate-500">
-              Tip: Upload your logo in the editor.
-            </div>
-          </div>
-
-          {/* Footer */}
-          <div className="border-t border-slate-100 px-5 sm:px-6 py-4 text-center text-xs text-slate-500">
-            © {new Date().getFullYear()} Just Search Web design L.L.C.
-          </div>
+           <button
+             type="submit"
+             className="w-full h-12 rounded-xl bg-gradient-to-r from-brand-start to-brand-end hover:shadow-brand-primary/30 text-white font-semibold text-sm shadow-xl shadow-brand-primary/20 active:scale-[0.98] transition-all"
+           >
+             Sign In
+           </button>
+        </form>
+        
+        <div className="mt-8 pt-8 border-t border-slate-100 text-center">
+           <p className="text-xs text-slate-400">
+             © {new Date().getFullYear()} Just Search Web Design L.L.C.
+           </p>
+           <p className="text-[10px] text-slate-300 mt-1">Invoice Management System v1.0</p>
         </div>
       </div>
     </main>

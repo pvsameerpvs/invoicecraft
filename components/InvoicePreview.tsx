@@ -128,13 +128,13 @@ export const InvoicePreview: React.FC<InvoicePreviewProps> = ({
                 <table className="invoice-table w-full table-fixed border-collapse">
                   <thead>
                     <tr>
-                      <th className="w-10 bg-black px-2 py-2 text-left text-[11px] font-semibold uppercase text-white">
+                      <th className="w-10 bg-gradient-to-r from-brand-start to-brand-primary px-2 py-2 text-left text-[11px] font-semibold uppercase text-white">
                         #
                       </th>
-                      <th className="bg-black px-2 py-2 text-left text-[11px] font-semibold uppercase text-white">
+                      <th className="bg-brand-primary px-2 py-2 text-left text-[11px] font-semibold uppercase text-white">
                         Item &amp; Description
                       </th>
-                      <th className="w-32 bg-black px-2 py-2 text-right text-[11px] font-semibold uppercase text-white">
+                      <th className="w-32 bg-gradient-to-r from-brand-primary to-brand-end px-2 py-2 text-right text-[11px] font-semibold uppercase text-white">
                         Amount
                       </th>
                     </tr>
@@ -144,7 +144,7 @@ export const InvoicePreview: React.FC<InvoicePreviewProps> = ({
                     {pageItems.map((item, rowIndex) => {
                       const globalIndex = pageIndex * rowsPerPage + rowIndex;
                       return (
-                        <tr key={item.id} className="border-b border-slate-300">
+                        <tr key={item.id} className="border-b border-orange-200">
                           <td className="px-2 py-2 align-top text-[11px]">
                             {globalIndex + 1}
                           </td>

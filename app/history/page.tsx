@@ -92,30 +92,34 @@ export default function HistoryPage() {
   };
 
   return (
-    <main className="min-h-screen bg-slate-100 p-4 lg:p-8">
-      <div className="mx-auto max-w-6xl">
-        <div className="mb-4">
-          <UserMenu />
-        </div>
-        <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+    <main className="min-h-screen bg-orange-50 relative selection:bg-orange-100 selection:text-orange-900">
+      {/* Background decoration */}
+      <div className="absolute top-0 left-0 w-full h-64 bg-gradient-to-br from-brand-start to-brand-end -z-0" />
+      
+      <div className="fixed top-6 left-6 z-50">
+        <UserMenu />
+      </div>
+
+      <div className="relative z-10 mx-auto max-w-7xl pt-20 px-4 sm:px-6 lg:px-8">
+        <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between text-white">
           <div>
-            <h1 className="text-xl font-semibold text-slate-900">Invoice History</h1>
-            <p className="text-sm text-slate-500">
-              Saved invoices from Google Sheet (search by invoice number).
+            <h1 className="text-3xl font-bold tracking-tight">Invoice History</h1>
+            <p className="mt-2 text-white/80 text-sm max-w-2xl">
+              Track, manage, and download your past invoices. Data is synced with your Google Sheet.
             </p>
           </div>
 
-          <div className="flex gap-2">
+          <div className="flex gap-3">
             <button
               onClick={() => router.push("/invoice")}
-              className="h-10 rounded-xl bg-white px-4 text-sm font-medium text-slate-900 shadow-sm ring-1 ring-slate-200 hover:bg-slate-50"
+              className="h-10 rounded-xl bg-white/10 px-4 text-sm font-medium text-white shadow-sm hover:bg-white/20 backdrop-blur-sm border border-white/20 transition-all"
             >
-              Back to Invoice
+              Back to Editor
             </button>
 
             <button
               onClick={load}
-              className="h-10 rounded-xl bg-slate-900 px-4 text-sm font-medium text-white shadow-sm hover:bg-slate-800"
+              className="h-10 rounded-xl bg-orange-500 px-6 text-sm font-medium text-white shadow-lg hover:bg-orange-400 transition-all shadow-orange-900/20"
             >
               Refresh
             </button>
@@ -123,16 +127,20 @@ export default function HistoryPage() {
         </div>
 
         {/* Search */}
-        <div className="mb-4 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-200">
-          <label className="text-xs font-medium text-slate-700">
-            Search (invoiceNumber)
-          </label>
-          <input
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="e.g. INV-2025-001"
-            className="mt-1 h-11 w-full rounded-xl border border-slate-200 px-3 text-sm outline-none focus:ring-2 focus:ring-slate-300"
-          />
+        <div className="mb-6 rounded-2xl bg-white p-2 shadow-xl shadow-slate-200/50 ring-1 ring-slate-100">
+           <div className="relative">
+             <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4">
+               <svg className="h-5 w-5 text-slate-400" viewBox="0 0 20 20" fill="currentColor">
+                 <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" />
+               </svg>
+             </div>
+             <input
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search by invoice number..."
+                className="h-12 w-full rounded-xl bg-transparent pl-11 pr-4 text-sm text-slate-700 outline-none placeholder:text-slate-400"
+             />
+           </div>
         </div>
 
         {/* Errors / Loading */}
@@ -143,91 +151,105 @@ export default function HistoryPage() {
         )}
 
         {loading ? (
-          <div className="rounded-2xl bg-white p-6 text-sm text-slate-600 shadow-sm ring-1 ring-slate-200">
-            Loading…
+          <div className="flex h-64 items-center justify-center rounded-3xl bg-white shadow-lg shadow-slate-200/50">
+             <div className="flex flex-col items-center gap-2">
+                <div className="h-8 w-8 animate-spin rounded-full border-4 border-orange-200 border-t-brand-primary" />
+                <span className="text-sm font-medium text-slate-500">Loading records...</span>
+             </div>
           </div>
         ) : (
-          <div className="overflow-auto rounded-2xl bg-white shadow-sm ring-1 ring-slate-200">
-            <table className="min-w-[1200px] w-full border-collapse text-sm">
-              <thead className="bg-slate-50">
-                <tr className="text-left text-xs font-semibold text-slate-700">
-                  <th className="px-4 py-3">Created</th>
-                  <th className="px-4 py-3">Created By</th>
-                  <th className="px-4 py-3">Invoice #</th>
-                  <th className="px-4 py-3">Date</th>
-                  <th className="px-4 py-3">Client</th>
-                  <th className="px-4 py-3">Subject</th>
-                  <th className="px-4 py-3">Currency</th>
-                  <th className="px-4 py-3 text-right">Subtotal</th>
-                  <th className="px-4 py-3 text-right">VAT</th>
-                  <th className="px-4 py-3 text-right">Total</th>
-                  <th className="px-4 py-3 text-right">Action</th>
+          <div className="overflow-hidden rounded-3xl bg-white shadow-xl shadow-slate-200/50 ring-1 ring-slate-100">
+            <div className="overflow-x-auto">
+            <table className="min-w-[1200px] w-full border-collapse text-left text-sm">
+              <thead>
+                <tr className="border-b border-orange-100 bg-orange-50/50 text-xs font-semibold uppercase tracking-wider text-slate-500">
+                  <th className="px-6 py-4">Created Date</th>
+                  <th className="px-6 py-4">User</th>
+                  <th className="px-6 py-4">Invoice #</th>
+                  <th className="px-6 py-4">Date</th>
+                  <th className="px-6 py-4">Client</th>
+                  <th className="px-6 py-4">Subject</th>
+                  <th className="px-6 py-4">Currency</th>
+                  <th className="px-6 py-4 text-right">Subtotal</th>
+                  <th className="px-6 py-4 text-right">VAT</th>
+                  <th className="px-6 py-4 text-right">Total</th>
+                  <th className="px-6 py-4 text-right">Actions</th>
                 </tr>
               </thead>
 
-              <tbody>
+              <tbody className="divide-y divide-orange-100 bg-white">
                 {filtered.length === 0 ? (
                   <tr>
-                    <td colSpan={11} className="px-4 py-6 text-center text-slate-500">
-                      No invoices found.
+                    <td colSpan={11} className="px-6 py-12 text-center text-slate-500">
+                       <div className="flex flex-col items-center gap-2">
+                          <p className="text-base font-medium text-slate-900">No invoices found</p>
+                          <p className="text-sm text-slate-400">Try adjusting your search query.</p>
+                       </div>
                     </td>
                   </tr>
                 ) : (
                   filtered.map((r, idx) => (
                     <tr
                       key={`${r.invoiceNumber}-${idx}`}
-                      className="border-t border-slate-100"
+                      className="group transition-colors hover:bg-orange-50"
                     >
-                      <td className="px-4 py-3 whitespace-nowrap text-xs text-slate-600">
+                      <td className="px-6 py-4 whitespace-nowrap text-xs text-slate-500">
                         {formatDate(r.createdAt)}
                       </td>
-                      <td className="px-4 py-3">{r.createdBy || "-"}</td>
-
-                      <td className="px-4 py-3 font-semibold text-slate-900 whitespace-nowrap">
-                        {r.invoiceNumber}
+                      <td className="px-6 py-4 whitespace-nowrap">
+                         <span className="inline-flex items-center rounded-md bg-slate-100 px-2 py-1 text-xs font-medium text-slate-600 ring-1 ring-inset ring-slate-500/10">
+                           {r.createdBy || "Unk"}
+                         </span>
                       </td>
 
-                      <td className="px-4 py-3 whitespace-nowrap">{r.date}</td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className="font-semibold text-slate-900">{r.invoiceNumber}</span>
+                      </td>
 
-                      <td className="px-4 py-3">{r.clientName}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-slate-600">{r.date}</td>
 
-                      <td className="px-4 py-3">{r.subject}</td>
+                      <td className="px-6 py-4 font-medium text-slate-900">{r.clientName}</td>
 
-                      <td className="px-4 py-3">{r.currency}</td>
+                      <td className="px-6 py-4 text-slate-600 max-w-[200px] truncate" title={r.subject}>{r.subject}</td>
 
-                      <td className="px-4 py-3 text-right tabular-nums">
+                      <td className="px-6 py-4 text-slate-500">{r.currency}</td>
+
+                      <td className="px-6 py-4 text-right tabular-nums text-slate-600">
                         {r.subtotal}
                       </td>
 
-                      <td className="px-4 py-3 text-right tabular-nums">
+                      <td className="px-6 py-4 text-right tabular-nums text-slate-600">
                         {r.vat}
                       </td>
 
-                      <td className="px-4 py-3 text-right tabular-nums font-semibold">
+                      <td className="px-6 py-4 text-right tabular-nums font-bold text-slate-900">
                         {r.total}
                       </td>
 
-                      <td className="px-4 py-3 text-right flex justify-end gap-2">
+                      <td className="px-6 py-4 text-right">
+                        <div className="flex justify-end gap-2 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
                         <button
                           onClick={() => onEdit(r)}
-                          className="h-9 rounded-xl bg-slate-900 px-3 text-xs font-medium text-white hover:bg-slate-800"
+                          className="rounded-lg bg-white px-3 py-1.5 text-xs font-semibold text-brand-primary shadow-sm ring-1 ring-inset ring-orange-200 hover:bg-orange-50"
                         >
                           Edit
                         </button>
                         {localStorage.getItem("invoicecraft:username") === "admin" && (
                           <button
                             onClick={() => setDeleteTarget(r)}
-                            className="h-9 rounded-xl bg-red-600 px-3 text-xs font-medium text-white hover:bg-red-700"
+                            className="rounded-lg bg-red-50 px-3 py-1.5 text-xs font-semibold text-red-600 shadow-sm ring-1 ring-inset ring-red-100 hover:bg-red-100"
                           >
                             Delete
                           </button>
                         )}
+                        </div>
                       </td>
                     </tr>
                   ))
                 )}
               </tbody>
             </table>
+            </div>
           </div>
         )}
       </div>

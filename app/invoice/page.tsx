@@ -113,7 +113,7 @@ export default function InvoicePage() {
   };
 
   return (
-    <main className="min-h-screen bg-slate-100 p-4 lg:p-8">
+    <main className="min-h-screen bg-orange-50/50 p-4 lg:p-8">
       <div className="mx-auto max-w-6xl">
         <div className="flex flex-col gap-6 lg:flex-row lg:h-[calc(100vh-4rem)] lg:overflow-hidden">
           <section className="w-full lg:w-[280px] xl:w-[260px] lg:h-full lg:overflow-auto">
