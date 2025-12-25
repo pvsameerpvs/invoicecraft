@@ -4,7 +4,7 @@ export async function POST(req: Request) {
   const body = await req.json();
   const { username, password } = body;
 
-  if ((username === "1234" && password === "1234") || (username === "admin" && password === "admin")) {
+  if ((username === "pooja" && password === "pooja@123") || (username === "admin" && password === "adminjs@321")) {
     const res = NextResponse.json({ ok: true });
 
     res.cookies.set("js_auth", "1", {
