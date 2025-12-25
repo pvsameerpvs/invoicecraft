@@ -3,6 +3,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { InvoiceForm } from "../../components/InvoiceForm";
 import { InvoicePreview } from "../../components/InvoicePreview";
+import { UserMenu } from "../../components/UserMenu";
 import { InvoiceData } from "../../lib/types";
 import { downloadInvoicePdf } from "../../lib/pdf";
 import toast from "react-hot-toast";
@@ -116,6 +117,7 @@ export default function InvoicePage() {
       <div className="mx-auto max-w-6xl">
         <div className="flex flex-col gap-6 lg:flex-row lg:h-[calc(100vh-4rem)] lg:overflow-hidden">
           <section className="w-full lg:w-[280px] xl:w-[260px] lg:h-full lg:overflow-auto">
+            <UserMenu />
             <h1 className="mb-4 text-xl font-semibold">Invoice editor</h1>
             <InvoiceForm
               value={invoice}

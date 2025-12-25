@@ -2,6 +2,7 @@
 
 import React from "react";
 import { useRouter } from "next/navigation";
+import { UserMenu } from "../../components/UserMenu";
 import toast from "react-hot-toast";
 
 type InvoiceHistoryRow = {
@@ -93,6 +94,9 @@ export default function HistoryPage() {
   return (
     <main className="min-h-screen bg-slate-100 p-4 lg:p-8">
       <div className="mx-auto max-w-6xl">
+        <div className="mb-4">
+          <UserMenu />
+        </div>
         <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h1 className="text-xl font-semibold text-slate-900">Invoice History</h1>
