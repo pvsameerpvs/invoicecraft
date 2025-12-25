@@ -89,7 +89,10 @@ export default function InvoicePage() {
         res = await fetch("/api/invoice-history", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(invoice),
+          body: JSON.stringify({
+            ...invoice,
+            createdBy: localStorage.getItem("invoicecraft:username") || "Unknown",
+          }),
         });
       }
 

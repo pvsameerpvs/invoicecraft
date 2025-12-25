@@ -118,7 +118,7 @@ export async function POST(req: Request) {
     // ✅ Save invoice row
     await sheets.spreadsheets.values.append({
       spreadsheetId: sheetId,
-      range: "Invoices!A:J",
+      range: "Invoices!A:K",
       valueInputOption: "USER_ENTERED",
       requestBody: {
         values: [
@@ -133,6 +133,7 @@ export async function POST(req: Request) {
             money(vat),
             money(total),
             JSON.stringify({ ...invoice, invoiceNumber }),
+            invoice.createdBy || "", // K: Created By
           ],
         ],
       },
@@ -291,7 +292,7 @@ export async function GET() {
 
     const res = await sheets.spreadsheets.values.get({
       spreadsheetId: sheetId,
-      range: "Invoices!A:J",
+      range: "Invoices!A:K",
     });
 
     const rows = res.data.values || [];
@@ -311,6 +312,7 @@ export async function GET() {
         vat: r[7] || "0.00",
         total: r[8] || "0.00",
         payloadJson: r[9] || "",
+        createdBy: r[10] || "",
       }))
       .reverse(); // newest first
 
@@ -318,6 +320,82 @@ export async function GET() {
   } catch (e: any) {
     return NextResponse.json(
       { ok: false, error: e?.message || "Failed" },
+      { status: 500 }
+    );
+  }
+}
+
+/**
+ * DELETE /api/invoice-history
+ * Body: { invoiceNumber }
+ * Deletes the row for the given invoice number
+ */
+export async function DELETE(req: Request) {
+  try {
+    const sheetId = "1oo7G79VtN-zIQzlpKzVHGKGDObWik7MUPdVA2ZrEayQ";
+    if (!sheetId) throw new Error("Missing GOOGLE_SHEET_ID");
+
+    const { invoiceNumber } = await req.json();
+
+    if (!invoiceNumber) {
+      return NextResponse.json(
+        { ok: false, error: "Missing invoiceNumber" },
+        { status: 400 }
+      );
+    }
+
+    const sheets = getSheetsClient();
+
+    // 1. Find the row index
+    const res = await sheets.spreadsheets.values.get({
+      spreadsheetId: sheetId,
+      range: "Invoices!B:B", // Invoice Number column
+    });
+
+    const rows = res.data.values || [];
+    const rowIndex = rows.findIndex((r) => {
+        const sheetVal = (r[0] || "").toString().trim();
+        const searchVal = (invoiceNumber || "").toString().trim();
+        return sheetVal === searchVal;
+    });
+
+    if (rowIndex === -1) {
+      return NextResponse.json(
+        { ok: false, error: "Invoice not found" },
+        { status: 404 }
+      );
+    }
+
+    const sheetDetails = await sheets.spreadsheets.get({ spreadsheetId: sheetId });
+    const sheet = sheetDetails.data.sheets?.find(s => s.properties?.title === "Invoices");
+    const sheetIdNum = sheet?.properties?.sheetId;
+
+    if (sheetIdNum === undefined) {
+         throw new Error("Could not find Invoices sheet ID");
+    }
+
+    await sheets.spreadsheets.batchUpdate({
+        spreadsheetId: sheetId,
+        requestBody: {
+            requests: [
+                {
+                    deleteDimension: {
+                        range: {
+                            sheetId: sheetIdNum,
+                            dimension: "ROWS",
+                            startIndex: rowIndex, // Inclusive (0-based)
+                            endIndex: rowIndex + 1 // Exclusive
+                        }
+                    }
+                }
+            ]
+        }
+    });
+
+    return NextResponse.json({ ok: true });
+  } catch (e: any) {
+    return NextResponse.json(
+      { ok: false, error: e?.message || "Failed to delete" },
       { status: 500 }
     );
   }

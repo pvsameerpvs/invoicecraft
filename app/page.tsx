@@ -26,6 +26,8 @@ export default function HomePage() {
 
       if (res.ok) {
         toast.success("Login successful!", { id: t });
+        // ✅ Store username for history tracking
+        localStorage.setItem("invoicecraft:username", username);
         router.push("/invoice");
         return;
       }
