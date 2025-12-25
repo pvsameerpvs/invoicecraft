@@ -83,7 +83,8 @@ export default function InvoicePage() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             originalInvoiceNumber,
-            invoice
+            invoice,
+            currentUser: localStorage.getItem("invoicecraft:username") || ""
           }),
         });
       } else {

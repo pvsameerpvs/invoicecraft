@@ -41,6 +41,7 @@ export default function HistoryPage() {
   const [error, setError] = React.useState("");
   const [search, setSearch] = React.useState("");
   const [deleteTarget, setDeleteTarget] = React.useState<InvoiceHistoryRow | null>(null);
+  const [currentUser, setCurrentUser] = React.useState("");
 
   const load = React.useCallback(async () => {
     setLoading(true);
@@ -68,6 +69,7 @@ export default function HistoryPage() {
   }, []);
 
   React.useEffect(() => {
+    setCurrentUser(localStorage.getItem("invoicecraft:username") || "");
     load();
   }, [load]);
 
@@ -78,6 +80,14 @@ export default function HistoryPage() {
   }, [rows, search]);
 
   const onEdit = (row: InvoiceHistoryRow) => {
+    const isOwner = currentUser === row.createdBy;
+    const isAdmin = currentUser === "admin";
+    
+    if (!isAdmin && !isOwner) {
+       toast.error("You can only edit your own invoices");
+       return;
+    }
+
     // Store full payload in localStorage and go to /invoice
     try {
       if (!row.payloadJson) {
@@ -107,8 +117,6 @@ export default function HistoryPage() {
       <main className="relative">
       {/* Background decoration */}
       <div className="absolute top-0 left-0 w-full h-64 bg-gradient-to-br from-brand-start to-brand-end -z-0" />
-
-      {/* UserMenu removed from here */}
 
       <div className="relative z-10 mx-auto max-w-7xl pt-20 px-4 sm:px-6 lg:px-8">
         <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between text-white">
@@ -198,7 +206,12 @@ export default function HistoryPage() {
                     </td>
                   </tr>
                 ) : (
-                  filtered.map((r, idx) => (
+                  filtered.map((r, idx) => {
+                    const isOwner = currentUser === r.createdBy;
+                    const isAdmin = currentUser === "admin";
+                    const canEdit = isAdmin || isOwner;
+
+                    return (
                     <tr
                       key={`${r.invoiceNumber}-${idx}`}
                       className="group transition-colors hover:bg-orange-50"
@@ -238,13 +251,15 @@ export default function HistoryPage() {
 
                       <td className="px-6 py-4 text-right">
                         <div className="flex justify-end gap-2 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
-                        <button
-                          onClick={() => onEdit(r)}
-                          className="rounded-lg bg-white px-3 py-1.5 text-xs font-semibold text-brand-primary shadow-sm ring-1 ring-inset ring-orange-200 hover:bg-orange-50"
-                        >
-                          Edit
-                        </button>
-                        {localStorage.getItem("invoicecraft:username") === "admin" && (
+                        {canEdit && (
+                          <button
+                            onClick={() => onEdit(r)}
+                            className="rounded-lg bg-white px-3 py-1.5 text-xs font-semibold text-brand-primary shadow-sm ring-1 ring-inset ring-orange-200 hover:bg-orange-50"
+                          >
+                            Edit
+                          </button>
+                        )}
+                        {isAdmin && (
                           <button
                             onClick={() => setDeleteTarget(r)}
                             className="rounded-lg bg-red-50 px-3 py-1.5 text-xs font-semibold text-red-600 shadow-sm ring-1 ring-inset ring-red-100 hover:bg-red-100"
@@ -255,7 +270,7 @@ export default function HistoryPage() {
                         </div>
                       </td>
                     </tr>
-                  ))
+                  )})
                 )}
               </tbody>
             </table>

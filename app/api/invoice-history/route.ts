@@ -175,7 +175,7 @@ export async function PUT(req: Request) {
     const sheetId = "1oo7G79VtN-zIQzlpKzVHGKGDObWik7MUPdVA2ZrEayQ";
     if (!sheetId) throw new Error("Missing GOOGLE_SHEET_ID");
 
-    const { originalInvoiceNumber, invoice } = await req.json();
+    const { originalInvoiceNumber, invoice, currentUser } = await req.json();
 
     if (!originalInvoiceNumber || !invoice) {
       return NextResponse.json(
@@ -189,25 +189,35 @@ export async function PUT(req: Request) {
     // 1. Find the row index
     const res = await sheets.spreadsheets.values.get({
       spreadsheetId: sheetId,
-      range: "Invoices!B:B", // Invoice Number column
+      range: "Invoices!A:K", // Read all columns to get CreatedBy
     });
 
     const rows = res.data.values || [];
-    // rows are like: [ ["Invoice #"], ["INV-001"], ["INV-002"] ]
     
     console.log("Searching for:", originalInvoiceNumber);
     
     const rowIndex = rows.findIndex((r) => {
-        const sheetVal = (r[0] || "").toString().trim();
+        const sheetVal = (r[1] || "").toString().trim(); // Column B is Index 1
         const searchVal = (originalInvoiceNumber || "").toString().trim();
         return sheetVal === searchVal;
     });
 
     if (rowIndex === -1) {
-      console.log("Invoice numbers in sheet:", rows.map(r => r[0]));
+      console.log("Invoice numbers in sheet:", rows.map(r => r[1]));
       return NextResponse.json(
         { ok: false, error: `Original invoice "${originalInvoiceNumber}" not found in sheet` },
         { status: 404 }
+      );
+    }
+
+    // Permission Check
+    const row = rows[rowIndex];
+    const createdBy = (row[10] || "").toString().trim(); // Column K is index 10
+
+    if (currentUser !== "admin" && createdBy !== currentUser) {
+       return NextResponse.json(
+        { ok: false, error: "You are not authorized to edit this invoice" },
+        { status: 403 }
       );
     }
 
