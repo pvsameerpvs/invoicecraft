@@ -49,17 +49,17 @@ export function UserMenu() {
         <div className="flex h-8 w-8 items-center justify-center rounded-full bg-brand-primary text-xs font-bold text-white uppercase shadow-md shadow-brand-primary/20">
           {username.charAt(0)}
         </div>
-        <div className="flex flex-col items-start text-xs">
+        <div className="hidden flex-col items-start text-xs sm:flex">
            <span className="font-semibold text-slate-900">{username}</span>
            <span className="text-[10px] text-slate-400">View Profile</span>
         </div>
         
         {/* Simple down arrow using CSS border */}
-        <div className={`ml-auto h-0 w-0 border-l-[4px] border-r-[4px] border-t-[4px] border-l-transparent border-r-transparent border-t-slate-400 transition-transform ${isOpen ? "rotate-180" : ""}`} />
+        <div className={`ml-auto hidden h-0 w-0 border-l-[4px] border-r-[4px] border-t-[4px] border-l-transparent border-r-transparent border-t-slate-400 transition-transform sm:block ${isOpen ? "rotate-180" : ""}`} />
       </button>
 
       {isOpen && (
-        <div className="absolute left-0 top-full z-50 mt-2 w-48 rounded-xl bg-white p-1 shadow-xl ring-1 ring-orange-100">
+        <div className="absolute right-0 top-full z-50 mt-2 w-48 rounded-xl bg-white p-1 shadow-xl ring-1 ring-orange-100">
            <div className="px-3 py-2 border-b border-orange-50 mb-1">
               <p className="text-xs font-medium text-slate-900">Signed in as</p>
               <p className="text-xs text-slate-500 truncate">{username}</p>

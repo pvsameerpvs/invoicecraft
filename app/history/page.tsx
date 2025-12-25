@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { UserMenu } from "../../components/UserMenu";
 import toast from "react-hot-toast";
@@ -92,13 +93,22 @@ export default function HistoryPage() {
   };
 
   return (
-    <main className="min-h-screen bg-orange-50 relative selection:bg-orange-100 selection:text-orange-900">
+    <div className="min-h-screen bg-orange-50 selection:bg-orange-100 selection:text-orange-900">
+      <header className="sticky top-0 z-50 flex h-16 flex-none items-center justify-between border-b border-slate-200 bg-white px-4 shadow-sm sm:px-6">
+        <div className="flex items-center gap-4">
+          <Image src="/logo-js.png" alt="Logo" width={150} height={150} className="w-[100px] h-auto sm:w-[150px]" />
+          <span className="hidden rounded-full bg-orange-100 px-2.5 py-0.5 text-xs font-medium text-brand-primary sm:inline-flex">
+            v1.0 History
+          </span>
+        </div>
+        <UserMenu />
+      </header>
+
+      <main className="relative">
       {/* Background decoration */}
       <div className="absolute top-0 left-0 w-full h-64 bg-gradient-to-br from-brand-start to-brand-end -z-0" />
-      
-      <div className="fixed top-6 left-6 z-50">
-        <UserMenu />
-      </div>
+
+      {/* UserMenu removed from here */}
 
       <div className="relative z-10 mx-auto max-w-7xl pt-20 px-4 sm:px-6 lg:px-8">
         <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between text-white">
@@ -303,6 +313,7 @@ export default function HistoryPage() {
           </div>
         </div>
       )}
-    </main>
+      </main>
+    </div>
   );
 }

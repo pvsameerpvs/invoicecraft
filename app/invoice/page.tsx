@@ -116,10 +116,10 @@ export default function InvoicePage() {
   return (
     <div className="flex h-screen flex-col bg-slate-50 text-slate-900">
       {/* 1. Header */}
-      <header className="flex h-16 flex-none items-center justify-between border-b border-slate-200 bg-white px-6">
+      <header className="flex h-16 flex-none items-center justify-between border-b border-slate-200 bg-white px-4 sm:px-6">
         <div className="flex items-center gap-4">
-        <Image src="/logo-js.png" alt="Logo" width={150} height={150} />
-          <span className="rounded-full bg-orange-100 px-2.5 py-0.5 text-xs font-medium text-brand-primary">
+        <Image src="/logo-js.png" alt="Logo" width={150} height={150} className="w-[100px] h-auto sm:w-[150px]" />
+          <span className="hidden rounded-full bg-orange-100 px-2.5 py-0.5 text-xs font-medium text-brand-primary sm:inline-flex">
             v1.0 Editor
           </span>
         </div>
