@@ -116,6 +116,58 @@ export async function POST(req: Request) {
   }
 }
 
+// Helper to cascade delete line items
+async function deleteLineItems(sheets: any, sheetId: string, invoiceNumber: string) {
+    try {
+        const sheetDetails = await sheets.spreadsheets.get({ spreadsheetId: sheetId });
+        const lineItemsSheet = sheetDetails.data.sheets?.find((s: any) => s.properties?.title === "LineItems");
+        const lineItemsSheetId = lineItemsSheet?.properties?.sheetId;
+
+        if (lineItemsSheetId !== undefined) {
+             const lineItemsRes = await sheets.spreadsheets.values.get({
+                spreadsheetId: sheetId,
+                range: "LineItems!A:A", // Column A contains Invoice Numbers
+            });
+
+            const lineRows = lineItemsRes.data.values || [];
+            
+            // Find all row indices to delete (descending order to avoid index shift)
+            const rowsToDelete: number[] = [];
+            lineRows.forEach((r: any, idx: number) => {
+                if ((r[0] || "").toString().trim() === invoiceNumber) {
+                    rowsToDelete.push(idx);
+                }
+            });
+
+            // Sort descending: 5, 2, 1
+            rowsToDelete.sort((a, b) => b - a);
+
+            if (rowsToDelete.length > 0) {
+                 const deleteRequests = rowsToDelete.map(idx => ({
+                    deleteDimension: {
+                        range: {
+                            sheetId: lineItemsSheetId,
+                            dimension: "ROWS",
+                            startIndex: idx,
+                            endIndex: idx + 1
+                        }
+                    }
+                }));
+
+                await sheets.spreadsheets.batchUpdate({
+                    spreadsheetId: sheetId,
+                    requestBody: {
+                        requests: deleteRequests
+                    }
+                });
+                console.log(`Deleted ${rowsToDelete.length} line items for ${invoiceNumber}`);
+            }
+        }
+    } catch (err) {
+        console.error("Failed to delete line items:", err);
+    }
+}
+
 /**
  * PUT /api/invoice-history
  * Body: { originalInvoiceNumber, invoice }
@@ -188,13 +240,6 @@ export async function PUT(req: Request) {
     const currency = invoice.currency || "AED";
 
     // 2. Update the row
-    // Columns: Created (A), Inv# (B), Date (C), Client (D), Subject (E), Currency (F), Sub (G), VAT (H), Total (I), Payload (J)
-    // We preserve CreatedAt (Column A) by reading it? Or just don't write it?
-    // We need to write the whole row to keep it consistent.
-    // Let's Fetch the specific row first to keep CreatedAt? Or just use "now" for updated at?
-    // Usually CreatedAt should stay same.
-    // Let's just update B:J. A is CreatedAt.
-
     const rangeToUpdate = `Invoices!B${sheetRowNumber}:J${sheetRowNumber}`;
 
     await sheets.spreadsheets.values.update({
@@ -218,22 +263,28 @@ export async function PUT(req: Request) {
       },
     });
 
+    // 3. Sync Line Items (Delete Old -> Insert New)
+    await deleteLineItems(sheets, sheetId, originalInvoiceNumber);
+
+    const lineRows = (invoice.lineItems || []).map((it: any) => [
+      invoice.invoiceNumber,
+      it.id || "",
+      it.description || "",
+      it.amount || "",
+    ]);
+
+    if (lineRows.length > 0) {
+      await sheets.spreadsheets.values.append({
+        spreadsheetId: sheetId,
+        range: "LineItems!A:D",
+        valueInputOption: "USER_ENTERED",
+        requestBody: { values: lineRows },
+      });
+    }
+
     // ✅ Log Activity
     const userAgent = req.headers.get("user-agent");
     logActivity(currentUser || "Unknown", `UPDATED ${invoice.invoiceNumber}`, userAgent).catch(console.error);
-
-    // 3. Update Line Items
-    // This is trickier because line items are just appended.
-    // Option A: Don't update line items sheet (simple). But then detailed reporting is wrong.
-    // Option B: Delete old line items and append new ones. Hard to delete rows in middle.
-    // Option C: Just append new ones and ignore old ones? No.
-    // Option D: Current requirement might just be to update the INVOICE row for later editing.
-    // The "history" page reads from the "Invoices" sheet payload (Col J).
-    // So as long as we update Col J, the "Edit" feature will work with new data.
-    // The "LineItems" sheet is likely for separate data analysis.
-    // For now, I will append NEW line items for this invoice number and leave old ones as "ghosts"
-    // OR, I can try to find and clear them? Too risky without a proper DB ID.
-    // Let's just update the Invoices Row for now, which drives the app.
 
     return NextResponse.json({ ok: true });
   } catch (e: any) {
@@ -357,7 +408,8 @@ export async function DELETE(req: Request) {
         }
     });
 
-
+    // 2. Cascade Delete Line Items
+    await deleteLineItems(sheets, sheetId, invoiceNumber);
 
     // ✅ Log Activity
     const userAgent = req.headers.get("user-agent");
