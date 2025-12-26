@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getSheetsClient, logActivity } from "../../lib/sheets";
 
+export const dynamic = 'force-dynamic';
 export const runtime = "nodejs";
 
 function money(n: number) {

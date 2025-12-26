@@ -2,8 +2,10 @@ import { NextResponse } from "next/server";
 import { getSheetsClient } from "../../lib/sheets";
 
 // SHARED CONSTANTS
+// SHARED CONSTANTS
 const SHEET_ID = "1oo7G79VtN-zIQzlpKzVHGKGDObWik7MUPdVA2ZrEayQ";
 
+export const dynamic = 'force-dynamic';
 export const runtime = "nodejs";
 
 export async function GET() {
