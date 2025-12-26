@@ -114,13 +114,13 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
-  <Button
+  {/* <Button
     type="button"
     onClick={() => window.location.assign("/history")}
     className="h-10 rounded-xl bg-white px-4 text-sm font-medium text-brand-primary shadow-sm ring-1 ring-orange-200 hover:bg-orange-50"
   >
     History
-  </Button>
+  </Button> */}
 
   <Button
     type="button"

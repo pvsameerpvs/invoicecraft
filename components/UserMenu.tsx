@@ -29,9 +29,19 @@ export function UserMenu() {
     };
   }, []);
 
-  const handleLogout = () => {
-    // Clear auth
-    document.cookie = "js_auth=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT;";
+  const handleLogout = async () => {
+    // Call server to log logout and clear cookie
+    try {
+        await fetch("/api/logout", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ username }) 
+        });
+    } catch (e) {
+        console.error("Logout failed", e);
+    }
+    
+    // Clear local storage
     localStorage.removeItem("invoicecraft:username");
     
     toast.success("Logged out");
@@ -64,6 +74,27 @@ export function UserMenu() {
               <p className="text-xs font-medium text-slate-900">Signed in as</p>
               <p className="text-xs text-slate-500 truncate">{username}</p>
            </div>
+           
+           {username === "admin" && (
+             <button
+               onClick={() => {
+                 setIsOpen(false);
+                 router.push("/activity");
+               }}
+               className="w-full text-left rounded-lg px-3 py-2 text-xs font-medium text-slate-700 hover:bg-orange-50 hover:text-brand-primary"
+             >
+               Activity Logs
+             </button>
+           )}
+            <button
+               onClick={() => {
+                 setIsOpen(false);
+                 router.push("/history");
+               }}
+               className="w-full text-left rounded-lg px-3 py-2 text-xs font-medium text-slate-700 hover:bg-orange-50 hover:text-brand-primary"
+             >
+               Invoice History
+             </button>
            
            <button
              onClick={handleLogout}

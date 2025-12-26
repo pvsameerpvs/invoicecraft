@@ -135,8 +135,8 @@ export default function HistoryPage() {
   };
 
   return (
-    <div className="min-h-screen bg-orange-50 selection:bg-orange-100 selection:text-orange-900">
-      <header className="sticky top-0 z-50 flex h-16 flex-none items-center justify-between border-b border-slate-200 bg-white px-4 shadow-sm sm:px-6">
+    <div className="h-screen flex flex-col bg-orange-50 selection:bg-orange-100 selection:text-orange-900 overflow-hidden">
+      <header className="flex-none sticky top-0 z-50 flex h-16 items-center justify-between border-b border-slate-200 bg-white px-4 shadow-sm sm:px-6">
         <div className="flex items-center gap-4">
           <Image src="/logo-js.png" alt="Logo" width={150} height={150} className="w-[100px] h-auto sm:w-[150px]" />
           <span className="hidden rounded-full bg-orange-100 px-2.5 py-0.5 text-xs font-medium text-brand-primary sm:inline-flex">
@@ -146,16 +146,17 @@ export default function HistoryPage() {
         <UserMenu />
       </header>
 
-      <main className="relative">
+      <main className="flex-1 flex flex-col min-h-0 relative">
       {/* Background decoration */}
       <div className="absolute top-0 left-0 w-full h-64 bg-gradient-to-br from-brand-start to-brand-end -z-0" />
 
-      <div className="relative z-10 mx-auto max-w-7xl pt-20 px-4 sm:px-6 lg:px-8">
-        <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between text-white">
+      {/* Fixed Top Content */}
+      <div className="relative z-10 flex-none px-4 pt-8 pb-4 sm:px-6 lg:px-8">
+        <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between text-white">
           <div>
             <h1 className="text-3xl font-bold tracking-tight">Invoice History</h1>
             <p className="mt-2 text-white/80 text-sm max-w-2xl">
-              Track, manage, and download your past invoices. Data is synced with your Google Sheet.
+              Track, manage, and download your past invoices.
             </p>
           </div>
 
@@ -177,7 +178,7 @@ export default function HistoryPage() {
         </div>
 
         {/* Search */}
-        <div className="mb-6 rounded-2xl bg-white p-2 shadow-xl shadow-slate-200/50 ring-1 ring-slate-100">
+        <div className="rounded-2xl bg-white p-2 shadow-xl shadow-slate-200/50 ring-1 ring-slate-100">
            <div className="relative">
              <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4">
                <svg className="h-5 w-5 text-slate-400" viewBox="0 0 20 20" fill="currentColor">
@@ -192,8 +193,10 @@ export default function HistoryPage() {
              />
            </div>
         </div>
+      </div>
 
-        {/* Errors / Loading */}
+      {/* Scrollable Table Content */}
+      <div className="flex-1 overflow-y-auto px-4 pb-8 sm:px-6 lg:px-8 relative z-10">
         {error && (
           <div className="mb-4 rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
             {error}
@@ -211,8 +214,8 @@ export default function HistoryPage() {
           <div className="overflow-hidden rounded-3xl bg-white shadow-xl shadow-slate-200/50 ring-1 ring-slate-100">
             <div className="overflow-x-auto">
             <table className="min-w-[1200px] w-full border-collapse text-left text-sm">
-              <thead>
-                <tr className="border-b border-orange-100 bg-orange-50/50 text-xs font-semibold uppercase tracking-wider text-slate-500">
+              <thead className="sticky top-0 z-20">
+                <tr className="border-b border-orange-100 bg-orange-50 text-xs font-semibold uppercase tracking-wider text-slate-500">
                   <th className="px-6 py-4">Created Date</th>
                   <th className="px-6 py-4">User</th>
                   <th className="px-6 py-4">Invoice #</th>
@@ -353,6 +356,7 @@ export default function HistoryPage() {
                       headers: { "Content-Type": "application/json" },
                       body: JSON.stringify({
                         invoiceNumber: deleteTarget.invoiceNumber,
+                        currentUser: localStorage.getItem("invoicecraft:username") || ""
                       }),
                     });
                     if (!res.ok) throw new Error("Failed to delete");

@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { logActivity } from "../../lib/sheets";
 
 export async function POST(req: Request) {
   const body = await req.json();
@@ -6,6 +7,11 @@ export async function POST(req: Request) {
 
   if ((username === "pooja" && password === "pooja@123") || (username === "admin" && password === "adminjs@321")) {
     const res = NextResponse.json({ ok: true });
+
+    // ✅ Log Activity
+    const userAgent = req.headers.get("user-agent");
+    // Fire and forget logging to avoid slowing down login
+    logActivity(username, "LOGIN", userAgent).catch(console.error);
 
     res.cookies.set("js_auth", "1", {
       httpOnly: true,
