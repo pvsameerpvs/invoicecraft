@@ -21,6 +21,18 @@ function chunkArray<T>(arr: T[], size: number) {
   return out;
 }
 
+// Helper to format date as DD-MM-YYYY
+function formatDate(dateStr?: string) {
+  if (!dateStr) return " ";
+  try {
+     const [y, m, d] = dateStr.split("-");
+     if (y && m && d) return `${d}-${m}-${y}`;
+     return dateStr;
+  } catch {
+     return dateStr;
+  }
+}
+
 export const InvoicePreview: React.FC<InvoicePreviewProps> = ({
   value,
   forwardRef,
@@ -109,7 +121,7 @@ export const InvoicePreview: React.FC<InvoicePreviewProps> = ({
                           Date:
                         </span>
                         <span className="font-semibold">
-                          {value.date || " "}
+                          {formatDate(value.date)}
                         </span>
                       </div>
                     </div>
