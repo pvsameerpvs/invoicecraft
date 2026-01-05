@@ -28,4 +28,5 @@ export interface InvoiceData {
   footerNote: string;
   bankDetails: BankDetails;
   signatureLabel: string;
+  status?: "Paid" | "Unpaid";
 }

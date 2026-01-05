@@ -184,6 +184,9 @@ export const InvoicePreview: React.FC<InvoicePreviewProps> = ({
                       <div className="text-xs font-semibold tabular-nums whitespace-nowrap">
                         Total (Incl. VAT) {currency} {totalText}
                       </div>
+                       <div className="text-xs font-semibold tabular-nums whitespace-nowrap">
+                       {value.status}
+                      </div>
                     </div>
                   </div>
                 )}

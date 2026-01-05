@@ -66,7 +66,7 @@ export async function POST(req: Request) {
     // ✅ Save invoice row
     await sheets.spreadsheets.values.append({
       spreadsheetId: sheetId,
-      range: "Invoices!A:K",
+      range: "Invoices!A:L",
       valueInputOption: "USER_ENTERED",
       requestBody: {
         values: [
@@ -82,6 +82,7 @@ export async function POST(req: Request) {
             money(total),
             JSON.stringify({ ...invoice, invoiceNumber }),
             invoice.createdBy || "", // K: Created By
+            invoice.status || "Unpaid", // L: Status
           ],
         ],
       },
@@ -193,7 +194,7 @@ export async function PUT(req: Request) {
     // 1. Find the row index
     const res = await sheets.spreadsheets.values.get({
       spreadsheetId: sheetId,
-      range: "Invoices!A:K", // Read all columns to get CreatedBy
+      range: "Invoices!A:L", // Read all columns to get CreatedBy and Status
     });
 
     const rows = res.data.values || [];
@@ -241,7 +242,7 @@ export async function PUT(req: Request) {
     const currency = invoice.currency || "AED";
 
     // 2. Update the row
-    const rangeToUpdate = `Invoices!B${sheetRowNumber}:J${sheetRowNumber}`;
+    const rangeToUpdate = `Invoices!B${sheetRowNumber}:L${sheetRowNumber}`;
 
     await sheets.spreadsheets.values.update({
       spreadsheetId: sheetId,
@@ -259,6 +260,8 @@ export async function PUT(req: Request) {
             money(vat), // H
             money(total), // I
             JSON.stringify({ ...invoice, invoiceNumber: invoice.invoiceNumber }), // J
+            createdBy, // K: Keep original creator (read from sheet earlier)
+            invoice.status || "Unpaid", // L: Status
           ],
         ],
       },
@@ -309,7 +312,7 @@ export async function GET() {
 
     const res = await sheets.spreadsheets.values.get({
       spreadsheetId: sheetId,
-      range: "Invoices!A:K",
+      range: "Invoices!A:L",
     });
 
     const rows = res.data.values || [];
@@ -330,6 +333,7 @@ export async function GET() {
         total: r[8] || "0.00",
         payloadJson: r[9] || "",
         createdBy: r[10] || "",
+        status: r[11] || "Unpaid",
       }))
       .reverse(); // newest first
 

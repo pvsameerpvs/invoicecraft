@@ -34,6 +34,7 @@ const initialInvoiceData: InvoiceData = {
     accountNumber: "14006537820001",
   },
   signatureLabel: "Computer Generated",
+  status: "Unpaid",
 };
 
 export default function InvoicePage() {
