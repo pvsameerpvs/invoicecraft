@@ -214,13 +214,12 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({
           </div>
 
           <div>
-            <Label htmlFor="invoiceNumber">Invoice #</Label>
+            <Label htmlFor="invoiceNumber">Invoice # (Auto)</Label>
             <Input
               id="invoiceNumber"
               value={value.invoiceNumber}
-              onChange={(e) =>
-                handleFieldChange("invoiceNumber", e.target.value)
-              }
+              disabled
+              className="bg-slate-100/50 text-slate-500 cursor-not-allowed opacity-100" // opacity-100 to ensure readability
             />
           </div>
 

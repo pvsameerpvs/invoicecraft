@@ -43,30 +43,64 @@ export default function InvoicePage() {
   /* New State for tracking origin of edit */
   const [originalInvoiceNumber, setOriginalInvoiceNumber] = useState<string | null>(null);
 
-  // ✅ Load invoice for editing (from History)
+  // ✅ Load invoice for editing (from History) or Generate New
   useEffect(() => {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if (!raw) return;
+    const init = async () => {
+        try {
+            const raw = localStorage.getItem(STORAGE_KEY);
+            
+            // 1. If EDITING existing invoice
+            if (raw) {
+                const parsed = JSON.parse(raw);
+                if (parsed && typeof parsed === "object") {
+                   setInvoice({ ...initialInvoiceData, ...parsed });
+                   if (parsed.invoiceNumber) {
+                     setOriginalInvoiceNumber(parsed.invoiceNumber);
+                   }
+                   toast.success("Invoice loaded for editing");
+                }
+                localStorage.removeItem(STORAGE_KEY);
+                return;
+            }
 
-      const parsed = JSON.parse(raw);
+            // 2. If NEW invoice, fetch latest number to increment
+             try {
+                setInvoice(prev => ({...prev, invoiceNumber: "Loading..."}));
+                
+                const res = await fetch("/api/invoice-history");
+                const history = await res.json();
+                
+                let nextNum = "INV-001"; // Default
+                
+                if (Array.isArray(history) && history.length > 0) {
+                   const latest = history[0]; // Newest first
+                   const match = (latest.invoiceNumber || "").match(/INV-(\d+)/);
+                   if (match) {
+                      const currentNum = parseInt(match[1], 10);
+                      // Only increment if it's a realistic sequence (e.g. not a timestamp 176...)
+                      if (currentNum < 100000) { 
+                          nextNum = `INV-${String(currentNum + 1).padStart(3, "0")}`;
+                      } else {
+                          // If last was timestamp, start fresh sequence
+                          nextNum = "INV-001";
+                      }
+                   }
+                }
+                
+                setInvoice(prev => ({...prev, invoiceNumber: nextNum}));
 
-      if (parsed && typeof parsed === "object") {
-        // merge with initial to avoid missing fields
-        setInvoice({ ...initialInvoiceData, ...parsed });
-        
-        // Track original invoice number if it exists
-        if (parsed.invoiceNumber) {
-            setOriginalInvoiceNumber(parsed.invoiceNumber);
+             } catch (err) {
+                 console.error("Failed to fetch history", err);
+                 // Fallback to timestamp if fetch fails
+                 setInvoice(prev => ({...prev, invoiceNumber: `INV-${Date.now()}`}));
+             }
+
+        } catch {
+             // ignore localStorage errors
         }
-        
-        toast.success("Invoice loaded for editing");
-      }
+    };
 
-      localStorage.removeItem(STORAGE_KEY);
-    } catch {
-      // ignore
-    }
+    init();
   }, []);
 
   const handleDownload = async () => {
