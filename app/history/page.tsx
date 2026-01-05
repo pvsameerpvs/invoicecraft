@@ -21,6 +21,7 @@ type InvoiceHistoryRow = {
   total: string;
   payloadJson: string; // full invoice JSON string saved in sheet
   createdBy?: string;
+  status?: string;
 };
 
 const STORAGE_KEY = "invoicecraft:editInvoicePayload";
@@ -222,6 +223,7 @@ export default function HistoryPage() {
                   <th className="px-6 py-4">Date</th>
                   <th className="px-6 py-4">Client</th>
                   <th className="px-6 py-4">Subject</th>
+                  <th className="px-6 py-4">Status</th>
                   <th className="px-6 py-4">Currency</th>
                   <th className="px-6 py-4 text-right">Subtotal</th>
                   <th className="px-6 py-4 text-right">VAT</th>
@@ -233,7 +235,7 @@ export default function HistoryPage() {
               <tbody className="divide-y divide-orange-100 bg-white">
                 {filtered.length === 0 ? (
                   <tr>
-                    <td colSpan={11} className="px-6 py-12 text-center text-slate-500">
+                    <td colSpan={12} className="px-6 py-12 text-center text-slate-500">
                        <div className="flex flex-col items-center gap-2">
                           <p className="text-base font-medium text-slate-900">No invoices found</p>
                           <p className="text-sm text-slate-400">Try adjusting your search query.</p>
@@ -241,82 +243,16 @@ export default function HistoryPage() {
                     </td>
                   </tr>
                 ) : (
-                  filtered.map((r, idx) => {
-                    const isOwner = currentUser === r.createdBy;
-                    const isAdmin = currentUser === "admin";
-                    const canEdit = isAdmin || isOwner;
-
-                    return (
-                    <tr
+                  filtered.map((r, idx) => (
+                    <InvoiceRow
                       key={`${r.invoiceNumber}-${idx}`}
-                      className="group transition-colors hover:bg-orange-50"
-                    >
-                      <td className="px-6 py-4 whitespace-nowrap text-xs text-slate-500">
-                        {formatDate(r.createdAt)}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                         <span className="inline-flex items-center rounded-md bg-slate-100 px-2 py-1 text-xs font-medium text-slate-600 ring-1 ring-inset ring-slate-500/10">
-                           {r.createdBy || "Unk"}
-                         </span>
-                      </td>
-
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <button
-                          onClick={() => onPreview(r)}
-                          className="font-semibold text-brand-primary hover:underline"
-                        >
-                          {r.invoiceNumber}
-                        </button>
-                      </td>
-
-                      <td className="px-6 py-4 whitespace-nowrap text-slate-600">{r.date}</td>
-
-                      <td className="px-6 py-4 font-medium text-slate-900">{r.clientName}</td>
-
-                      <td className="px-6 py-4 text-slate-600 max-w-[200px] truncate" title={r.subject}>{r.subject}</td>
-
-                      <td className="px-6 py-4 text-slate-500">{r.currency}</td>
-
-                      <td className="px-6 py-4 text-right tabular-nums text-slate-600">
-                        {r.subtotal}
-                      </td>
-
-                      <td className="px-6 py-4 text-right tabular-nums text-slate-600">
-                        {r.vat}
-                      </td>
-
-                      <td className="px-6 py-4 text-right tabular-nums font-bold text-slate-900">
-                        {r.total}
-                      </td>
-
-                      <td className="px-6 py-4 text-right">
-                        <div className="flex justify-end gap-2 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
-                        {canEdit && (
-                          <button
-                            onClick={() => onEdit(r)}
-                            className="rounded-lg bg-white px-3 py-1.5 text-xs font-semibold text-brand-primary shadow-sm ring-1 ring-inset ring-orange-200 hover:bg-orange-50"
-                          >
-                            Edit
-                          </button>
-                        )}
-                        {isAdmin && (
-                          <button
-                            onClick={() => setDeleteTarget(r)}
-                            className="rounded-lg bg-red-50 px-3 py-1.5 text-xs font-semibold text-red-600 shadow-sm ring-1 ring-inset ring-red-100 hover:bg-red-100"
-                          >
-                            Delete
-                          </button>
-                        )}
-                        <button
-                            onClick={() => onPreview(r)}
-                            className="rounded-lg bg-orange-50 px-3 py-1.5 text-xs font-semibold text-orange-600 shadow-sm ring-1 ring-inset ring-orange-100 hover:bg-orange-100"
-                          >
-                            View
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  )})
+                      row={r}
+                      currentUser={currentUser}
+                      onPreview={onPreview}
+                      onEdit={onEdit}
+                      setDeleteTarget={setDeleteTarget}
+                    />
+                  ))
                 )}
               </tbody>
             </table>
@@ -415,5 +351,148 @@ export default function HistoryPage() {
       )}
       </main>
     </div>
+  );
+}
+
+// Sub-component to fix Hooks in loop issue
+function InvoiceRow({
+  row,
+  currentUser,
+  onPreview,
+  onEdit,
+  setDeleteTarget,
+}: {
+  row: InvoiceHistoryRow;
+  currentUser: string;
+  onPreview: (r: InvoiceHistoryRow) => void;
+  onEdit: (r: InvoiceHistoryRow) => void;
+  setDeleteTarget: (r: InvoiceHistoryRow) => void;
+}) {
+  const isOwner = currentUser === row.createdBy;
+  const isAdmin = currentUser === "admin";
+  const canEdit = isAdmin || isOwner;
+  const [menuOpen, setMenuOpen] = React.useState(false);
+  const menuRef = React.useRef<HTMLDivElement>(null);
+
+  // Close menu when clicking outside
+  React.useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setMenuOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  return (
+    <tr className="group transition-colors hover:bg-orange-50 relative">
+      <td className="px-6 py-4 whitespace-nowrap text-xs text-slate-500">
+        {formatDate(row.createdAt)}
+      </td>
+      <td className="px-6 py-4 whitespace-nowrap">
+        <span className="inline-flex items-center rounded-md bg-slate-100 px-2 py-1 text-xs font-medium text-slate-600 ring-1 ring-inset ring-slate-500/10">
+          {row.createdBy || "Unk"}
+        </span>
+      </td>
+
+      <td className="px-6 py-4 whitespace-nowrap">
+        <button
+          onClick={() => onPreview(row)}
+          className="font-semibold text-brand-primary hover:underline"
+        >
+          {row.invoiceNumber}
+        </button>
+      </td>
+
+      <td className="px-6 py-4 whitespace-nowrap text-slate-600">{row.date}</td>
+
+      <td className="px-6 py-4 font-medium text-slate-900">{row.clientName}</td>
+
+      <td className="px-6 py-4 text-slate-600 max-w-[200px] truncate" title={row.subject}>
+        {row.subject}
+      </td>
+
+      {/* Status Column */}
+      <td className="px-6 py-4 whitespace-nowrap">
+        {row.status === "Paid" ? (
+          <span className="inline-flex items-center rounded-full bg-green-50 px-2 py-1 text-xs font-medium text-green-700 ring-1 ring-inset ring-green-600/20">
+            Paid
+          </span>
+        ) : (
+          <span className="inline-flex items-center rounded-full bg-red-50 px-2 py-1 text-xs font-medium text-red-700 ring-1 ring-inset ring-red-600/20">
+            Unpaid
+          </span>
+        )}
+      </td>
+
+      <td className="px-6 py-4 text-slate-500">{row.currency}</td>
+
+      <td className="px-6 py-4 text-right tabular-nums text-slate-600">
+        {row.subtotal}
+      </td>
+
+      <td className="px-6 py-4 text-right tabular-nums text-slate-600">
+        {row.vat}
+      </td>
+
+      <td className="px-6 py-4 text-right tabular-nums font-bold text-slate-900">
+        {row.total}
+      </td>
+
+      {/* Actions Dropdown */}
+      <td className="px-6 py-4 text-right relative">
+        <div className="relative inline-block text-left" ref={menuRef}>
+          <button
+            onClick={() => setMenuOpen(!menuOpen)}
+            className="flex items-center justify-center h-8 w-8 rounded-full text-slate-400 hover:text-slate-600 hover:bg-slate-100"
+          >
+            <span className="sr-only">Open options</span>
+            {/* 3-dot icon */}
+            <svg className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+              <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
+            </svg>
+          </button>
+
+          {menuOpen && (
+            <div className="absolute right-0 z-50 mt-2 w-32 origin-top-right rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
+              <div className="py-1">
+                <button
+                  onClick={() => {
+                    setMenuOpen(false);
+                    onPreview(row);
+                  }}
+                  className="block w-full px-4 py-2 text-left text-sm text-slate-700 hover:bg-orange-50 hover:text-orange-600"
+                >
+                  View
+                </button>
+                {canEdit && (
+                  <button
+                    onClick={() => {
+                      setMenuOpen(false);
+                      onEdit(row);
+                    }}
+                    className="block w-full px-4 py-2 text-left text-sm text-slate-700 hover:bg-orange-50 hover:text-orange-600"
+                  >
+                    Edit
+                  </button>
+                )}
+                {isAdmin && (
+                  <button
+                    onClick={() => {
+                      setMenuOpen(false);
+                      setDeleteTarget(row);
+                    }}
+                    className="block w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50"
+                  >
+                    Delete
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+      </td>
+    </tr>
   );
 }
