@@ -71,20 +71,29 @@ export default function InvoicePage() {
                 const res = await fetch("/api/invoice-history");
                 const history = await res.json();
                 
-                let nextNum = "INV-001"; // Default
+                const currentYear = new Date().getFullYear();
+                let nextNum = `INV-${currentYear}-000001`; // Default for new year/start
                 
                 if (Array.isArray(history) && history.length > 0) {
                    const latest = history[0]; // Newest first
-                   const match = (latest.invoiceNumber || "").match(/INV-(\d+)/);
-                   if (match) {
-                      const currentNum = parseInt(match[1], 10);
-                      // Only increment if it's a realistic sequence (e.g. not a timestamp 176...)
-                      if (currentNum < 100000) { 
-                          nextNum = `INV-${String(currentNum + 1).padStart(3, "0")}`;
+                   // Try to match new format: INV-YYYY-XXXXXX
+                   const matchNew = (latest.invoiceNumber || "").match(/INV-(\d{4})-(\d+)/);
+                   
+                   if (matchNew) {
+                      const lastYear = parseInt(matchNew[1], 10);
+                      const lastSeq = parseInt(matchNew[2], 10);
+                      
+                      if (lastYear === currentYear) {
+                          const nextSeq = lastSeq + 1;
+                          nextNum = `INV-${currentYear}-${String(nextSeq).padStart(6, "0")}`;
                       } else {
-                          // If last was timestamp, start fresh sequence
-                          nextNum = "INV-001";
+                          // New year, restart sequence
+                          nextNum = `INV-${currentYear}-000001`;
                       }
+                   } else {
+                      // Fallback: If previous format was different (e.g. INV-001 or timestamp), start new format
+                      // We ignore the old sequence and start fresh for the new year format
+                      nextNum = `INV-${currentYear}-000001`;
                    }
                 }
                 
