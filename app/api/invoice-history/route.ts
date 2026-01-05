@@ -303,8 +303,15 @@ export async function PUT(req: Request) {
  * GET /api/invoice-history
  * Returns list newest first
  */
-export async function GET() {
+export async function GET(req: Request) {
   try {
+    const { searchParams } = new URL(req.url);
+    const qSearch = (searchParams.get("search") || "").toLowerCase().trim();
+    const qClient = (searchParams.get("client") || "").toLowerCase().trim();
+    const qStatus = (searchParams.get("status") || "").toLowerCase().trim();
+    const qDate = (searchParams.get("date") || "").trim();
+    const qUser = (searchParams.get("user") || "").toLowerCase().trim();
+
     const sheetId = "1oo7G79VtN-zIQzlpKzVHGKGDObWik7MUPdVA2ZrEayQ";
     if (!sheetId) throw new Error("Missing GOOGLE_SHEET_ID");
 
@@ -335,6 +342,37 @@ export async function GET() {
         createdBy: r[10] || "",
         status: r[11] || "Unpaid",
       }))
+      .filter((item) => {
+        // 1. Search (Invoice # or Client)
+        if (qSearch) {
+          const matchInv = item.invoiceNumber.toLowerCase().includes(qSearch);
+          const matchCli = item.clientName.toLowerCase().includes(qSearch);
+          if (!matchInv && !matchCli) return false;
+        }
+
+        // 2. Client Filter (Exact or partial? Let's do partial for flexibility)
+        if (qClient && !item.clientName.toLowerCase().includes(qClient)) {
+          return false;
+        }
+
+        // 3. Status Filter (Exact, case insensitive)
+        if (qStatus && item.status.toLowerCase() !== qStatus) {
+           // Allow "all" to skip
+           if (qStatus !== "all") return false;
+        }
+
+        // 4. Date Filter (Exact match YYYY-MM-DD)
+        if (qDate && item.date !== qDate) {
+          return false;
+        }
+
+        // 5. User Filter (Exact or partial)
+        if (qUser && !item.createdBy.toLowerCase().includes(qUser)) {
+          return false;
+        }
+
+        return true;
+      })
       .reverse(); // newest first
 
     return NextResponse.json(list);

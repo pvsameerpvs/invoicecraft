@@ -8,6 +8,20 @@ import { InvoicePreview } from "../../components/InvoicePreview";
 import { downloadInvoicePdf } from "../../lib/pdf";
 import { InvoiceData } from "../../lib/types";
 import toast from "react-hot-toast";
+import { 
+  Users, 
+  Calendar, 
+  FileText, 
+  Search, 
+  Filter, 
+  ChevronDown, 
+  RefreshCw,
+  MoreVertical,
+  ArrowLeft,
+  X,
+  CreditCard,
+  Briefcase
+} from "lucide-react";
 
 type InvoiceHistoryRow = {
   createdAt: string;
@@ -43,9 +57,15 @@ export default function HistoryPage() {
   const [rows, setRows] = React.useState<InvoiceHistoryRow[]>([]);
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState("");
-  const [search, setSearch] = React.useState("");
   const [deleteTarget, setDeleteTarget] = React.useState<InvoiceHistoryRow | null>(null);
   const [currentUser, setCurrentUser] = React.useState("");
+
+  // Filter States
+  const [search, setSearch] = React.useState("");
+  const [filterClient, setFilterClient] = React.useState("");
+  const [filterStatus, setFilterStatus] = React.useState("");
+  const [filterDate, setFilterDate] = React.useState("");
+  const [filterUser, setFilterUser] = React.useState("");
 
   // Preview Modal State
   const [previewInvoice, setPreviewInvoice] = React.useState<InvoiceData | null>(null);
@@ -54,9 +74,17 @@ export default function HistoryPage() {
   const load = React.useCallback(async () => {
     setLoading(true);
     setError("");
+    // Build Query
+    const params = new URLSearchParams();
+    if (search) params.append("search", search);
+    if (filterClient) params.append("client", filterClient);
+    if (filterStatus && filterStatus !== "all") params.append("status", filterStatus);
+    if (filterDate) params.append("date", filterDate);
+    if (filterUser) params.append("user", filterUser);
+
     const t = toast.loading("Loading history…");
     try {
-      const res = await fetch("/api/invoice-history", { cache: "no-store" });
+      const res = await fetch(`/api/invoice-history?${params.toString()}`, { cache: "no-store" });
       const data = await res.json();
 
       if (!res.ok) {
@@ -65,7 +93,7 @@ export default function HistoryPage() {
 
       // API returns array
       setRows(Array.isArray(data) ? data : []);
-      toast.success("History loaded", { id: t });
+      toast.success("Updated", { id: t });
     } catch (e: any) {
       console.error(e);
       setError(e?.message || "Failed to load history");
@@ -74,18 +102,23 @@ export default function HistoryPage() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [search, filterClient, filterStatus, filterDate, filterUser]);
 
+  // Debounced load for text inputs
   React.useEffect(() => {
     setCurrentUser(localStorage.getItem("invoicecraft:username") || "");
-    load();
+    const timer = setTimeout(() => {
+        load();
+    }, 500); // Debounce 500ms
+    return () => clearTimeout(timer);
   }, [load]);
 
-  const filtered = React.useMemo(() => {
-    const q = search.trim().toLowerCase();
-    if (!q) return rows;
-    return rows.filter((r) => (r.invoiceNumber || "").toLowerCase().includes(q));
-  }, [rows, search]);
+  // Handle Enter key for immediate search
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter") {
+        load();
+    }
+  };
 
   const onEdit = (row: InvoiceHistoryRow) => {
     const isOwner = currentUser === row.createdBy;
@@ -164,35 +197,128 @@ export default function HistoryPage() {
           <div className="flex gap-3">
             <button
               onClick={() => router.push("/invoice")}
-              className="h-10 rounded-xl bg-white/10 px-4 text-sm font-medium text-white shadow-sm hover:bg-white/20 backdrop-blur-sm border border-white/20 transition-all"
+              className="group flex items-center gap-2 h-10 rounded-xl bg-white/10 px-4 text-sm font-medium text-white shadow-sm hover:bg-white/20 backdrop-blur-sm border border-white/20 transition-all"
             >
+              <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-0.5" />
               Back to Editor
             </button>
 
             <button
               onClick={load}
-              className="h-10 rounded-xl bg-orange-500 px-6 text-sm font-medium text-white shadow-lg hover:bg-orange-400 transition-all shadow-orange-900/20"
+              className="flex items-center gap-2 h-10 rounded-xl bg-orange-500 px-6 text-sm font-medium text-white shadow-lg hover:bg-orange-400 transition-all shadow-orange-900/20"
             >
+              <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
               Refresh
             </button>
           </div>
         </div>
 
-        {/* Search */}
-        <div className="rounded-2xl bg-white p-2 shadow-xl shadow-slate-200/50 ring-1 ring-slate-100">
-           <div className="relative">
-             <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4">
-               <svg className="h-5 w-5 text-slate-400" viewBox="0 0 20 20" fill="currentColor">
-                 <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" />
-               </svg>
-             </div>
-             <input
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search by invoice number..."
-                className="h-12 w-full rounded-xl bg-transparent pl-11 pr-4 text-sm text-slate-700 outline-none placeholder:text-slate-400"
-             />
+        {/* Filters Bar */}
+        <div className="rounded-2xl bg-white p-4 shadow-xl shadow-slate-200/50 ring-1 ring-slate-100">
+           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+               {/* 1. Global Search */}
+               <div className="relative col-span-1 md:col-span-2 lg:col-span-2">
+                 <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                   <Search className="h-5 w-5 text-slate-400" />
+                 </div>
+                 <input
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    onKeyDown={handleKeyDown}
+                    placeholder="Search invoice #..."
+                    className="h-10 w-full rounded-lg border-0 bg-slate-50 pl-10 pr-4 text-sm text-slate-900 ring-1 ring-inset ring-slate-200 placeholder:text-slate-500 focus:ring-2 focus:ring-inset focus:ring-brand-primary"
+                 />
+               </div>
+
+               {/* 2. Client Filter */}
+               <div className="relative">
+                 <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                   <Briefcase className="h-4 w-4 text-slate-400" />
+                 </div>
+                 <input
+                    value={filterClient}
+                    onChange={(e) => setFilterClient(e.target.value)}
+                    onKeyDown={handleKeyDown}
+                    placeholder="Filter Client..."
+                    className="h-10 w-full rounded-lg border-0 bg-slate-50 pl-10 pr-4 text-sm text-slate-900 ring-1 ring-inset ring-slate-200 placeholder:text-slate-500 focus:ring-2 focus:ring-inset focus:ring-brand-primary"
+                 />
+               </div>
+
+               {/* 3. Status Filter */}
+               <div className="relative">
+                 <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                   <CreditCard className="h-4 w-4 text-slate-400" />
+                 </div>
+                 <select
+                    value={filterStatus}
+                    onChange={(e) => setFilterStatus(e.target.value)}
+                    className="h-10 w-full rounded-lg border-0 bg-slate-50 pl-10 pr-8 text-sm text-slate-900 ring-1 ring-inset ring-slate-200 focus:ring-2 focus:ring-inset focus:ring-brand-primary appearance-none"
+                 >
+                    <option value="">All Statuses</option>
+                    <option value="paid">Paid</option>
+                    <option value="unpaid">Unpaid</option>
+                 </select>
+                 <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
+                    <ChevronDown className="h-4 w-4 text-slate-400" />
+                 </div>
+               </div>
+
+                {/* 4. Date Filter */}
+               <div className="relative">
+                 <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                   <Calendar className="h-4 w-4 text-slate-400" />
+                 </div>
+                 <input
+                    type="date"
+                    value={filterDate}
+                    onChange={(e) => setFilterDate(e.target.value)}
+                    className="h-10 w-full rounded-lg border-0 bg-slate-50 pl-10 pr-4 text-sm text-slate-900 ring-1 ring-inset ring-slate-200 placeholder:text-slate-500 focus:ring-2 focus:ring-inset focus:ring-brand-primary"
+                 />
+               </div>
            </div>
+           
+           {/* Active Filters Summary (Optional, mainly for Date/User clearing) */}
+           {(filterUser || filterDate || filterClient || filterStatus || search) && (
+              <div className="mt-3 flex items-center gap-2 overflow-x-auto pb-1">
+                 <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Active Filters:</span>
+                 {search && (
+                    <span className="inline-flex items-center gap-1 rounded-full bg-orange-100 px-2.5 py-0.5 text-xs font-medium text-orange-800">
+                       Search: {search}
+                       <button onClick={() => setSearch("")}><X className="w-3 h-3 hover:text-orange-950" /></button>
+                    </span>
+                 )}
+                 {filterClient && (
+                    <span className="inline-flex items-center gap-1 rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-medium text-blue-800">
+                       Client: {filterClient}
+                       <button onClick={() => setFilterClient("")}><X className="w-3 h-3 hover:text-blue-950" /></button>
+                    </span>
+                 )}
+                 {filterStatus && (
+                    <span className="inline-flex items-center gap-1 rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-800">
+                       Status: {filterStatus}
+                       <button onClick={() => setFilterStatus("")}><X className="w-3 h-3 hover:text-green-950" /></button>
+                    </span>
+                 )}
+                  {filterDate && (
+                    <span className="inline-flex items-center gap-1 rounded-full bg-purple-100 px-2.5 py-0.5 text-xs font-medium text-purple-800">
+                       Date: {filterDate}
+                       <button onClick={() => setFilterDate("")}><X className="w-3 h-3 hover:text-purple-950" /></button>
+                    </span>
+                 )}
+                 <button 
+                   onClick={() => {
+                      setSearch("");
+                      setFilterClient("");
+                      setFilterStatus("");
+                      setFilterDate("");
+                      setFilterUser("");
+                   }}
+                   className="ml-auto text-xs text-slate-500 hover:text-slate-700 underline"
+                 >
+                    Clear All
+                 </button>
+              </div>
+           )}
         </div>
       </div>
 
@@ -233,17 +359,18 @@ export default function HistoryPage() {
               </thead>
 
               <tbody className="divide-y divide-orange-100 bg-white">
-                {filtered.length === 0 ? (
+                {rows.length === 0 ? (
                   <tr>
                     <td colSpan={12} className="px-6 py-12 text-center text-slate-500">
                        <div className="flex flex-col items-center gap-2">
+                          <Filter className="h-10 w-10 text-slate-300" />
                           <p className="text-base font-medium text-slate-900">No invoices found</p>
-                          <p className="text-sm text-slate-400">Try adjusting your search query.</p>
+                          <p className="text-sm text-slate-400">Try adjusting your filters.</p>
                        </div>
                     </td>
                   </tr>
                 ) : (
-                  filtered.map((r, idx) => (
+                  rows.map((r, idx) => (
                     <InvoiceRow
                       key={`${r.invoiceNumber}-${idx}`}
                       row={r}
@@ -392,6 +519,7 @@ function InvoiceRow({
       </td>
       <td className="px-6 py-4 whitespace-nowrap">
         <span className="inline-flex items-center rounded-md bg-slate-100 px-2 py-1 text-xs font-medium text-slate-600 ring-1 ring-inset ring-slate-500/10">
+          <Users className="w-3 h-3 mr-1" />
           {row.createdBy || "Unk"}
         </span>
       </td>
@@ -399,8 +527,9 @@ function InvoiceRow({
       <td className="px-6 py-4 whitespace-nowrap">
         <button
           onClick={() => onPreview(row)}
-          className="font-semibold text-brand-primary hover:underline"
+          className="flex items-center gap-1 font-semibold text-brand-primary hover:underline"
         >
+          <FileText className="w-3 h-3" />
           {row.invoiceNumber}
         </button>
       </td>
@@ -448,10 +577,7 @@ function InvoiceRow({
             className="flex items-center justify-center h-8 w-8 rounded-full text-slate-400 hover:text-slate-600 hover:bg-slate-100"
           >
             <span className="sr-only">Open options</span>
-            {/* 3-dot icon */}
-            <svg className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-              <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
-            </svg>
+            <MoreVertical className="h-4 w-4" />
           </button>
 
           {menuOpen && (
