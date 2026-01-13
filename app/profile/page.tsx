@@ -43,26 +43,34 @@ export default function ProfilePage() {
   const isAdmin = username === "admin";
 
   return (
-    <div className="min-h-screen bg-slate-50">
-      <Navbar label="Profile" variant="white" />
+    <div className="min-h-screen bg-orange-50 flex flex-col relative">
+      <Navbar label="Profile" variant="transparent" />
       
-      <ProfileHeader username={username} initials={initials} isAdmin={isAdmin} />
+      {/* Global Background Gradient */}
+      <div className="absolute top-0 left-0 w-full h-64 bg-gradient-to-br from-brand-start to-brand-end z-0" />
       
-      <main className="p-4 md:p-8 max-w-5xl mx-auto space-y-8">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      {/* Header Area */}
+      <div className="relative z-10 px-4 md:px-8 pt-8 pb-4">
+          <ProfileHeader username={username} initials={initials} isAdmin={isAdmin} />
+      </div>
+      
+      <main className="flex-1 px-4 md:px-8 pb-8 max-w-7xl mx-auto w-full relative z-10">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
             
-            {/* Sidebar */}
-            <div className="space-y-6">
+            {/* Sidebar (Includes Avatar now) */}
+            <div className="lg:col-span-3 space-y-6">
                 <ProfileSidebar 
                     activeTab={activeTab} 
                     setActiveTab={setActiveTab} 
                     isAdmin={isAdmin}
                     onLogout={handleLogout}
+                    username={username}
+                    initials={initials}
                 />
             </div>
 
             {/* Content Area */}
-            <div className="lg:col-span-2 space-y-6">
+            <div className="lg:col-span-9 space-y-6">
                 {activeTab === "personal_info" && (
                     <PersonalInfoSection username={username} isAdmin={isAdmin} />
                 )}
