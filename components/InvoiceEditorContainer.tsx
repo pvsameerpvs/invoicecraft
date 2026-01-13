@@ -8,6 +8,8 @@ import { UserMenu } from "./UserMenu";
 import { InvoiceData } from "../lib/types";
 import { downloadInvoicePdf } from "../lib/pdf";
 import toast from "react-hot-toast";
+import { History, PlusCircle } from "lucide-react";
+import Link from "next/link";
 
 const initialInvoiceData: InvoiceData = {
   logoDataUrl: undefined,
@@ -130,7 +132,7 @@ export function InvoiceEditorContainer({ initialInvoiceId }: Props) {
     init();
   }, [initialInvoiceId]);
 
-  const handleDownload = async () => {
+   const handleDownload = async () => {
     const t = toast.loading("Saving & Generating PDF…");
     const isUpdate = !!originalInvoiceNumber; 
 
@@ -174,6 +176,8 @@ export function InvoiceEditorContainer({ initialInvoiceId }: Props) {
       toast.error(e.message || "Failed to download", { id: t });
     }
   };
+
+  const isUpdateMode = !!originalInvoiceNumber;
 
   return (
     <div className="flex min-h-screen lg:h-screen flex-col bg-slate-50 text-slate-900">
@@ -219,6 +223,7 @@ export function InvoiceEditorContainer({ initialInvoiceId }: Props) {
               value={invoice}
               onChange={setInvoice}
               onDownloadPdf={handleDownload}
+              isUpdate={isUpdateMode}
             />
         </aside>
 
@@ -233,7 +238,7 @@ export function InvoiceEditorContainer({ initialInvoiceId }: Props) {
                      onClick={handleDownload}
                      className="flex items-center gap-2 bg-slate-900 text-white px-6 py-3 rounded-full shadow-xl shadow-slate-900/20 font-semibold active:scale-95 transition-all"
                   >
-                    <span>Download PDF</span>
+                    <span>{isUpdateMode ? "Edit & Download PDF" : "Download PDF"}</span>
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
                   </button>
                </div>

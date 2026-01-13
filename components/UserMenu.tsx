@@ -86,6 +86,17 @@ export function UserMenu() {
                Activity Logs
              </button>
            )}
+            {/* NEW: Back to Editor / New Invoice */}
+            <button
+               onClick={() => {
+                 setIsOpen(false);
+                 router.push("/invoice");
+               }}
+               className="w-full text-left rounded-lg px-3 py-2 text-xs font-medium text-slate-700 hover:bg-orange-50 hover:text-brand-primary"
+             >
+               New Invoice
+             </button>
+
             <button
                onClick={() => {
                  setIsOpen(false);

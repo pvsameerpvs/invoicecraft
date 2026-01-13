@@ -11,6 +11,7 @@ interface InvoiceFormProps {
   value: InvoiceData;
   onChange: (next: InvoiceData) => void;
   onDownloadPdf: () => void;
+  isUpdate?: boolean;
 }
 
 const PRESET_LINE_ITEMS: Array<{ label: string; amount: string }> = [
@@ -43,6 +44,7 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({
   value,
   onChange,
   onDownloadPdf,
+  isUpdate = false,
 }) => {
   const [isEditingLockedFields, setIsEditingLockedFields] =
     React.useState(false);
@@ -528,7 +530,7 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({
 
       <div className="flex justify-end">
         <Button type="button" onClick={onDownloadPdf} className="bg-gradient-to-r from-brand-start to-brand-end hover:shadow-lg hover:shadow-brand-primary/30 transition-all">
-          Download PDF
+          {isUpdate ? "Edit & Download PDF" : "Download PDF"}
         </Button>
       </div>
     </div>
