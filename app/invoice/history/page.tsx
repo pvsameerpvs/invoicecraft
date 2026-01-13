@@ -20,12 +20,8 @@ export default function InvoiceHistoryPage() {
     load();
   }, []);
 
-  const onLoadInvoice = (payloadJson: string) => {
-    try {
-      const invoice = JSON.parse(payloadJson);
-      localStorage.setItem("invoiceDraft", JSON.stringify(invoice));
-      router.push("/invoice");
-    } catch {}
+  const onLoadInvoice = (invoiceNumber: string) => {
+    router.push(`/invoice/edit/${invoiceNumber}`);
   };
 
   return (
@@ -70,7 +66,7 @@ export default function InvoiceHistoryPage() {
                       <td className="py-2 text-right">
                         <button
                           className="rounded-md border px-3 py-1 text-xs"
-                          onClick={() => onLoadInvoice(r.payloadJson)}
+                          onClick={() => onLoadInvoice(r.invoiceNumber)}
                         >
                           Load
                         </button>

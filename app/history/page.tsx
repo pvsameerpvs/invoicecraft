@@ -129,18 +129,8 @@ export default function HistoryPage() {
        return;
     }
 
-    // Store full payload in localStorage and go to /invoice
-    try {
-      if (!row.payloadJson) {
-        toast.error("Cannot edit: missing invoice data");
-        return;
-      }
-      localStorage.setItem(STORAGE_KEY, row.payloadJson || "");
-      toast.success("Loading invoice details…");
-      router.push("/invoice");
-    } catch (e) {
-      toast.error("Failed to prepare invoice for editing");
-    }
+    // Direct navigation to dynamic edit route
+    router.push(`/invoice/edit/${row.invoiceNumber}`);
   };
 
   const onPreview = (row: InvoiceHistoryRow) => {
@@ -590,7 +580,7 @@ function InvoiceRow({
                   }}
                   className="block w-full px-4 py-2 text-left text-sm text-slate-700 hover:bg-orange-50 hover:text-orange-600"
                 >
-                  View
+                 Preview
                 </button>
                 {canEdit && (
                   <button
@@ -600,7 +590,7 @@ function InvoiceRow({
                     }}
                     className="block w-full px-4 py-2 text-left text-sm text-slate-700 hover:bg-orange-50 hover:text-orange-600"
                   >
-                    Edit
+                    Edit Invoice
                   </button>
                 )}
                 {isAdmin && (
