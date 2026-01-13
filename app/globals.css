@@ -85,6 +85,19 @@ body {
   box-shadow: none !important;
 }
 
+/* Force preview functionality during export even if hidden on mobile */
+.pdf-export .invoice-preview-section {
+  display: flex !important;
+  position: absolute !important;
+  top: 0;
+  left: 0;
+  width: 100%; /* or 210mm to be safe? 100% fits the A4 child */
+  z-index: -50;
+  visibility: visible !important;
+  opacity: 1 !important; /* Ensure content is rendered for capture */
+  background: white; /* Ensure clean background */
+}
+
 /* =========================
    PRINT / PDF (browser print)
    ========================= */

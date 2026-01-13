@@ -41,7 +41,8 @@ export default function InvoicePage() {
   const [invoice, setInvoice] = useState<InvoiceData>(initialInvoiceData);
   const previewRef = useRef<HTMLDivElement | null>(null);
 
-  /* New State for tracking origin of edit */
+  /* New State for tabs */
+  const [mobileTab, setMobileTab] = useState<"edit" | "preview">("edit");
   const [originalInvoiceNumber, setOriginalInvoiceNumber] = useState<string | null>(null);
 
   // ✅ Load invoice for editing (from History) or Generate New
@@ -171,10 +172,28 @@ export default function InvoicePage() {
         <UserMenu />
       </header>
 
+      {/* MOBILE TABS CONTROL (Sticky Top) */}
+      <div className="lg:hidden sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-slate-200 px-4 py-2">
+         <div className="flex p-1 bg-slate-100 rounded-lg">
+             <button
+               onClick={() => setMobileTab("edit")}
+               className={`flex-1 py-1.5 text-sm font-semibold rounded-md transition-all ${mobileTab === "edit" ? "bg-white text-slate-900 shadow-sm" : "text-slate-500 hover:text-slate-700"}`}
+             >
+               Edit Invoice
+             </button>
+             <button
+                onClick={() => setMobileTab("preview")}
+               className={`flex-1 py-1.5 text-sm font-semibold rounded-md transition-all ${mobileTab === "preview" ? "bg-white text-slate-900 shadow-sm" : "text-slate-500 hover:text-slate-700"}`}
+             >
+               Preview & Download
+             </button>
+         </div>
+      </div>
+
       {/* 2. Main Layout (Sidebar + Preview) */}
       <main className="flex flex-1 flex-col lg:flex-row lg:overflow-hidden">
         {/* Left Sidebar: Form */}
-        <aside className="w-full lg:w-[500px] flex-none lg:overflow-y-auto border-r border-slate-200 bg-white p-4 sm:p-6 scrollbar-thin scrollbar-thumb-slate-200 hover:scrollbar-thumb-slate-300 z-10 ">
+        <aside className={`w-full lg:w-[500px] flex-none lg:overflow-y-auto border-r border-slate-200 bg-white p-4 sm:p-6 scrollbar-thin scrollbar-thumb-slate-200 hover:scrollbar-thumb-slate-300 z-10 ${mobileTab === "preview" ? "hidden lg:block" : ""}`}>
            <div className="mb-6 flex items-center justify-between">
               <h2 className="text-lg font-semibold text-slate-900">Invoice Details</h2>
               <div className="text-xs text-slate-500">Auto-saving...</div>
@@ -188,9 +207,20 @@ export default function InvoicePage() {
         </aside>
 
         {/* Right Content: PDF Preview */}
-        <section className="flex flex-1 justify-center lg:overflow-y-auto bg-slate-100/50 p-4 lg:p-12">
-            <div className="h-fit w-full flex justify-center">
+        <section className={`invoice-preview-section flex flex-1 justify-center lg:overflow-y-auto bg-slate-100/50 p-4 lg:p-12 ${mobileTab === "edit" ? "hidden lg:flex" : "flex"}`}>
+            <div className="h-fit w-full flex flex-col items-center">
                <InvoicePreview value={invoice} forwardRef={previewRef} />
+               
+               {/* Mobile Download Button Context (only show in preview tab on mobile) */}
+               <div className="lg:hidden fixed bottom-6 right-6 z-50">
+                  <button 
+                     onClick={handleDownload}
+                     className="flex items-center gap-2 bg-slate-900 text-white px-6 py-3 rounded-full shadow-xl shadow-slate-900/20 font-semibold active:scale-95 transition-all"
+                  >
+                    <span>Download PDF</span>
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
+                  </button>
+               </div>
             </div>
         </section>
       </main>
