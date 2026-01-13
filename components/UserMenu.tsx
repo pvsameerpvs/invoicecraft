@@ -70,7 +70,7 @@ export function UserMenu() {
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 top-full z-50 mt-2 w-48 rounded-xl bg-white p-1 shadow-xl ring-1 ring-orange-100">
+        <div className="absolute right-0 top-full z-[100] mt-2 w-48 rounded-xl bg-white p-1 shadow-xl ring-1 ring-orange-100">
            <div className="px-3 py-2 border-b border-orange-50 mb-1">
               <p className="text-xs font-medium text-slate-900">Signed in as</p>
               <p className="text-xs text-slate-500 truncate">{username}</p>

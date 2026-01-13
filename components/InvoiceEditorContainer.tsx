@@ -187,7 +187,7 @@ export function InvoiceEditorContainer({ initialInvoiceId }: Props) {
       <Navbar label="v1.0 Editor" variant="white" />
 
       {/* MOBILE TABS CONTROL (Sticky Top) */}
-      <div className="lg:hidden sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-slate-200 px-4 py-2">
+      <div className="lg:hidden sticky top-0 z-40 bg-white/80 backdrop-blur-md border-b border-slate-200 px-4 py-2">
          <div className="flex p-1 bg-slate-100 rounded-lg">
              <button
                onClick={() => setMobileTab("edit")}
