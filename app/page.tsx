@@ -12,10 +12,13 @@ export default function HomePage() {
   const [username, setUsername] = React.useState("");
   const [password, setPassword] = React.useState("");
   const [error, setError] = React.useState("");
+  const [loading, setLoading] = React.useState(false);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (loading) return; // Prevent double submission
     setError("");
+    setLoading(true);
     const t = toast.loading("Logging in…");
 
     try {
@@ -37,6 +40,7 @@ export default function HomePage() {
     } catch (err: any) {
       setError(err.message);
       toast.error(err.message, { id: t });
+      setLoading(false);
     }
   };
 
@@ -68,6 +72,7 @@ export default function HomePage() {
                   placeholder="Enter your username"
                   autoComplete="username"
                   autoFocus
+                  disabled={loading}
                 />
              </div>
            </div>
@@ -82,6 +87,7 @@ export default function HomePage() {
                   className="w-full h-12 rounded-xl bg-slate-50 border border-slate-200 px-4 text-sm font-medium text-slate-800 focus:bg-white focus:ring-2 focus:ring-brand-primary/20 focus:border-brand-primary transition-all outline-none placeholder:text-slate-400"
                   placeholder="Enter your password"
                   autoComplete="current-password"
+                  disabled={loading}
                 />
              </div>
            </div>
@@ -94,9 +100,17 @@ export default function HomePage() {
 
            <button
              type="submit"
-             className="w-full h-12 rounded-xl bg-gradient-to-r from-brand-start to-brand-end hover:shadow-brand-primary/30 text-white font-semibold text-sm shadow-xl shadow-brand-primary/20 active:scale-[0.98] transition-all"
+             disabled={loading}
+             className={`w-full h-12 rounded-xl bg-gradient-to-r from-brand-start to-brand-end hover:shadow-brand-primary/30 text-white font-semibold text-sm shadow-xl shadow-brand-primary/20 active:scale-[0.98] transition-all flex items-center justify-center ${loading ? 'opacity-70 cursor-not-allowed' : ''}`}
            >
-             Sign In
+             {loading ? (
+                <div className="flex items-center gap-2">
+                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  <span>Signing In...</span>
+                </div>
+             ) : (
+               "Sign In"
+             )}
            </button>
         </form>
         
