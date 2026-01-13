@@ -10,6 +10,7 @@ import { downloadInvoicePdf } from "../lib/pdf";
 import toast from "react-hot-toast";
 import { History, PlusCircle } from "lucide-react";
 import Link from "next/link";
+import { Navbar } from "./Navbar";
 
 const initialInvoiceData: InvoiceData = {
   logoDataUrl: undefined,
@@ -182,15 +183,8 @@ export function InvoiceEditorContainer({ initialInvoiceId }: Props) {
   return (
     <div className="flex min-h-screen lg:h-screen flex-col bg-slate-50 text-slate-900">
       {/* 1. Header */}
-      <header className="flex h-16 flex-none items-center justify-between border-b border-slate-200 bg-white px-4 sm:px-6">
-        <div className="flex items-center gap-4">
-        <Image src="/logo-js.png" alt="Logo" width={150} height={150} className="w-[100px] h-auto sm:w-[150px]" />
-          <span className="hidden rounded-full bg-orange-100 px-2.5 py-0.5 text-xs font-medium text-brand-primary sm:inline-flex">
-            v1.0 Editor
-          </span>
-        </div>
-        <UserMenu />
-      </header>
+      {/* 1. Navbar */}
+      <Navbar label="v1.0 Editor" variant="white" />
 
       {/* MOBILE TABS CONTROL (Sticky Top) */}
       <div className="lg:hidden sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-slate-200 px-4 py-2">

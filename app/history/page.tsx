@@ -3,7 +3,7 @@
 import React from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { UserMenu } from "../../components/UserMenu";
+import { Navbar } from "../../components/Navbar";
 import { InvoicePreview } from "../../components/InvoicePreview";
 import { downloadInvoicePdf } from "../../lib/pdf";
 import { InvoiceData } from "../../lib/types";
@@ -160,15 +160,7 @@ export default function HistoryPage() {
 
   return (
     <div className="h-screen flex flex-col bg-orange-50 selection:bg-orange-100 selection:text-orange-900 overflow-hidden">
-      <header className="flex-none sticky top-0 z-50 flex h-16 items-center justify-between border-b border-slate-200 bg-white px-4 shadow-sm sm:px-6">
-        <div className="flex items-center gap-4">
-          <Image src="/logo-js.png" alt="Logo" width={150} height={150} className="w-[100px] h-auto sm:w-[150px]" />
-          <span className="hidden rounded-full bg-orange-100 px-2.5 py-0.5 text-xs font-medium text-brand-primary sm:inline-flex">
-            v1.0 History
-          </span>
-        </div>
-        <UserMenu />
-      </header>
+      <Navbar label="v1.0 History" variant="white" />
 
       <main className="flex-1 flex flex-col min-h-0 relative">
       {/* Background decoration */}

@@ -3,6 +3,7 @@
 import React, { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
+import { Activity, PlusCircle, History, LogOut } from "lucide-react";
 
 export function UserMenu() {
   const router = useRouter();
@@ -81,8 +82,9 @@ export function UserMenu() {
                  setIsOpen(false);
                  router.push("/activity");
                }}
-               className="w-full text-left rounded-lg px-3 py-2 text-xs font-medium text-slate-700 hover:bg-orange-50 hover:text-brand-primary"
+               className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-xs font-medium text-slate-700 hover:bg-orange-50 hover:text-brand-primary"
              >
+               <Activity className="h-4 w-4" />
                Activity Logs
              </button>
            )}
@@ -92,8 +94,9 @@ export function UserMenu() {
                  setIsOpen(false);
                  router.push("/invoice");
                }}
-               className="w-full text-left rounded-lg px-3 py-2 text-xs font-medium text-slate-700 hover:bg-orange-50 hover:text-brand-primary"
+               className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-xs font-medium text-slate-700 hover:bg-orange-50 hover:text-brand-primary"
              >
+               <PlusCircle className="h-4 w-4" />
                New Invoice
              </button>
 
@@ -102,15 +105,19 @@ export function UserMenu() {
                  setIsOpen(false);
                  router.push("/history");
                }}
-               className="w-full text-left rounded-lg px-3 py-2 text-xs font-medium text-slate-700 hover:bg-orange-50 hover:text-brand-primary"
+               className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-xs font-medium text-slate-700 hover:bg-orange-50 hover:text-brand-primary"
              >
+               <History className="h-4 w-4" />
                Invoice History
              </button>
            
+           <div className="my-1 border-t border-slate-100"></div>
+
            <button
              onClick={handleLogout}
-             className="w-full text-left rounded-lg px-3 py-2 text-xs font-medium text-red-600 hover:bg-red-50"
+             className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-xs font-medium text-red-600 hover:bg-red-50"
            >
+             <LogOut className="h-4 w-4" />
              Logout
            </button>
         </div>
