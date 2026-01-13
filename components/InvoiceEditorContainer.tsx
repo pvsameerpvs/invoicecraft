@@ -193,13 +193,13 @@ export function InvoiceEditorContainer({ initialInvoiceId }: Props) {
                onClick={() => setMobileTab("edit")}
                className={`flex-1 py-1.5 text-sm font-semibold rounded-md transition-all ${mobileTab === "edit" ? "bg-white text-slate-900 shadow-sm" : "text-slate-500 hover:text-slate-700"}`}
              >
-               Edit Invoice
+               {isUpdateMode ? "Edit Invoice" : "Create Invoice"}
              </button>
              <button
                 onClick={() => setMobileTab("preview")}
                className={`flex-1 py-1.5 text-sm font-semibold rounded-md transition-all ${mobileTab === "preview" ? "bg-white text-slate-900 shadow-sm" : "text-slate-500 hover:text-slate-700"}`}
              >
-               Preview & Download
+               {isUpdateMode ? "Preview & Download" : "Preview & Create"}
              </button>
          </div>
       </div>
