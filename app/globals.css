@@ -21,22 +21,47 @@ body {
 /* =========================
    Mobile preview (scale)
    ========================= */
+/* =========================
+   Mobile preview (scale)
+   ========================= */
 @media (max-width: 1024px) {
   /* keep original A4 preview size inside scaled wrapper */
   .a4-preview {
     width: 794px;
     min-height: 1123px;
+    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1); /* shadow-md */
+    margin-bottom: 2rem; /* Space between pages on mobile */
   }
 
   .a4-mobile-fit {
     width: 100%;
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
+    display: flex;
+    justify-content: center;
+    overflow-x: hidden; 
+    padding-bottom: 2rem;
   }
 
   .a4-mobile-scale {
-    transform-origin: top center;
-    transform: scale(var(--a4-scale, 0.55));
+    /* Use zoom for layout-affecting scale on mobile to remove whitespace */
+    zoom: var(--a4-scale, 0.55);
+    /* Disable transform to avoid double scaling */
+    transform: none;
+  }
+}
+
+@media (max-width: 640px) {
+  .a4-mobile-scale {
+    --a4-scale: 0.45;
+  }
+}
+
+@media (max-width: 450px) {
+  .a4-mobile-scale {
+    --a4-scale: 0.38; /* Fits ~300px width */
+  }
+  .a4-preview {
+    margin-left: 0; 
+    margin-right: 0;
   }
 }
 
@@ -49,6 +74,12 @@ body {
 }
 .pdf-export .a4-mobile-scale {
   transform: none !important;
+  zoom: 1 !important;
+}
+.pdf-export .a4-preview {
+  min-height: 297mm !important; /* Force A4 height for PDF */
+  height: auto !important; 
+  width: 210mm !important;
 }
 .pdf-export .invoice-paper {
   box-shadow: none !important;

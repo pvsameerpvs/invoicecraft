@@ -159,7 +159,7 @@ export default function InvoicePage() {
   };
 
   return (
-    <div className="flex h-screen flex-col bg-slate-50 text-slate-900">
+    <div className="flex min-h-screen lg:h-screen flex-col bg-slate-50 text-slate-900">
       {/* 1. Header */}
       <header className="flex h-16 flex-none items-center justify-between border-b border-slate-200 bg-white px-4 sm:px-6">
         <div className="flex items-center gap-4">
@@ -172,9 +172,9 @@ export default function InvoicePage() {
       </header>
 
       {/* 2. Main Layout (Sidebar + Preview) */}
-      <main className="flex flex-1 overflow-hidden">
+      <main className="flex flex-1 flex-col lg:flex-row lg:overflow-hidden">
         {/* Left Sidebar: Form */}
-        <aside className="w-[500px] flex-none overflow-y-auto border-r border-slate-200 bg-white p-6 scrollbar-thin scrollbar-thumb-slate-200 hover:scrollbar-thumb-slate-300">
+        <aside className="w-full lg:w-[500px] flex-none lg:overflow-y-auto border-r border-slate-200 bg-white p-4 sm:p-6 scrollbar-thin scrollbar-thumb-slate-200 hover:scrollbar-thumb-slate-300 z-10 ">
            <div className="mb-6 flex items-center justify-between">
               <h2 className="text-lg font-semibold text-slate-900">Invoice Details</h2>
               <div className="text-xs text-slate-500">Auto-saving...</div>
@@ -188,8 +188,8 @@ export default function InvoicePage() {
         </aside>
 
         {/* Right Content: PDF Preview */}
-        <section className="flex flex-1 justify-center overflow-y-auto bg-slate-100/50 p-8 lg:p-12">
-            <div className="h-fit">
+        <section className="flex flex-1 justify-center lg:overflow-y-auto bg-slate-100/50 p-4 lg:p-12">
+            <div className="h-fit w-full flex justify-center">
                <InvoicePreview value={invoice} forwardRef={previewRef} />
             </div>
         </section>
