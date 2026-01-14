@@ -19,17 +19,55 @@ export const DashboardContainer = ({ onCreateInvoice, invoiceHistory = [] }: Das
 
     // 1. Calculate Stats
     const stats = useMemo(() => {
-        // Mock data logic for now, or real calculation if `invoiceHistory` is populated
-        const total = invoiceHistory.length;
-        // In a real app, you'd parse `payloadJson` to get the actual total amount.
-        // For this UI demo, we'll simulate some stats or calculate basic counts.
+        let revenue = 0;
+        let outstanding = 0;
+        let paid = 0;
+        let count = 0;
+        const pendingCount = 0; // TODO: Calculate if needed for pie chart
         
+        invoiceHistory.forEach(item => {
+            try {
+                if (!item.payloadJson) return;
+                const data = JSON.parse(item.payloadJson);
+                
+                // Calculate Total for this invoice
+                let invoiceTotal = 0;
+                if (data.overrideTotal) {
+                     invoiceTotal = parseFloat(data.overrideTotal) || 0;
+                } else if (Array.isArray(data.lineItems)) {
+                    invoiceTotal = data.lineItems.reduce((acc: number, line: any) => {
+                        return acc + (parseFloat(line.amount) || 0);
+                    }, 0);
+                }
+
+                revenue += invoiceTotal;
+                count++;
+
+                // Check Status
+                if (data.status === "Paid") {
+                    paid += invoiceTotal;
+                } else {
+                    // Default to Unpaid/Outstanding
+                    outstanding += invoiceTotal;
+                }
+
+            } catch (e) {
+                console.warn("Failed to parse invoice data for stats", e);
+            }
+        });
+
+        // VAT is only relevant for PAID amounts (Collected VAT)
+        const vat = paid * 0.05;
+
+        // Currency Formatter
+        const fmt = (num: number) => new Intl.NumberFormat('en-AE', { style: 'currency', currency: 'AED' }).format(num);
+
         return {
-            totalInvoices: total || 124,
-            totalRevenue: "AED 45,200", 
-            totalVat: "AED 2,260",
-            outstanding: "AED 12,500",
-            paid: "AED 32,700"
+            totalInvoices: count,
+            totalRevenue: fmt(revenue),
+            totalVat: fmt(vat),
+            outstanding: fmt(outstanding),
+            paid: fmt(paid)
         };
     }, [invoiceHistory]);
 
