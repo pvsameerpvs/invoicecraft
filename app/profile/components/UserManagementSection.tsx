@@ -3,10 +3,36 @@
 import React, { useState } from "react";
 import toast from "react-hot-toast";
 
+interface User {
+    id: string;
+    username: string;
+    role: string;
+    email: string;
+    mobile: string;
+    createdAt?: string;
+}
+
 export const UserManagementSection = () => {
+    const [users, setUsers] = useState<User[]>([]);
     const [newUser, setNewUser] = useState({ 
         username: "", password: "", repeatPassword: "", role: "user", email: "", mobile: "" 
     });
+
+    const fetchUsers = async () => {
+        try {
+            const res = await fetch("/api/users/list");
+            if (res.ok) {
+                const data = await res.json();
+                setUsers(data.users);
+            }
+        } catch (error) {
+            console.error("Failed to fetch users", error);
+        }
+    };
+
+    React.useEffect(() => {
+        fetchUsers();
+    }, []);
 
     const [loading, setLoading] = useState(false);
     
@@ -41,6 +67,7 @@ export const UserManagementSection = () => {
             if (res.ok) {
                 toast.success(`User ${newUser.username} created successfully!`);
                 setNewUser({ username: "", password: "", repeatPassword: "", role: "user", email: "", mobile: "" });
+                fetchUsers();
             } else {
                 toast.error(data.error || "Failed to create user");
             }
@@ -135,6 +162,47 @@ export const UserManagementSection = () => {
                     </button>
                  </div>
             </form>
+
+            <div className="mt-12">
+                <h3 className="text-lg font-bold text-slate-900 mb-4">Existing Users</h3>
+                <div className="overflow-x-auto">
+                    <table className="w-full text-left border-collapse">
+                        <thead>
+                            <tr className="border-b border-slate-100 text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                                <th className="py-3 px-2">Username</th>
+                                <th className="py-3 px-2">Role</th>
+                                <th className="py-3 px-2">Email</th>
+                                <th className="py-3 px-2">Created At</th>
+                            </tr>
+                        </thead>
+                        <tbody className="text-sm text-slate-700">
+                            {users.map(user => (
+                                <tr key={user.id} className="border-b border-slate-50 hover:bg-slate-50 transition-colors">
+                                    <td className="py-3 px-2 font-medium">{user.username}</td>
+                                    <td className="py-3 px-2">
+                                        <span className={`inline-flex items-center px-2 py-1 rounded-md text-xs font-medium ${
+                                            user.role === 'admin' ? 'bg-purple-50 text-purple-700 ring-1 ring-purple-600/10' : 'bg-slate-100 text-slate-600 ring-1 ring-slate-500/10'
+                                        }`}>
+                                            {user.role}
+                                        </span>
+                                    </td>
+                                    <td className="py-3 px-2 text-slate-500">{user.email || "-"}</td>
+                                    <td className="py-3 px-2 text-slate-400 text-xs">
+                                        {user.createdAt ? new Date(user.createdAt).toLocaleDateString() : "-"}
+                                    </td>
+                                </tr>
+                            ))}
+                            {users.length === 0 && (
+                                <tr>
+                                    <td colSpan={4} className="py-8 text-center text-slate-400">
+                                        No users found.
+                                    </td>
+                                </tr>
+                            )}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
         </section>
     );
 };

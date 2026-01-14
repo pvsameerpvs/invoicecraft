@@ -22,7 +22,7 @@ export default function ProfilePage() {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<TabId>("personal_info");
   const [role, setRole] = useState<"admin" | "user">("user");
-  const [userData, setUserData] = useState({ email: "", mobile: "" });
+  const [userData, setUserData] = useState({ email: "", mobile: "", createdAt: "" });
 
   const fetchUserData = () => {
       fetch('/api/users')
@@ -31,7 +31,8 @@ export default function ProfilePage() {
             if (data.ok && data.user) {
                 setUserData({
                     email: data.user.email,
-                    mobile: data.user.mobile
+                    mobile: data.user.mobile,
+                    createdAt: data.user.createdAt
                 });
                 const r = localStorage.getItem("invoicecraft:role");
                 if (data.user.role !== r) {
@@ -93,6 +94,7 @@ export default function ProfilePage() {
                     onLogout={handleLogout}
                     username={username}
                     initials={initials}
+                    joinedAt={userData.createdAt}
                 />
             </div>
 

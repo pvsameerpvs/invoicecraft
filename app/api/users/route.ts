@@ -26,7 +26,8 @@ export async function GET(req: Request) {
                 username: user.username,
                 role: user.role,
                 email: user.email,
-                mobile: user.mobile
+                mobile: user.mobile,
+                createdAt: user.createdAt
             } 
         });
 
@@ -66,12 +67,14 @@ export async function POST(req: Request) {
         // Add User
         // ID, Username, Password, Role, Email, Mobile
         const id = Date.now().toString(); 
+        const createdAt = new Date().toISOString();
+        // ID, Username, Password, Role, Email, Mobile, CreatedAt
         await sheets.spreadsheets.values.append({
             spreadsheetId: USERS_SHEET_ID,
-            range: "Users!A:F",
+            range: "Users!A:G",
             valueInputOption: "USER_ENTERED",
             requestBody: {
-                values: [[id, username, password, newRole, email || "", mobile || ""]] 
+                values: [[id, username, password, newRole, email || "", mobile || "", createdAt]] 
             }
         });
 

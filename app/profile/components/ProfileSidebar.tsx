@@ -17,9 +17,10 @@ interface ProfileSidebarProps {
     onLogout: () => void;
     username: string;
     initials: string;
+    joinedAt?: string;
 }
 
-export const ProfileSidebar = ({ activeTab, setActiveTab, isAdmin, onLogout, username, initials }: ProfileSidebarProps) => {
+export const ProfileSidebar = ({ activeTab, setActiveTab, isAdmin, onLogout, username, initials, joinedAt }: ProfileSidebarProps) => {
     const menuItems: (SidebarItem | null)[] = [
         { id: "personal_info", icon: User, label: "Personal Info" },
         { id: "security", icon: Lock, label: "Security" },
@@ -28,6 +29,18 @@ export const ProfileSidebar = ({ activeTab, setActiveTab, isAdmin, onLogout, use
         { id: "notifications", icon: Bell, label: "Notifications" },
         { id: "language", icon: Globe, label: "Language" },
     ];
+
+    const memberSince = React.useMemo(() => {
+        if (!joinedAt) return null;
+        try {
+            const date = new Date(joinedAt);
+            if (isNaN(date.getTime())) return null;
+            
+            return `Member since ${date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' })} at ${date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}`;
+        } catch (e) {
+            return null;
+        }
+    }, [joinedAt]);
 
     return (
         <div className="bg-white rounded-3xl shadow-xl shadow-slate-200/50 ring-1 ring-slate-100 overflow-hidden">
@@ -50,7 +63,7 @@ export const ProfileSidebar = ({ activeTab, setActiveTab, isAdmin, onLogout, use
                         {isAdmin ? "Admin" : "User"}
                     </span>
                 </div>
-                <p className="text-xs text-slate-400 font-medium">Member since Jan 2026</p>
+                {memberSince && <p className="text-xs text-slate-400 font-medium">{memberSince}</p>}
             </div>
 
             {/* Navigation Menu */}

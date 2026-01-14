@@ -6,6 +6,7 @@ export interface User {
   role: "admin" | "user";
   email: string;
   mobile: string;
+  createdAt?: string;
 }
 
 const USERS_SHEET_ID = "1oo7G79VtN-zIQzlpKzVHGKGDObWik7MUPdVA2ZrEayQ"; // Same sheet ID
@@ -18,14 +19,14 @@ export async function verifyUser(username: string, password: string): Promise<Us
     
     const res = await sheets.spreadsheets.values.get({
       spreadsheetId: USERS_SHEET_ID,
-      range: "Users!A2:F", 
+      range: "Users!A2:G", 
     });
 
     console.log(`[Auth] Fetch complete. Status: ${res.status}`);
     const rows = res.data.values || [];
     console.log(`[Auth] Found ${rows.length} users.`);
 
-    // Row: [ID, Username, Password, Role, Email, Mobile]
+    // Row: [ID, Username, Password, Role, Email, Mobile, CreatedAt]
     const userRow = rows.find(
       (row) => row[1] === username && row[2] === password
     );
@@ -43,6 +44,7 @@ export async function verifyUser(username: string, password: string): Promise<Us
       role: (userRow[3] as "admin" | "user") || "user",
       email: userRow[4] || "",
       mobile: userRow[5] || "",
+      createdAt: userRow[6] || "",
     };
   } catch (error: any) {
     console.error("[Auth] Verification Error:", error.message);
@@ -61,7 +63,7 @@ export async function getUser(username: string): Promise<User | null> {
         const sheets = getSheetsClient();
         const res = await sheets.spreadsheets.values.get({
             spreadsheetId: USERS_SHEET_ID,
-            range: "Users!A2:F",
+            range: "Users!A2:G",
         });
         const rows = res.data.values || [];
         const userRow = rows.find((row) => row[1] === username);
@@ -74,6 +76,7 @@ export async function getUser(username: string): Promise<User | null> {
             role: (userRow[3] as "admin" | "user") || "user",
             email: userRow[4] || "",
             mobile: userRow[5] || "",
+            createdAt: userRow[6] || "",
         };
     } catch (error) {
         console.error("Failed to get user:", error);
