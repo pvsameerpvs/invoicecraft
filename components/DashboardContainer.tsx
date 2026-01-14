@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter, useSearchParams } from "next/navigation";
 import React, { useMemo, useState, useEffect } from "react";
 import { 
     AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
@@ -29,7 +30,23 @@ type FilterType = 'monthly' | 'yearly' | 'all';
 export const DashboardContainer = ({ onCreateInvoice, invoiceHistory = [] }: DashboardProps) => {
     
     // --- Server Side Stats State ---
-    const [filter, setFilter] = useState<FilterType>('monthly');
+    const router = useRouter();
+    const searchParams = useSearchParams();
+
+    // Initialize state from URL params
+    const [filter, setFilter] = useState<FilterType>((searchParams.get('period') as FilterType) || 'monthly');
+    const [year, setYear] = useState<number>(parseInt(searchParams.get('year') || new Date().getFullYear().toString()));
+    const [month, setMonth] = useState<number>(parseInt(searchParams.get('month') || new Date().getMonth().toString()));
+
+    // Update URL when filters change
+    useEffect(() => {
+        const params = new URLSearchParams(searchParams);
+        params.set('period', filter);
+        params.set('year', year.toString());
+        params.set('month', month.toString());
+        router.replace(`?${params.toString()}`, { scroll: false });
+    }, [filter, year, month, router, searchParams]);
+
     const [stats, setStats] = useState({
         revenue: { value: 0, growth: 0 },
         invoices: { value: 0, growth: 0 },
@@ -44,7 +61,7 @@ export const DashboardContainer = ({ onCreateInvoice, invoiceHistory = [] }: Das
         const fetchStats = async () => {
             try {
                 setStats(prev => ({ ...prev, loading: true }));
-                const res = await fetch(`/api/dashboard-stats?period=${filter}`);
+                const res = await fetch(`/api/dashboard-stats?period=${filter}&year=${year}&month=${month}`);
                 if (res.ok) {
                     const data = await res.json();
                     setStats({ ...data, loading: false });
@@ -54,7 +71,7 @@ export const DashboardContainer = ({ onCreateInvoice, invoiceHistory = [] }: Das
             }
         };
         fetchStats();
-    }, [filter]);
+    }, [filter, year, month]);
 
     // Formatters
     const fmtMoney = (n: number) => new Intl.NumberFormat('en-AE', { style: 'currency', currency: 'AED' }).format(n);
@@ -111,6 +128,37 @@ export const DashboardContainer = ({ onCreateInvoice, invoiceHistory = [] }: Das
                     </div>
                     
                     <div className="flex items-center gap-3">
+                         {/* Year & Month Selectors */}
+                         {filter !== 'all' && (
+                            <div className="flex gap-2">
+                                {/* Year Select */}
+                                <select 
+                                    value={year} 
+                                    onChange={(e) => setYear(parseInt(e.target.value))}
+                                    className="px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-orange-500"
+                                >
+                                    {[2023, 2024, 2025, 2026, 2027,2028,2029,2030].map(y => (
+                                        <option key={y} value={y}>{y}</option>
+                                    ))}
+                                </select>
+
+                                {/* Month Select */}
+                                {filter === 'monthly' && (
+                                    <select 
+                                        value={month} 
+                                        onChange={(e) => setMonth(parseInt(e.target.value))}
+                                        className="px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-orange-500"
+                                    >
+                                        {Array.from({ length: 12 }, (_, i) => (
+                                            <option key={i} value={i}>
+                                                {new Date(0, i).toLocaleString('default', { month: 'long' })}
+                                            </option>
+                                        ))}
+                                    </select>
+                                )}
+                            </div>
+                        )}
+
                         {/* Filter Toggles */}
                         <div className="bg-white p-1 rounded-xl shadow-sm border border-slate-200 flex">
                             {(['monthly', 'yearly', 'all'] as FilterType[]).map((f) => (

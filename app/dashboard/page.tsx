@@ -38,10 +38,12 @@ export default function DashboardPage() {
                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-600"></div>
              </div>
          ) : (
-             <DashboardContainer 
-                onCreateInvoice={() => router.push("/invoice")} 
-                invoiceHistory={history}
-             />
+             <React.Suspense fallback={<div>Loading stats...</div>}>
+                 <DashboardContainer 
+                    onCreateInvoice={() => router.push("/invoice")} 
+                    invoiceHistory={history}
+                 />
+             </React.Suspense>
          )}
     </div>
   );

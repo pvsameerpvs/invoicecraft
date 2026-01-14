@@ -42,6 +42,8 @@ export async function GET(req: Request) {
     try {
         const { searchParams } = new URL(req.url);
         const period = (searchParams.get("period") || "monthly") as 'monthly' | 'yearly' | 'all';
+        const yearParam = searchParams.get("year");
+        const monthParam = searchParams.get("month");
 
         const sheetId = "1oo7G79VtN-zIQzlpKzVHGKGDObWik7MUPdVA2ZrEayQ";
          if (!sheetId) throw new Error("Missing GOOGLE_SHEET_ID");
@@ -54,7 +56,16 @@ export async function GET(req: Request) {
 
         const rows = (res.data.values || []).slice(1); // skip header
         
-        const now = new Date();
+        // Determine "Now" (Selected Date) based on params or current date
+        const currentDate = new Date();
+        let now = new Date();
+        
+        if (yearParam) now.setFullYear(parseInt(yearParam));
+        if (monthParam) now.setMonth(parseInt(monthParam));
+        
+        // If yearly, set month to 0 (start of year) for consistency/safety, though isSameYear ignores month
+        if (period === 'yearly') now.setMonth(0);
+
         const prevDate = getPreviousPeriod(now, period === 'all' ? 'monthly' : period);
 
         // Accumulators
