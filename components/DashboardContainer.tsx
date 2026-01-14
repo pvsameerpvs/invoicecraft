@@ -6,7 +6,7 @@ import {
     AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
     PieChart, Pie, Cell, Legend
 } from "recharts";
-import { PlusCircle, FileText, TrendingUp, AlertCircle, CheckCircle, Percent, TrendingDown } from "lucide-react";
+import { PlusCircle, FileText, TrendingUp, AlertCircle, CheckCircle, Percent, TrendingDown, RotateCcw, Filter, Calendar } from "lucide-react";
 
 interface DashboardProps {
     onCreateInvoice: () => void;
@@ -133,52 +133,75 @@ export const DashboardContainer = ({ onCreateInvoice, invoiceHistory = [] }: Das
                     </div>
                     
                     <div className="flex items-center gap-3">
-                         {/* Year & Month Selectors */}
-                         {filter !== 'all' && (
-                            <div className="flex gap-2">
-                                {/* Year Select */}
-                                <select 
-                                    value={year} 
-                                    onChange={(e) => setYear(parseInt(e.target.value))}
-                                    className="px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-orange-500"
-                                >
-                                    {[2023, 2024, 2025, 2026, 2027,2028,2029,2030].map(y => (
-                                        <option key={y} value={y}>{y}</option>
-                                    ))}
-                                </select>
-
-                                {/* Month Select */}
-                                {filter === 'monthly' && (
-                                    <select 
-                                        value={month} 
-                                        onChange={(e) => setMonth(parseInt(e.target.value))}
-                                        className="px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-orange-500"
+                        {/* Improved Filter Toolbar */}
+                        <div className="flex flex-wrap items-center gap-3 bg-white p-2 rounded-2xl shadow-sm border border-slate-200">
+                             
+                             {/* Period Toggles */}
+                             <div className="flex bg-slate-100 p-1 rounded-xl">
+                                {(['monthly', 'yearly', 'all'] as FilterType[]).map((f) => (
+                                    <button
+                                        key={f}
+                                        onClick={() => setFilter(f)}
+                                        className={`px-4 py-1.5 text-sm font-bold rounded-lg capitalize transition-all ${
+                                            filter === f 
+                                            ? "bg-white text-slate-900 shadow-sm ring-1 ring-black/5" 
+                                            : "text-slate-500 hover:text-slate-900"
+                                        }`}
                                     >
-                                        {Array.from({ length: 12 }, (_, i) => (
-                                            <option key={i} value={i}>
-                                                {new Date(0, i).toLocaleString('default', { month: 'long' })}
-                                            </option>
-                                        ))}
-                                    </select>
-                                )}
+                                        {f}
+                                    </button>
+                                ))}
                             </div>
-                        )}
 
-                        {/* Filter Toggles */}
-                        <div className="bg-white p-1 rounded-xl shadow-sm border border-slate-200 flex">
-                            {(['monthly', 'yearly', 'all'] as FilterType[]).map((f) => (
-                                <button
-                                    key={f}
-                                    onClick={() => setFilter(f)}
-                                    className={`px-4 py-2 text-sm font-semibold rounded-lg capitalize transition-all ${
-                                        filter === f 
-                                        ? "bg-slate-900 text-white shadow-md" 
-                                        : "text-slate-500 hover:bg-slate-50 hover:text-slate-900"
-                                    }`}
-                                >
-                                    {f}
-                                </button>
-                            ))}
+                            <div className="w-px h-8 bg-slate-200 hidden md:block"></div>
+
+                            {/* Date Selectors */}
+                            {filter !== 'all' && (
+                                <div className="flex items-center gap-2">
+                                    <div className="relative">
+                                        <Calendar className="w-4 h-4 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                                        <select 
+                                            value={year} 
+                                            onChange={(e) => setYear(parseInt(e.target.value))}
+                                            className="pl-9 pr-8 py-2 bg-slate-50 hover:bg-slate-100 border border-transparent hover:border-slate-200 rounded-xl text-sm font-bold text-slate-700 focus:outline-none focus:ring-2 focus:ring-orange-500/20 transition-all appearance-none cursor-pointer"
+                                        >
+                                            {[2023, 2024, 2025, 2026, 2027, 2028, 2029, 2030].map(y => (
+                                                <option key={y} value={y}>{y}</option>
+                                            ))}
+                                        </select>
+                                    </div>
+
+                                    {filter === 'monthly' && (
+                                        <div className="relative">
+                                            <select 
+                                                value={month} 
+                                                onChange={(e) => setMonth(parseInt(e.target.value))}
+                                                className="pl-4 pr-8 py-2 bg-slate-50 hover:bg-slate-100 border border-transparent hover:border-slate-200 rounded-xl text-sm font-bold text-slate-700 focus:outline-none focus:ring-2 focus:ring-orange-500/20 transition-all appearance-none cursor-pointer min-w-[140px]"
+                                            >
+                                                {Array.from({ length: 12 }, (_, i) => (
+                                                    <option key={i} value={i}>
+                                                        {new Date(0, i).toLocaleString('default', { month: 'long' })}
+                                                    </option>
+                                                ))}
+                                            </select>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+
+                             {/* Reset Button */}
+                             <button 
+                                onClick={() => {
+                                    const now = new Date();
+                                    setFilter('monthly');
+                                    setYear(now.getFullYear());
+                                    setMonth(now.getMonth());
+                                }}
+                                className="p-2 text-slate-400 hover:text-orange-600 hover:bg-orange-50 rounded-xl transition-colors"
+                                title="Reset Filters"
+                             >
+                                <RotateCcw className="w-4 h-4" />
+                             </button>
                         </div>
 
                         <button 
