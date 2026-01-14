@@ -220,7 +220,12 @@ function HistoryContent() {
       <div className="relative z-10 flex-none px-4 pt-8 pb-4 sm:px-6 lg:px-8">
         <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between text-white">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">Invoice History</h1>
+            <div className="flex items-center gap-3">
+              <h1 className="text-3xl font-bold tracking-tight">Invoice History</h1>
+              <span className="rounded-full bg-white/20 px-3 py-1 text-sm font-medium text-white backdrop-blur-sm border border-white/20">
+                 {rows.length} Total
+              </span>
+            </div>
             <p className="mt-2 text-white/80 text-sm max-w-2xl">
               Track, manage, and download your past invoices.
             </p>

@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getSheetsClient } from "../../lib/sheets";
+import { getSheetsClient } from "@/app/lib/sheets";
 
 export const dynamic = 'force-dynamic';
 export const runtime = "nodejs";

@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getSheetsClient, logActivity } from "../../lib/sheets";
+import { getSheetsClient, logActivity } from "@/app/lib/sheets";
 
 export const dynamic = 'force-dynamic';
 export const runtime = "nodejs";
@@ -372,18 +372,21 @@ export async function GET(req: Request) {
         }
 
         // 6. Year & Month Filter
-        if (searchParams.has('year')) {
-            const year = parseInt(searchParams.get('year') || "");
-            if (!isNaN(year)) {
-                // Parse item date
-                const d = new Date(item.date); // item.date is YYYY-MM-DD string usually, or ISO
-                if (d.getFullYear() !== year) return false;
+        // 6. Year & Month Filter
+        if (searchParams.has('year') || searchParams.has('month')) {
+            const d = new Date(item.date); // item.date is YYYY-MM-DD string usually, or ISO
+            
+            if (searchParams.has('year')) {
+                const year = parseInt(searchParams.get('year') || "");
+                if (!isNaN(year) && d.getFullYear() !== year) {
+                    return false;
+                }
+            }
 
-                if (searchParams.has('month')) {
-                    const month = parseInt(searchParams.get('month') || "");
-                    if (!isNaN(month) && d.getMonth() !== month) {
-                        return false;
-                    }
+            if (searchParams.has('month')) {
+                const month = parseInt(searchParams.get('month') || "");
+                if (!isNaN(month) && d.getMonth() !== month) {
+                    return false;
                 }
             }
         }

@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { logActivity } from "../../lib/sheets";
+import { logActivity } from "@/app/lib/sheets";
 
 export async function POST(req: Request) {
   try {
