@@ -118,7 +118,7 @@ export default function ProfilePage() {
 
                 {/* Other Settings Tabs */}
                 {["security", "notifications", "language"].includes(activeTab) && (
-                    <SettingsSection activeTab={activeTab} />
+                    <SettingsSection activeTab={activeTab} username={username} />
                 )}
             </div>
         </div>

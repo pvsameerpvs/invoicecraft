@@ -86,6 +86,7 @@ export async function POST(req: Request) {
 }
 
 // PUT: Update current user details
+// PUT: Update current user details
 export async function PUT(req: Request) {
     try {
         const currentUser = cookies().get("invoicecraft_auth")?.value;
@@ -93,11 +94,11 @@ export async function PUT(req: Request) {
              return NextResponse.json({ ok: false, error: "Not logged in" }, { status: 401 });
         }
 
-        const { email, mobile } = await req.json();
+        const { email, mobile, password, username: newUsername } = await req.json();
 
         const sheets = getSheetsClient();
 
-        // Find the user row
+        // Fetch all users to check for existence and find current user
         const existing = await sheets.spreadsheets.values.get({
             spreadsheetId: USERS_SHEET_ID,
             range: "Users!B:B", // Username column
@@ -112,23 +113,67 @@ export async function PUT(req: Request) {
 
         // B:B includes header at index 0. So row # is index + 1
         const rowNum = rowIndex + 1; 
-
-        // Update Email (Column E / index 4) and Mobile (Column F / index 5)
-        // Range: E{rowNum}:F{rowNum}
         
-        await sheets.spreadsheets.values.update({
-             spreadsheetId: USERS_SHEET_ID,
-             range: `Users!E${rowNum}:F${rowNum}`,
-             valueInputOption: "USER_ENTERED",
-             requestBody: {
-                 values: [[email || "", mobile || ""]]
+        // 0. Update Username if provided (Column B)
+        if (newUsername && newUsername !== currentUser) {
+             if (users.includes(newUsername)) {
+                 return NextResponse.json({ ok: false, error: "Username already taken" }, { status: 409 });
              }
-        });
+             
+             await sheets.spreadsheets.values.update({
+                spreadsheetId: USERS_SHEET_ID,
+                range: `Users!B${rowNum}`,
+                valueInputOption: "USER_ENTERED",
+                requestBody: { values: [[newUsername]] }
+             });
+             
+             // Update Auth Cookie because username changed
+             // We need to set the cookie on the response
+             // But in Next.js App Router we can set cookies on the request or response.
+             // We return JSON, so we can't easily set header on NextResponse unless we construct it specifically.
+             // Actually, we can just set it on the response object we return.
+        }
+        
+        // 1. Update Password if provided (Column C)
+        if (password) {
+             await sheets.spreadsheets.values.update({
+                spreadsheetId: USERS_SHEET_ID,
+                range: `Users!C${rowNum}`,
+                valueInputOption: "USER_ENTERED",
+                requestBody: { values: [[password]] }
+           });
+        }
+
+        // 2. Update Email/Mobile if provided (Column E, F)
+        if (email !== undefined || mobile !== undefined) {
+             if (email !== undefined && mobile !== undefined) {
+                await sheets.spreadsheets.values.update({
+                    spreadsheetId: USERS_SHEET_ID,
+                    range: `Users!E${rowNum}:F${rowNum}`,
+                    valueInputOption: "USER_ENTERED",
+                    requestBody: {
+                        values: [[email, mobile]]
+                    }
+                });
+             }
+        }
 
         // Log
-        await logActivity(currentUser, `UPDATED PROFILE`, req.headers.get("user-agent"));
+        await logActivity(currentUser, `UPDATED PROFILE${newUsername ? ` (New User: ${newUsername})` : ""}`, req.headers.get("user-agent"));
 
-        return NextResponse.json({ ok: true });
+        const response = NextResponse.json({ ok: true });
+        
+        // If username changed, update cookie
+        if (newUsername && newUsername !== currentUser) {
+             response.cookies.set("invoicecraft_auth", newUsername, { 
+                 path: "/",
+                 httpOnly: true,
+                 secure: process.env.NODE_ENV === "production",
+                 maxAge: 60 * 60 * 24 * 7 // 7 days
+             });
+        }
+
+        return response;
 
     } catch (e: any) {
         return NextResponse.json({ ok: false, error: e.message }, { status: 500 });
