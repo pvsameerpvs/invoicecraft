@@ -32,7 +32,7 @@ export default function HomePage() {
         toast.success("Login successful!", { id: t });
         // ✅ Store username for history tracking
         localStorage.setItem("invoicecraft:username", username);
-        router.push("/invoice");
+        router.push("/dashboard");
         return;
       }
 

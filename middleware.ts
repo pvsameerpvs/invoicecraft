@@ -4,7 +4,7 @@ import type { NextRequest } from "next/server";
 export function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
-  if (pathname.startsWith("/invoice")) {
+  if (pathname.startsWith("/invoice") || pathname.startsWith("/dashboard")) {
     const auth = req.cookies.get("js_auth")?.value;
 
     if (auth !== "1") {
@@ -18,5 +18,5 @@ export function middleware(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/invoice/:path*"],
+  matcher: ["/invoice/:path*", "/dashboard/:path*"],
 };

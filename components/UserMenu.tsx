@@ -3,7 +3,7 @@
 import React, { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
-import { Activity, PlusCircle, History, LogOut } from "lucide-react";
+import { Activity, PlusCircle, History, LogOut, LayoutDashboard } from "lucide-react";
 
 export function UserMenu() {
   const router = useRouter();
@@ -94,6 +94,18 @@ export function UserMenu() {
                Activity Logs
              </button>
            )}
+           {/* NEW: Dashboard Link */}
+           <button
+               onClick={() => {
+                 setIsOpen(false);
+                 router.push("/dashboard");
+               }}
+               className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-xs font-medium text-slate-700 hover:bg-orange-50 hover:text-brand-primary"
+             >
+               <LayoutDashboard className="h-4 w-4" />
+               Dashboard
+             </button>
+
             {/* NEW: Back to Editor / New Invoice */}
             <button
                onClick={() => {
