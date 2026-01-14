@@ -12,6 +12,8 @@ interface User {
     createdAt?: string;
 }
 
+import { Trash2 } from "lucide-react";
+
 export const UserManagementSection = () => {
     const [users, setUsers] = useState<User[]>([]);
     const [newUser, setNewUser] = useState({ 
@@ -35,10 +37,37 @@ export const UserManagementSection = () => {
     }, []);
 
     const [loading, setLoading] = useState(false);
-    
+    const [deleting, setDeleting] = useState<string | null>(null);
+
     // Check if role defaults to admin if not set
     const handleRoleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
         setNewUser({ ...newUser, role: e.target.value });
+    };
+
+    const handleDelete = async (username: string) => {
+        if (!confirm(`Are you sure you want to delete user ${username}?`)) return;
+        
+        setDeleting(username);
+        try {
+            const res = await fetch("/api/users", {
+                method: "DELETE",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ username })
+            });
+
+            const data = await res.json();
+            
+            if (res.ok) {
+                toast.success(`User ${username} deleted`);
+                fetchUsers();
+            } else {
+                toast.error(data.error || "Failed to delete user");
+            }
+        } catch (error) {
+            toast.error("Something went wrong");
+        } finally {
+            setDeleting(null);
+        }
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -165,14 +194,15 @@ export const UserManagementSection = () => {
 
             <div className="mt-12">
                 <h3 className="text-lg font-bold text-slate-900 mb-4">Existing Users</h3>
-                <div className="overflow-x-auto">
-                    <table className="w-full text-left border-collapse">
-                        <thead>
+                <div className="overflow-x-auto max-h-[400px] overflow-y-auto scrollbar-thin scrollbar-thumb-slate-200 scrollbar-track-transparent">
+                    <table className="w-full text-left border-collapse bg-white">
+                        <thead className="sticky top-0 bg-white z-10 shadow-sm">
                             <tr className="border-b border-slate-100 text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                                <th className="py-3 px-2">Username</th>
-                                <th className="py-3 px-2">Role</th>
-                                <th className="py-3 px-2">Email</th>
-                                <th className="py-3 px-2">Created At</th>
+                                <th className="py-3 px-2 bg-white">Username</th>
+                                <th className="py-3 px-2 bg-white">Role</th>
+                                <th className="py-3 px-2 bg-white">Email</th>
+                                <th className="py-3 px-2 bg-white">Created At</th>
+                                <th className="py-3 px-2 bg-white text-right">Actions</th>
                             </tr>
                         </thead>
                         <tbody className="text-sm text-slate-700">
@@ -190,11 +220,21 @@ export const UserManagementSection = () => {
                                     <td className="py-3 px-2 text-slate-400 text-xs">
                                         {user.createdAt ? new Date(user.createdAt).toLocaleDateString() : "-"}
                                     </td>
+                                    <td className="py-3 px-2 text-right">
+                                        <button 
+                                            onClick={() => handleDelete(user.username)}
+                                            disabled={deleting === user.username}
+                                            className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all"
+                                            title="Delete User"
+                                        >
+                                            <Trash2 className="w-4 h-4" />
+                                        </button>
+                                    </td>
                                 </tr>
                             ))}
                             {users.length === 0 && (
                                 <tr>
-                                    <td colSpan={4} className="py-8 text-center text-slate-400">
+                                    <td colSpan={5} className="py-8 text-center text-slate-400">
                                         No users found.
                                     </td>
                                 </tr>
