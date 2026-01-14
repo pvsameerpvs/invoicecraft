@@ -337,28 +337,38 @@ export const DashboardContainer = ({ onCreateInvoice, invoiceHistory = [] }: Das
                 <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
                     <div className="px-6 py-4 border-b border-slate-50 flex items-center justify-between">
                         <h3 className="font-bold text-slate-900">Recent Invoices</h3>
-                        <button className="text-sm font-bold text-orange-600 hover:text-orange-700">View All</button>
+                        <button 
+                            onClick={() => router.push('/history')}
+                            className="text-sm font-bold text-orange-600 hover:text-orange-700"
+                        >
+                            View All
+                        </button>
                     </div>
                     <div className="divide-y divide-slate-50">
-                        {[1, 2, 3].map((i) => (
+                        {invoiceHistory.slice(0, 3).map((invoice, i) => (
                             <div key={i} className="flex items-center justify-between px-6 py-4 hover:bg-slate-50 transition-colors">
                                 <div className="flex items-center gap-4">
-                                    <div className="h-10 w-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-600 font-bold">
-                                        #{28 + i}
-                                    </div>
                                     <div>
-                                        <p className="font-bold text-slate-900 text-sm">Invoice INV-2026-00{28+i}</p>
-                                        <p className="text-xs text-slate-500">Generated on 13 Jan 2026</p>
+                                        <p className="font-bold text-slate-900 text-sm">Invoice {invoice.invoiceNumber}</p>
+                                        <p className="text-xs text-slate-500">Generated on {invoice.date}</p>
                                     </div>
                                 </div>
                                 <div className="text-right">
-                                     <p className="font-bold text-slate-900 text-sm">AED 1,20{i}.00</p>
-                                     <span className="inline-flex items-center gap-1 text-[10px] uppercase font-bold text-green-600 bg-green-50 px-2 py-0.5 rounded-full mt-1">
-                                        <CheckCircle className="w-3 h-3" /> Paid
+                                     <p className="font-bold text-slate-900 text-sm">{invoice.currency} {invoice.total}</p>
+                                     <span className={`inline-flex items-center gap-1 text-[10px] uppercase font-bold px-2 py-0.5 rounded-full mt-1 ${
+                                         invoice.status === 'Paid' ? 'text-green-600 bg-green-50' : 'text-orange-600 bg-orange-50'
+                                     }`}>
+                                        {invoice.status === 'Paid' ? <CheckCircle className="w-3 h-3" /> : <AlertCircle className="w-3 h-3" />}
+                                        {invoice.status || 'Unpaid'}
                                      </span>
                                 </div>
                             </div>
                         ))}
+                        {invoiceHistory.length === 0 && (
+                             <div className="px-6 py-8 text-center text-slate-500 text-sm">
+                                 No recent invoices found.
+                             </div>
+                        )}
                     </div>
                 </div>
 
