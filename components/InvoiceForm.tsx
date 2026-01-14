@@ -14,31 +14,7 @@ interface InvoiceFormProps {
   isUpdate?: boolean;
 }
 
-const PRESET_LINE_ITEMS: Array<{ label: string; amount: string }> = [
-  { label: "Website AI", amount: "299" },
-  { label: "Website 5 Page Plan", amount: "99" },
-  { label: "Website 10 Page Plan", amount: "" },
-  { label: "Website 15 Page Plan", amount: "15" },
-  { label: "Website 20 Page Plan", amount: "1" },
-  { label: "RESTAURANT QR CODE MENU", amount: "500" },
-  { label: "E Commerce Up 20 Products", amount: "1000" },
-  { label: "E Commerce Up 40 Products", amount: "2000" },
-  { label: "E Commerce Up 60 Products", amount: "3000" },
-  { label: "E Commerce Complete Managed", amount: "4000" },
-  { label: "SEO Try N Buy Offer", amount: "999" },
-  { label: "Digital Marketing Try N Buy Bundle", amount: "4000" },
-  { label: "Dedicated Website Managed Solution", amount: "8000" },
-  { label: "Dedicated SEO Managed Solution", amount: "8000" },
-  { label: "Dedicated Social Media Managed Solution", amount: "" },
-  { label: "Old E Commerce Plan", amount: "" },
-  { label: "Old Website Plan", amount: "" },
-  { label: "Old SEO Plan", amount: "" },
-  { label: "OLD SMM PLan", amount: "" },
-  { label: "Google Ads", amount: "200" },
-  { label: "Google My Business - GMB", amount: "200" },
-  { label: "Portfolio", amount: "200" },
-  { label: "Meta ads", amount: "" },
-];
+
 
 export const InvoiceForm: React.FC<InvoiceFormProps> = ({
   value,
@@ -50,6 +26,19 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({
     React.useState(false);
 
   const [isAddItemPickerOpen, setIsAddItemPickerOpen] = React.useState(false);
+
+  const [presets, setPresets] = React.useState<Array<{ label: string; amount: string }>>([]);
+
+  React.useEffect(() => {
+    fetch("/api/products")
+      .then((res) => res.json())
+      .then((data) => {
+        if (Array.isArray(data)) {
+          setPresets(data);
+        }
+      })
+      .catch((err) => console.error("Failed to load products preset", err));
+  }, []);
 
   const handleFieldChange = (field: keyof InvoiceData, newValue: string) => {
     onChange({ ...value, [field]: newValue });
@@ -291,7 +280,7 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({
             return;
           }
 
-          const preset = PRESET_LINE_ITEMS.find((p) => p.label === v);
+          const preset = presets.find((p) => p.label === v);
           if (preset) {
             addPresetLineItem(preset);
             setIsAddItemPickerOpen(false);
@@ -303,7 +292,7 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({
           Choose…
         </option>
 
-        {PRESET_LINE_ITEMS.map((p) => (
+        {presets.map((p) => (
           <option key={p.label} value={p.label}>
             {p.label}
             {p.amount && p.amount.trim().length > 0 ? ` - ${p.amount}` : ""}
@@ -312,6 +301,7 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({
 
         <option value="__custom__">Custom item…</option>
       </select>
+
 
       <div className="flex justify-end">
         <Button
