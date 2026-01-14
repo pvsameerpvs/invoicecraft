@@ -13,6 +13,7 @@ import { ProfileHeader } from "./components/ProfileHeader";
 import { ProfileSidebar } from "./components/ProfileSidebar";
 import { PersonalInfoSection } from "./components/PersonalInfoSection";
 import { UserManagementSection } from "./components/UserManagementSection";
+import { ProductsSection } from "./components/ProductsSection";
 import { SettingsSection } from "./components/SettingsSection";
 
 export default function ProfilePage() {
@@ -77,6 +78,10 @@ export default function ProfilePage() {
                 
                 {activeTab === "user_management" && isAdmin && (
                     <UserManagementSection />
+                )}
+
+                {activeTab === "products" && isAdmin && (
+                    <ProductsSection />
                 )}
 
                 {/* Other Settings Tabs */}
