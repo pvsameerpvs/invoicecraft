@@ -44,7 +44,7 @@ export async function POST(req: Request) {
             return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 403 });
         }
 
-        const { username, password, role: newRole } = await req.json();
+        const { username, password, role: newRole, email, mobile } = await req.json();
 
         if (!username || !password) {
              return NextResponse.json({ ok: false, error: "Missing fields" }, { status: 400 });
@@ -71,7 +71,7 @@ export async function POST(req: Request) {
             range: "Users!A:F",
             valueInputOption: "USER_ENTERED",
             requestBody: {
-                values: [[id, username, password, newRole, "", ""]] 
+                values: [[id, username, password, newRole, email || "", mobile || ""]] 
             }
         });
 

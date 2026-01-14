@@ -5,7 +5,7 @@ import toast from "react-hot-toast";
 
 export const UserManagementSection = () => {
     const [newUser, setNewUser] = useState({ 
-        username: "", password: "", repeatPassword: "", role: "user" 
+        username: "", password: "", repeatPassword: "", role: "user", email: "", mobile: "" 
     });
 
     const [loading, setLoading] = useState(false);
@@ -30,7 +30,9 @@ export const UserManagementSection = () => {
                 body: JSON.stringify({
                     username: newUser.username,
                     password: newUser.password,
-                    role: newUser.role
+                    role: newUser.role,
+                    email: newUser.email,
+                    mobile: newUser.mobile
                 })
             });
 
@@ -38,7 +40,7 @@ export const UserManagementSection = () => {
             
             if (res.ok) {
                 toast.success(`User ${newUser.username} created successfully!`);
-                setNewUser({ username: "", password: "", repeatPassword: "", role: "user" });
+                setNewUser({ username: "", password: "", repeatPassword: "", role: "user", email: "", mobile: "" });
             } else {
                 toast.error(data.error || "Failed to create user");
             }
@@ -66,6 +68,26 @@ export const UserManagementSection = () => {
                             onChange={e => setNewUser({...newUser, username: e.target.value})}
                             className="w-full h-11 rounded-xl bg-slate-50 border border-slate-200 px-4 text-sm font-medium focus:bg-white focus:ring-2 focus:ring-brand-primary/20 focus:border-brand-primary outline-none transition-all"
                             placeholder="e.g. johndoe"
+                        />
+                    </div>
+                    <div className="space-y-1.5">
+                        <label className="text-xs font-semibold text-slate-900 uppercase tracking-wider">Email</label>
+                        <input 
+                            type="email"
+                            value={newUser.email}
+                            onChange={e => setNewUser({...newUser, email: e.target.value})}
+                            className="w-full h-11 rounded-xl bg-slate-50 border border-slate-200 px-4 text-sm font-medium focus:bg-white focus:ring-2 focus:ring-brand-primary/20 focus:border-brand-primary outline-none transition-all"
+                            placeholder="e.g. user@example.com"
+                        />
+                    </div>
+                    <div className="space-y-1.5">
+                        <label className="text-xs font-semibold text-slate-900 uppercase tracking-wider">Mobile</label>
+                        <input 
+                            type="tel"
+                            value={newUser.mobile}
+                            onChange={e => setNewUser({...newUser, mobile: e.target.value})}
+                            className="w-full h-11 rounded-xl bg-slate-50 border border-slate-200 px-4 text-sm font-medium focus:bg-white focus:ring-2 focus:ring-brand-primary/20 focus:border-brand-primary outline-none transition-all"
+                            placeholder="Mobile Number"
                         />
                     </div>
                     <div className="space-y-1.5">
@@ -106,9 +128,10 @@ export const UserManagementSection = () => {
                  <div className="flex justify-end pt-4 border-t border-slate-100">
                     <button 
                         type="submit"
-                        className="px-6 py-2.5 bg-slate-900 text-white text-sm font-bold rounded-xl shadow-lg shadow-slate-900/20 hover:bg-slate-800 active:scale-95 transition-all"
+                        disabled={loading}
+                        className={`px-6 py-2.5 bg-slate-900 text-white text-sm font-bold rounded-xl shadow-lg shadow-slate-900/20 hover:bg-slate-800 active:scale-95 transition-all ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
                     >
-                        Create User
+                        {loading ? "Creating..." : "Create User"}
                     </button>
                  </div>
             </form>
