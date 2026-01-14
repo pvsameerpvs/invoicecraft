@@ -5,7 +5,7 @@ import {
     AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
     PieChart, Pie, Cell, Legend
 } from "recharts";
-import { PlusCircle, FileText, TrendingUp, AlertCircle, CheckCircle } from "lucide-react";
+import { PlusCircle, FileText, TrendingUp, AlertCircle, CheckCircle, Percent } from "lucide-react";
 
 interface DashboardProps {
     onCreateInvoice: () => void;
@@ -27,6 +27,7 @@ export const DashboardContainer = ({ onCreateInvoice, invoiceHistory = [] }: Das
         return {
             totalInvoices: total || 124,
             totalRevenue: "AED 45,200", 
+            totalVat: "AED 2,260",
             outstanding: "AED 12,500",
             paid: "AED 32,700"
         };
@@ -69,7 +70,7 @@ export const DashboardContainer = ({ onCreateInvoice, invoiceHistory = [] }: Das
                 </div>
 
                 {/* Stats Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                     <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex items-start justify-between">
                         <div>
                             <p className="text-sm font-medium text-slate-500 mb-1">Total Revenue</p>
@@ -92,6 +93,18 @@ export const DashboardContainer = ({ onCreateInvoice, invoiceHistory = [] }: Das
                         </div>
                         <div className="p-3 bg-blue-50 text-blue-600 rounded-xl">
                             <FileText className="w-6 h-6" />
+                        </div>
+                    </div>
+
+                    {/* NEW: VAT Amount Card */}
+                    <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex items-start justify-between">
+                        <div>
+                            <p className="text-sm font-medium text-slate-500 mb-1">Tax Amount (5%)</p>
+                            <h3 className="text-3xl font-extrabold text-slate-900">{stats.totalVat}</h3>
+                            <p className="text-xs text-slate-400 mt-2 font-medium">Collected VAT</p>
+                        </div>
+                        <div className="p-3 bg-indigo-50 text-indigo-600 rounded-xl">
+                            <Percent className="w-6 h-6" />
                         </div>
                     </div>
 
