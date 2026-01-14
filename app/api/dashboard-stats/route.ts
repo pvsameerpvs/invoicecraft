@@ -13,7 +13,7 @@ export interface DashboardStats {
     revenue: StatBase;
     invoices: StatBase;
     vat: StatBase;
-    outstanding: StatBase;
+    outstanding: StatBase & { count: number };
     overdue: { count: number; value: number };
 }
 
@@ -58,8 +58,8 @@ export async function GET(req: Request) {
         const prevDate = getPreviousPeriod(now, period === 'all' ? 'monthly' : period);
 
         // Accumulators
-        const currentStats = { revenue: 0, invoices: 0, vat: 0, outstanding: 0, paid: 0 };
-        const prevStats = { revenue: 0, invoices: 0, vat: 0, outstanding: 0, paid: 0 };
+        const currentStats = { revenue: 0, invoices: 0, vat: 0, outstanding: 0, outstandingCount: 0, paid: 0 };
+        const prevStats = { revenue: 0, invoices: 0, vat: 0, outstanding: 0, outstandingCount: 0, paid: 0 };
         const overdueStats = { count: 0, value: 0 };
 
         rows.forEach(row => {
@@ -119,6 +119,7 @@ export async function GET(req: Request) {
                     currentStats.paid += invoiceTotal;
                 } else {
                     currentStats.outstanding += invoiceTotal;
+                    currentStats.outstandingCount++;
                 }
             }
             
@@ -130,6 +131,7 @@ export async function GET(req: Request) {
                     prevStats.paid += invoiceTotal;
                 } else {
                     prevStats.outstanding += invoiceTotal;
+                    prevStats.outstandingCount++;
                 }
             }
         });
@@ -149,7 +151,7 @@ export async function GET(req: Request) {
             revenue: { value: currentStats.revenue, growth: calcGrowth(currentStats.revenue, prevStats.revenue) },
             invoices: { value: currentStats.invoices, growth: calcGrowth(currentStats.invoices, prevStats.invoices) },
             vat: { value: currentStats.vat, growth: calcGrowth(currentStats.vat, prevStats.vat) },
-            outstanding: { value: currentStats.outstanding, growth: calcGrowth(currentStats.outstanding, prevStats.outstanding) },
+            outstanding: { value: currentStats.outstanding, count: currentStats.outstandingCount, growth: calcGrowth(currentStats.outstanding, prevStats.outstanding) },
             overdue: overdueStats
         };
 

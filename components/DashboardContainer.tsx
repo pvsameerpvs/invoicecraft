@@ -12,6 +12,17 @@ interface DashboardProps {
     invoiceHistory?: any[]; 
 }
 
+// Hide scrollbar utility
+const scrollbarHideStyles = `
+    .no-scrollbar::-webkit-scrollbar {
+        display: none;
+    }
+    .no-scrollbar {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+    }
+`;
+
 const COLORS = ["#f97316", "#ef4444", "#22c55e"]; // Orange, Red, Green
 type FilterType = 'monthly' | 'yearly' | 'all';
 
@@ -23,7 +34,7 @@ export const DashboardContainer = ({ onCreateInvoice, invoiceHistory = [] }: Das
         revenue: { value: 0, growth: 0 },
         invoices: { value: 0, growth: 0 },
         vat: { value: 0, growth: 0 },
-        outstanding: { value: 0, growth: 0 },
+        outstanding: { value: 0, count: 0, growth: 0 },
         overdue: { count: 0, value: 0 }, // New Overdue Metrics
         loading: true
     });
@@ -65,6 +76,10 @@ export const DashboardContainer = ({ onCreateInvoice, invoiceHistory = [] }: Das
         );
     };
 
+    // Calculate Paid Count (Client Side Approximation if not provided by API, assuming Total - Unpaid)
+    // Note: This relies on stats.invoices.value being Total and stats.outstanding.count being Unpaid
+    const paidCount = Math.max(0, stats.invoices.value - stats.outstanding.count);
+
     // --- Chart Data (Client Side derived from History for Trends) ---
     // We keep this responsive to the history prop for the graphs
     const areaData = [
@@ -85,6 +100,7 @@ export const DashboardContainer = ({ onCreateInvoice, invoiceHistory = [] }: Das
 
     return (
         <div className="flex-1 bg-slate-50 p-4 md:p-8 overflow-y-auto">
+            <style>{scrollbarHideStyles}</style>
             <div className="max-w-7xl mx-auto space-y-8">
                 
                 {/* Header & Filter */}
@@ -122,10 +138,10 @@ export const DashboardContainer = ({ onCreateInvoice, invoiceHistory = [] }: Das
                     </div>
                 </div>
 
-                {/* Stats Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                {/* Stats Slider */}
+                <div className="flex overflow-x-auto pb-4 gap-6 no-scrollbar snap-x">
                     {/* Total Revenue */}
-                    <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex items-start justify-between">
+                    <div className="min-w-[320px] flex-shrink-0 bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex items-start justify-between snap-center">
                         <div>
                             <p className="text-sm font-medium text-slate-500 mb-1">Total Revenue</p>
                             <h3 className="text-3xl font-extrabold text-slate-900">
@@ -138,22 +154,25 @@ export const DashboardContainer = ({ onCreateInvoice, invoiceHistory = [] }: Das
                         </div>
                     </div>
 
-                    {/* Total Invoices */}
-                    <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex items-start justify-between">
+                    {/* Total Paid Invoices */}
+                    <div className="min-w-[320px] flex-shrink-0 bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex items-start justify-between snap-center">
                         <div>
-                            <p className="text-sm font-medium text-slate-500 mb-1">Total Invoices</p>
+                            <p className="text-sm font-medium text-slate-500 mb-1">Total Paid Invoices</p>
                             <h3 className="text-3xl font-extrabold text-slate-900">
-                                {stats.loading ? "..." : stats.invoices.value}
+                                {stats.loading ? "..." : paidCount}
                             </h3>
+                             <p className="text-xs font-bold text-green-600 mt-1">
+                                {stats.loading ? "..." : fmtMoney(stats.revenue.value)}
+                            </p>
                              {!stats.loading && <GrowthBadge value={stats.invoices.growth} />}
                         </div>
-                        <div className="p-3 bg-blue-50 text-blue-600 rounded-xl">
-                            <FileText className="w-6 h-6" />
+                        <div className="p-3 bg-green-50 text-green-600 rounded-xl">
+                            <CheckCircle className="w-6 h-6" />
                         </div>
                     </div>
 
                     {/* VAT Amount */}
-                    <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex items-start justify-between">
+                    <div className="min-w-[320px] flex-shrink-0 bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex items-start justify-between snap-center">
                         <div>
                             <p className="text-sm font-medium text-slate-500 mb-1">Tax Amount (5%)</p>
                              <h3 className="text-3xl font-extrabold text-slate-900">
@@ -166,28 +185,37 @@ export const DashboardContainer = ({ onCreateInvoice, invoiceHistory = [] }: Das
                         </div>
                     </div>
 
-                    {/* Outstanding */}
-                    <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex flex-col justify-between">
-                        <div className="flex items-start justify-between w-full">
-                            <div>
-                                <p className="text-sm font-medium text-slate-500 mb-1">Outstanding</p>
-                                <h3 className="text-3xl font-extrabold text-slate-900">
-                                    {stats.loading ? "..." : fmtMoney(stats.outstanding.value)}
-                                </h3>
-                                {!stats.loading && <GrowthBadge value={stats.outstanding.growth} />}
-                            </div>
-                            <div className="p-3 bg-red-50 text-red-600 rounded-xl">
-                                <AlertCircle className="w-6 h-6" />
-                            </div>
+                    {/* Total Unpaid Invoices */}
+                    <div className="min-w-[320px] flex-shrink-0 bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex items-start justify-between snap-center">
+                        <div>
+                            <p className="text-sm font-medium text-slate-500 mb-1">Total Unpaid Invoices</p>
+                            <h3 className="text-3xl font-extrabold text-slate-900">
+                                {stats.loading ? "..." : fmtMoney(stats.outstanding.value)}
+                            </h3>
+                             <p className="text-xs font-bold text-slate-500 mt-1">
+                                {stats.loading ? "..." : `${stats.outstanding.count} Invoices`}
+                            </p>
+                            {!stats.loading && <GrowthBadge value={stats.outstanding.growth} />}
                         </div>
+                        <div className="p-3 bg-red-50 text-red-600 rounded-xl">
+                            <AlertCircle className="w-6 h-6" />
+                        </div>
+                    </div>
 
-                        {/* Overdue Alert */}
-                         {!stats.loading && stats.overdue.count > 0 && (
-                            <div className="mt-4 flex items-center gap-2 p-2.5 bg-red-100 text-red-700 rounded-lg text-xs font-bold border border-red-200">
-                                <AlertCircle className="w-4 h-4 flex-shrink-0" />
-                                <span>{stats.overdue.count} Overdue ({fmtMoney(stats.overdue.value)})</span>
-                            </div>
-                        )}
+                    {/* Total Overdue Invoices */}
+                    <div className="min-w-[320px] flex-shrink-0 bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex items-start justify-between snap-center">
+                        <div>
+                            <p className="text-sm font-medium text-slate-500 mb-1">Total Overdue Invoices</p>
+                            <h3 className="text-3xl font-extrabold text-slate-900">
+                                {stats.loading ? "..." : fmtMoney(stats.overdue.value)}
+                            </h3>
+                            <p className="text-xs font-bold text-red-500 mt-1">
+                                {stats.loading ? "..." : `${stats.overdue.count} Overdue`}
+                            </p>
+                        </div>
+                        <div className="p-3 bg-red-100 text-red-700 rounded-xl">
+                            <AlertCircle className="w-6 h-6" />
+                        </div>
                     </div>
                 </div>
 
