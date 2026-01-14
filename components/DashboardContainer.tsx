@@ -73,6 +73,11 @@ export const DashboardContainer = ({ onCreateInvoice, invoiceHistory = [] }: Das
         fetchStats();
     }, [filter, year, month]);
 
+    // Trigger Auto-Overdue Update on Mount
+    useEffect(() => {
+        fetch('/api/cron/update-overdue').catch(err => console.error("Auto-Overdue Check Failed", err));
+    }, []);
+
     // Formatters
     const fmtMoney = (n: number) => new Intl.NumberFormat('en-AE', { style: 'currency', currency: 'AED' }).format(n);
     const fmtPerc = (n: number) => `${Math.abs(n).toFixed(1)}%`;
