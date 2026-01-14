@@ -14,7 +14,11 @@ interface User {
 
 import { Trash2 } from "lucide-react";
 
-export const UserManagementSection = () => {
+interface UserManagementSectionProps {
+    currentUser?: string;
+}
+
+export const UserManagementSection = ({ currentUser }: UserManagementSectionProps) => {
     const [users, setUsers] = useState<User[]>([]);
     const [newUser, setNewUser] = useState({ 
         username: "", password: "", repeatPassword: "", role: "user", email: "", mobile: "" 
@@ -44,21 +48,21 @@ export const UserManagementSection = () => {
         setNewUser({ ...newUser, role: e.target.value });
     };
 
-    const handleDelete = async (username: string) => {
-        if (!confirm(`Are you sure you want to delete user ${username}?`)) return;
+    const handleDelete = async (user: User) => {
+        if (!confirm(`Are you sure you want to delete user ${user.username}?`)) return;
         
-        setDeleting(username);
+        setDeleting(user.id);
         try {
             const res = await fetch("/api/users", {
                 method: "DELETE",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ username })
+                body: JSON.stringify({ id: user.id })
             });
 
             const data = await res.json();
             
             if (res.ok) {
-                toast.success(`User ${username} deleted`);
+                toast.success(`User ${user.username} deleted`);
                 fetchUsers();
             } else {
                 toast.error(data.error || "Failed to delete user");
@@ -221,14 +225,18 @@ export const UserManagementSection = () => {
                                         {user.createdAt ? new Date(user.createdAt).toLocaleDateString() : "-"}
                                     </td>
                                     <td className="py-3 px-2 text-right">
-                                        <button 
-                                            onClick={() => handleDelete(user.username)}
-                                            disabled={deleting === user.username}
-                                            className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all"
-                                            title="Delete User"
-                                        >
-                                            <Trash2 className="w-4 h-4" />
-                                        </button>
+                                        {user.username === currentUser ? (
+                                            <span className="text-xs font-medium text-slate-400 italic pr-2">You</span>
+                                        ) : (
+                                            <button 
+                                                onClick={() => handleDelete(user)}
+                                                disabled={deleting !== null}
+                                                className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                                                title="Delete User"
+                                            >
+                                                <Trash2 className="w-4 h-4" />
+                                            </button>
+                                        )}
                                     </td>
                                 </tr>
                             ))}

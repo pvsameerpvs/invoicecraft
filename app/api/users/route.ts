@@ -191,37 +191,41 @@ export async function DELETE(req: Request) {
             return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 403 });
         }
 
-        const { username } = await req.json();
+        const { id } = await req.json();
 
-        if (!username) {
-             return NextResponse.json({ ok: false, error: "Missing username" }, { status: 400 });
-        }
-
-        // Prevent deleting self
-        const currentUser = cookies().get("invoicecraft_auth")?.value;
-        if (username === currentUser) {
-            return NextResponse.json({ ok: false, error: "Cannot delete yourself" }, { status: 400 });
+        if (!id) {
+             return NextResponse.json({ ok: false, error: "Missing user ID" }, { status: 400 });
         }
 
         const sheets = getSheetsClient();
 
-        // Find user row index
+        // Find user row index by ID (Column A)
         const existing = await sheets.spreadsheets.values.get({
             spreadsheetId: USERS_SHEET_ID,
-            range: "Users!B:B", // Username column
+            range: "Users!A:A", // ID column
         });
 
-        const users = (existing.data.values || []).flat();
-        const rowIndex = users.findIndex(u => u === username);
+        const userIds = (existing.data.values || []).flat();
+        const rowIndex = userIds.findIndex(u => u === id);
 
         if (rowIndex === -1) {
              return NextResponse.json({ ok: false, error: "User not found" }, { status: 404 });
         }
 
-        const sheetId = 0; // Assuming Users is the first sheet (GID 0). If not, we need to find sheetId.
-        // Actually, deleting rows requires the numeric SheetId (GID), not the name.
-        // We can fetch the spreadsheet metadata to find the GID for "Users".
+        // Prevent deleting self
+        // We need to fetch the row to check username or check against current session if we had ID in session.
+        // Currently session has username. Let's fetch the username for this row to check.
+        const userRowRes = await sheets.spreadsheets.values.get({
+            spreadsheetId: USERS_SHEET_ID,
+            range: `Users!A${rowIndex + 1}:B${rowIndex + 1}`
+        });
+        const usernameToDelete = userRowRes.data.values?.[0]?.[1]; // Column B is username
         
+        const currentUser = cookies().get("invoicecraft_auth")?.value;
+        if (usernameToDelete === currentUser) {
+            return NextResponse.json({ ok: false, error: "Cannot delete yourself" }, { status: 400 });
+        }
+
         const spreadsheet = await sheets.spreadsheets.get({
             spreadsheetId: USERS_SHEET_ID
         });
@@ -231,14 +235,6 @@ export async function DELETE(req: Request) {
             throw new Error("Could not find Users sheet ID");
         }
         const userSheetId = sheet.properties.sheetId!;
-
-        // Row index in array is 0-based relative to the data range.
-        // If B:B includes header, index 0 is header.
-        // batchUpdate deleteDimension uses 0-based index.
-        // If rowIndex 0 is "Username" header, we definitely don't want to delete that.
-        // But findIndex returns index in the array.
-        // matches 'username' which shouldn't match header 'Username' unless case issue?
-        // Assuming strict match.
 
         await sheets.spreadsheets.batchUpdate({
             spreadsheetId: USERS_SHEET_ID,
@@ -259,7 +255,7 @@ export async function DELETE(req: Request) {
         });
 
         // Log
-        await logActivity(currentUser || "admin", `DELETED USER ${username}`, req.headers.get("user-agent"));
+        await logActivity(currentUser || "admin", `DELETED USER ${usernameToDelete} (ID: ${id})`, req.headers.get("user-agent"));
 
         return NextResponse.json({ ok: true });
     } catch (e: any) {

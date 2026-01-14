@@ -111,7 +111,7 @@ export default function ProfilePage() {
                 )}
                 
                 {activeTab === "user_management" && isAdmin && (
-                    <UserManagementSection />
+                    <UserManagementSection currentUser={username} />
                 )}
 
                 {activeTab === "products" && isAdmin && (
