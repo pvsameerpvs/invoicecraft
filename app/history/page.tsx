@@ -2,7 +2,7 @@
 
 import React from "react";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { Navbar } from "../../components/Navbar";
 import { InvoicePreview } from "../../components/InvoicePreview";
 import { downloadInvoicePdf } from "../../lib/pdf";
@@ -52,7 +52,18 @@ function formatDate(iso: string) {
 }
 
 export default function HistoryPage() {
+  return (
+    <React.Suspense fallback={<div className="h-screen flex items-center justify-center">Loading...</div>}>
+      <HistoryContent />
+    </React.Suspense>
+  );
+}
+
+function HistoryContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const pathname = usePathname();
+  const { replace } = router;
 
   const [rows, setRows] = React.useState<InvoiceHistoryRow[]>([]);
   const [loading, setLoading] = React.useState(true);
@@ -60,28 +71,20 @@ export default function HistoryPage() {
   const [deleteTarget, setDeleteTarget] = React.useState<InvoiceHistoryRow | null>(null);
   const [currentUser, setCurrentUser] = React.useState("");
 
-  // Filter States
-  const [search, setSearch] = React.useState("");
-  const [filterClient, setFilterClient] = React.useState("");
-  const [filterStatus, setFilterStatus] = React.useState("");
-  const [filterDate, setFilterDate] = React.useState("");
-  const [filterUser, setFilterUser] = React.useState("");
-
   // Preview Modal State
   const [previewInvoice, setPreviewInvoice] = React.useState<InvoiceData | null>(null);
   const previewRef = React.useRef<HTMLDivElement>(null);
 
+  // Load from API based on URL params
   const load = React.useCallback(async () => {
     setLoading(true);
     setError("");
-    // Build Query
-    const params = new URLSearchParams();
-    if (search) params.append("search", search);
-    if (filterClient) params.append("client", filterClient);
-    if (filterStatus && filterStatus !== "all") params.append("status", filterStatus);
-    if (filterDate) params.append("date", filterDate);
-    if (filterUser) params.append("user", filterUser);
-
+    const params = new URLSearchParams(searchParams);
+    
+    // Ensure we send what's in the URL
+    // (searchParams is read-only, new URLSearchParams(searchParams) creates a mutable copy if needed, 
+    // but fetch needs a string)
+    
     const t = toast.loading("Loading history…");
     try {
       const res = await fetch(`/api/invoice-history?${params.toString()}`, { cache: "no-store" });
@@ -91,7 +94,6 @@ export default function HistoryPage() {
         throw new Error(data?.error || "Failed to load history");
       }
 
-      // API returns array
       setRows(Array.isArray(data) ? data : []);
       toast.success("Updated", { id: t });
     } catch (e: any) {
@@ -102,21 +104,71 @@ export default function HistoryPage() {
     } finally {
       setLoading(false);
     }
-  }, [search, filterClient, filterStatus, filterDate, filterUser]);
+  }, [searchParams]);
 
-  // Debounced load for text inputs
+  // Initial Load & subsequent param changes
   React.useEffect(() => {
     setCurrentUser(localStorage.getItem("invoicecraft:username") || "");
-    const timer = setTimeout(() => {
-        load();
-    }, 500); // Debounce 500ms
-    return () => clearTimeout(timer);
+    load();
   }, [load]);
 
-  // Handle Enter key for immediate search
+  // Helper to update URL
+  const updateFilter = (key: string, value: string) => {
+    const params = new URLSearchParams(searchParams);
+    if (value) {
+      params.set(key, value);
+    } else {
+      params.delete(key);
+    }
+    replace(`${pathname}?${params.toString()}`);
+  };
+
+  // Debounced Search/Input handler
+  // We keep local state for inputs if we want smooth typing, 
+  // OR we just debounce the `updateFilter` call. 
+  // For simplicity and React standard, we can use a controlled input with debounce callback,
+  // or a simple onChange that calls a debounced function.
+  // Here we'll use a local state for the input value and useEffect to debounce sync to URL.
+
+  const [localSearch, setLocalSearch] = React.useState(searchParams.get('search') || "");
+  const [localClient, setLocalClient] = React.useState(searchParams.get('client') || "");
+
+  React.useEffect(() => {
+    setLocalSearch(searchParams.get('search') || "");
+  }, [searchParams]);
+
+  React.useEffect(() => {
+    setLocalClient(searchParams.get('client') || "");
+  }, [searchParams]);
+
+  // Debounced Sync for Search
+  React.useEffect(() => {
+    const timer = setTimeout(() => {
+      const current = searchParams.get('search') || "";
+      if (localSearch !== current) {
+          updateFilter('search', localSearch);
+      }
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [localSearch]);
+
+  // Debounced Sync for Client
+  React.useEffect(() => {
+     const timer = setTimeout(() => {
+      const current = searchParams.get('client') || "";
+      if (localClient !== current) {
+          updateFilter('client', localClient);
+      }
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [localClient]);
+
+
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter") {
-        load();
+       // Force update immediately
+       if (localSearch !== (searchParams.get('search') || "")) updateFilter('search', localSearch);
+       if (localClient !== (searchParams.get('client') || "")) updateFilter('client', localClient);
     }
   };
 
@@ -128,8 +180,6 @@ export default function HistoryPage() {
        toast.error("You can only edit your own invoices");
        return;
     }
-
-    // Direct navigation to dynamic edit route
     router.push(`/invoice/edit/${row.invoiceNumber}`);
   };
 
@@ -197,15 +247,15 @@ export default function HistoryPage() {
 
         {/* Filters Bar */}
         <div className="rounded-2xl bg-white p-4 shadow-xl shadow-slate-200/50 ring-1 ring-slate-100">
-           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4">
                {/* 1. Global Search */}
                <div className="relative col-span-1 md:col-span-2 lg:col-span-2">
                  <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
                    <Search className="h-5 w-5 text-slate-400" />
                  </div>
                  <input
-                    value={search}
-                    onChange={(e) => setSearch(e.target.value)}
+                    value={localSearch}
+                    onChange={(e) => setLocalSearch(e.target.value)}
                     onKeyDown={handleKeyDown}
                     placeholder="Search invoice #..."
                     className="h-10 w-full rounded-lg border-0 bg-slate-50 pl-10 pr-4 text-sm text-slate-900 ring-1 ring-inset ring-slate-200 placeholder:text-slate-500 focus:ring-2 focus:ring-inset focus:ring-brand-primary"
@@ -218,8 +268,8 @@ export default function HistoryPage() {
                    <Briefcase className="h-4 w-4 text-slate-400" />
                  </div>
                  <input
-                    value={filterClient}
-                    onChange={(e) => setFilterClient(e.target.value)}
+                    value={localClient}
+                    onChange={(e) => setLocalClient(e.target.value)}
                     onKeyDown={handleKeyDown}
                     placeholder="Filter Client..."
                     className="h-10 w-full rounded-lg border-0 bg-slate-50 pl-10 pr-4 text-sm text-slate-900 ring-1 ring-inset ring-slate-200 placeholder:text-slate-500 focus:ring-2 focus:ring-inset focus:ring-brand-primary"
@@ -232,69 +282,99 @@ export default function HistoryPage() {
                    <CreditCard className="h-4 w-4 text-slate-400" />
                  </div>
                  <select
-                    value={filterStatus}
-                    onChange={(e) => setFilterStatus(e.target.value)}
+                    value={searchParams.get('status') || ""}
+                    onChange={(e) => updateFilter('status', e.target.value)}
                     className="h-10 w-full rounded-lg border-0 bg-slate-50 pl-10 pr-8 text-sm text-slate-900 ring-1 ring-inset ring-slate-200 focus:ring-2 focus:ring-inset focus:ring-brand-primary appearance-none"
                  >
                     <option value="">All Statuses</option>
                     <option value="paid">Paid</option>
                     <option value="unpaid">Unpaid</option>
+                    <option value="overdue">Overdue</option>
                  </select>
                  <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
                     <ChevronDown className="h-4 w-4 text-slate-400" />
                  </div>
                </div>
 
-                {/* 4. Date Filter */}
+               {/* 4. Year Filter */}
                <div className="relative">
                  <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
                    <Calendar className="h-4 w-4 text-slate-400" />
                  </div>
-                 <input
-                    type="date"
-                    value={filterDate}
-                    onChange={(e) => setFilterDate(e.target.value)}
-                    className="h-10 w-full rounded-lg border-0 bg-slate-50 pl-10 pr-4 text-sm text-slate-900 ring-1 ring-inset ring-slate-200 placeholder:text-slate-500 focus:ring-2 focus:ring-inset focus:ring-brand-primary"
-                 />
+                 <select
+                    value={searchParams.get('year') || ""}
+                    onChange={(e) => updateFilter('year', e.target.value)}
+                    className="h-10 w-full rounded-lg border-0 bg-slate-50 pl-10 pr-8 text-sm text-slate-900 ring-1 ring-inset ring-slate-200 focus:ring-2 focus:ring-inset focus:ring-brand-primary appearance-none"
+                 >
+                    <option value="">All Years</option>
+                    {[2023, 2024, 2025, 2026, 2027, 2028, 2029, 2030].map(y => (
+                        <option key={y} value={y}>{y}</option>
+                    ))}
+                 </select>
+                 <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
+                    <ChevronDown className="h-4 w-4 text-slate-400" />
+                 </div>
+               </div>
+
+                {/* 5. Month Filter */}
+               <div className="relative">
+                 <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                   <Calendar className="h-4 w-4 text-slate-400" />
+                 </div>
+                 <select
+                    value={searchParams.get('month') || ""}
+                    onChange={(e) => updateFilter('month', e.target.value)}
+                    className="h-10 w-full rounded-lg border-0 bg-slate-50 pl-10 pr-8 text-sm text-slate-900 ring-1 ring-inset ring-slate-200 focus:ring-2 focus:ring-inset focus:ring-brand-primary appearance-none"
+                 >
+                    <option value="">All Months</option>
+                    {Array.from({ length: 12 }, (_, i) => (
+                        <option key={i} value={i}>
+                            {new Date(0, i).toLocaleString('default', { month: 'long' })}
+                        </option>
+                    ))}
+                 </select>
+                 <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
+                    <ChevronDown className="h-4 w-4 text-slate-400" />
+                 </div>
                </div>
            </div>
            
-           {/* Active Filters Summary (Optional, mainly for Date/User clearing) */}
-           {(filterUser || filterDate || filterClient || filterStatus || search) && (
+           {/* Active Filters Summary */}
+           {(searchParams.toString().length > 0) && (
               <div className="mt-3 flex items-center gap-2 overflow-x-auto pb-1">
                  <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Active Filters:</span>
-                 {search && (
+                 {searchParams.get('search') && (
                     <span className="inline-flex items-center gap-1 rounded-full bg-orange-100 px-2.5 py-0.5 text-xs font-medium text-orange-800">
-                       Search: {search}
-                       <button onClick={() => setSearch("")}><X className="w-3 h-3 hover:text-orange-950" /></button>
+                       Search: {searchParams.get('search')}
+                       <button onClick={() => updateFilter('search', '')}><X className="w-3 h-3 hover:text-orange-950" /></button>
                     </span>
                  )}
-                 {filterClient && (
+                 {searchParams.get('client') && (
                     <span className="inline-flex items-center gap-1 rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-medium text-blue-800">
-                       Client: {filterClient}
-                       <button onClick={() => setFilterClient("")}><X className="w-3 h-3 hover:text-blue-950" /></button>
+                       Client: {searchParams.get('client')}
+                       <button onClick={() => updateFilter('client', '')}><X className="w-3 h-3 hover:text-blue-950" /></button>
                     </span>
                  )}
-                 {filterStatus && (
+                 {searchParams.get('status') && (
                     <span className="inline-flex items-center gap-1 rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-800">
-                       Status: {filterStatus}
-                       <button onClick={() => setFilterStatus("")}><X className="w-3 h-3 hover:text-green-950" /></button>
+                       Status: {searchParams.get('status')}
+                       <button onClick={() => updateFilter('status', '')}><X className="w-3 h-3 hover:text-green-950" /></button>
                     </span>
                  )}
-                  {filterDate && (
-                    <span className="inline-flex items-center gap-1 rounded-full bg-purple-100 px-2.5 py-0.5 text-xs font-medium text-purple-800">
-                       Date: {filterDate}
-                       <button onClick={() => setFilterDate("")}><X className="w-3 h-3 hover:text-purple-950" /></button>
+                  {searchParams.get('year') && (
+                    <span className="inline-flex items-center gap-1 rounded-full bg-indigo-100 px-2.5 py-0.5 text-xs font-medium text-indigo-800">
+                       Year: {searchParams.get('year')}
+                       <button onClick={() => updateFilter('year', '')}><X className="w-3 h-3 hover:text-indigo-950" /></button>
+                    </span>
+                 )}
+                 {searchParams.get('month') && (
+                    <span className="inline-flex items-center gap-1 rounded-full bg-pink-100 px-2.5 py-0.5 text-xs font-medium text-pink-800">
+                       Month: {new Date(0, parseInt(searchParams.get('month')!)).toLocaleString('default', { month: 'short' })}
+                       <button onClick={() => updateFilter('month', '')}><X className="w-3 h-3 hover:text-pink-950" /></button>
                     </span>
                  )}
                  <button 
-                   onClick={() => {
-                      setSearch("");
-                      setFilterClient("");
-                      setFilterStatus("");
-                      setFilterDate("");
-                      setFilterUser("");
-                   }}
+                   onClick={() => replace(pathname)}
                    className="ml-auto text-xs text-slate-500 hover:text-slate-700 underline"
                  >
                     Clear All
@@ -388,7 +468,7 @@ export default function HistoryPage() {
             <div className="flex gap-3">
               <button
                 onClick={() => setDeleteTarget(null)}
-                className="flex-1 rounded-xl bg-slate-100 px-4 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-200"
+                className="flex-1 rounded-xl bg-slate-100 px-4 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-100"
               >
                 Cancel
               </button>

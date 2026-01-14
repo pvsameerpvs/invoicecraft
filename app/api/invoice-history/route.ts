@@ -371,6 +371,23 @@ export async function GET(req: Request) {
           return false;
         }
 
+        // 6. Year & Month Filter
+        if (searchParams.has('year')) {
+            const year = parseInt(searchParams.get('year') || "");
+            if (!isNaN(year)) {
+                // Parse item date
+                const d = new Date(item.date); // item.date is YYYY-MM-DD string usually, or ISO
+                if (d.getFullYear() !== year) return false;
+
+                if (searchParams.has('month')) {
+                    const month = parseInt(searchParams.get('month') || "");
+                    if (!isNaN(month) && d.getMonth() !== month) {
+                        return false;
+                    }
+                }
+            }
+        }
+
         return true;
       })
       .reverse(); // newest first
