@@ -73,9 +73,18 @@ export async function GET(req: Request) {
         const prevStats = { revenue: 0, invoices: 0, vat: 0, outstanding: 0, outstandingCount: 0, paid: 0 };
         const overdueStats = { count: 0, value: 0 };
 
+        // Chart Accumulators
+        const chartMap: Record<string, number> = {};
+        const statusMap = { Paid: 0, Pending: 0, Overdue: 0 };
+
         rows.forEach(row => {
             const dateStr = row[2]; // Column C: Date
-            const status = row[11] || "Unpaid"; // Column L: Status
+            const statusRaw = row[11]; // Column L: Status
+            let status = statusRaw || "Unpaid"; 
+            
+            // Normalize status for counting
+            if (status === 'Pending') status = 'Unpaid'; 
+
             const payload = row[9]; // Column J: Payload
             
             let invoiceTotal = 0;
@@ -97,14 +106,18 @@ export async function GET(req: Request) {
             const invoiceDate = new Date(dateStr);
             if (isNaN(invoiceDate.getTime())) return;
 
-            // --- OVERDUE LOGIC (Global, regardless of period filter usually, but let's calculate total current overdue) ---
-            if (status !== 'Paid') {
+            // --- OVERDUE LOGIC (Global check) ---
+            if (status !== 'Paid' && status !== 'Overdue') {
                 const diffTime = now.getTime() - invoiceDate.getTime();
                 const diffDays = diffTime / (1000 * 3600 * 24);
                 if (diffDays > 30) {
                     overdueStats.count++;
                     overdueStats.value += invoiceTotal;
+                    status = 'Overdue'; // Treat as overdue for chart distribution
                 }
+            } else if (status === 'Overdue') {
+                overdueStats.count++;
+                overdueStats.value += invoiceTotal;
             }
 
             // --- PERIOD LOGIC ---
@@ -128,15 +141,32 @@ export async function GET(req: Request) {
                 if (status === 'Paid') {
                     currentStats.revenue += invoiceTotal;
                     currentStats.paid += invoiceTotal;
+                    statusMap.Paid += 1;
+                } else if (status === 'Overdue') {
+                    currentStats.outstanding += invoiceTotal;
+                    statusMap.Overdue += 1;
                 } else {
                     currentStats.outstanding += invoiceTotal;
                     currentStats.outstandingCount++;
+                    statusMap.Pending += 1; // Count as Pending/Unpaid
+                }
+
+                // --- CHART DATA AGGREGATION ---
+                if (status === 'Paid') {
+                    let key = "";
+                    if (period === 'monthly') {
+                        key = invoiceDate.getDate().toString(); 
+                    } else if (period === 'yearly') {
+                        key = invoiceDate.toLocaleString('default', { month: 'short' }); 
+                    } else {
+                        key = invoiceDate.getFullYear().toString(); 
+                    }
+                    chartMap[key] = (chartMap[key] || 0) + invoiceTotal;
                 }
             }
             
             if (isPrevious) {
                  prevStats.invoices++;
-                 
                  if (status === 'Paid') {
                     prevStats.revenue += invoiceTotal;
                     prevStats.paid += invoiceTotal;
@@ -151,6 +181,31 @@ export async function GET(req: Request) {
         currentStats.vat = currentStats.paid * 0.05;
         prevStats.vat = prevStats.paid * 0.05;
 
+        // --- PREPARE CHART ARRAYS ---
+        let chartData: { name: string, revenue: number }[] = [];
+        
+        if (period === 'monthly') {
+            const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+            for (let i = 1; i <= daysInMonth; i++) {
+                chartData.push({ name: i.toString(), revenue: chartMap[i.toString()] || 0 });
+            }
+        } else if (period === 'yearly') {
+            const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+            months.forEach(m => {
+                 chartData.push({ name: m, revenue: chartMap[m] || 0 });
+            });
+        } else {
+             Object.keys(chartMap).sort().forEach(k => {
+                 chartData.push({ name: k, revenue: chartMap[k] });
+             });
+        }
+
+        const pieData = [
+            { name: "Paid", value: statusMap.Paid, color: "#22c55e" },
+            { name: "Pending", value: statusMap.Pending, color: "#f97316" },
+            { name: "Overdue", value: statusMap.Overdue, color: "#ef4444" },
+        ];
+
         // --- GROWTH FORMULA ---
         const calcGrowth = (curr: number, prev: number) => {
             if (period === 'all') return 0;
@@ -158,12 +213,14 @@ export async function GET(req: Request) {
             return ((curr - prev) / prev) * 100;
         };
 
-        const response: DashboardStats = {
+        const response: DashboardStats & { chartData: any[], pieData: any[] } = {
             revenue: { value: currentStats.revenue, growth: calcGrowth(currentStats.revenue, prevStats.revenue) },
             invoices: { value: currentStats.invoices, growth: calcGrowth(currentStats.invoices, prevStats.invoices) },
             vat: { value: currentStats.vat, growth: calcGrowth(currentStats.vat, prevStats.vat) },
             outstanding: { value: currentStats.outstanding, count: currentStats.outstandingCount, growth: calcGrowth(currentStats.outstanding, prevStats.outstanding) },
-            overdue: overdueStats
+            overdue: overdueStats,
+            chartData,
+            pieData
         };
 
         return NextResponse.json(response);

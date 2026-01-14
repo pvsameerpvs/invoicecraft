@@ -53,6 +53,8 @@ export const DashboardContainer = ({ onCreateInvoice, invoiceHistory = [] }: Das
         vat: { value: 0, growth: 0 },
         outstanding: { value: 0, count: 0, growth: 0 },
         overdue: { count: 0, value: 0 }, // New Overdue Metrics
+        chartData: [] as any[],
+        pieData: [] as any[],
         loading: true
     });
 
@@ -101,24 +103,6 @@ export const DashboardContainer = ({ onCreateInvoice, invoiceHistory = [] }: Das
     // Calculate Paid Count (Client Side Approximation if not provided by API, assuming Total - Unpaid)
     // Note: This relies on stats.invoices.value being Total and stats.outstanding.count being Unpaid
     const paidCount = Math.max(0, stats.invoices.value - stats.outstanding.count);
-
-    // --- Chart Data (Client Side derived from History for Trends) ---
-    // We keep this responsive to the history prop for the graphs
-    const areaData = [
-        { name: "Jan", revenue: 4000 },
-        { name: "Feb", revenue: 3000 },
-        { name: "Mar", revenue: 2000 },
-        { name: "Apr", revenue: 2780 },
-        { name: "May", revenue: 1890 },
-        { name: "Jun", revenue: 2390 },
-        { name: "Jul", revenue: 3490 },
-    ];
-
-    const pieData = [
-        { name: "Pending", value: 400 },
-        { name: "Overdue", value: 300 },
-        { name: "Paid", value: 300 },
-    ];
 
     return (
         <div className="flex-1 bg-slate-50 p-4 md:p-8 overflow-y-auto">
@@ -302,7 +286,7 @@ export const DashboardContainer = ({ onCreateInvoice, invoiceHistory = [] }: Das
                         <h3 className="text-lg font-bold text-slate-900 mb-6">Revenue Analytics</h3>
                         <div className="h-[300px] w-full">
                             <ResponsiveContainer width="100%" height="100%">
-                                <AreaChart data={areaData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+                                <AreaChart data={stats.chartData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
                                     <defs>
                                         <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
                                             <stop offset="5%" stopColor="#f97316" stopOpacity={0.2}/>
@@ -322,35 +306,29 @@ export const DashboardContainer = ({ onCreateInvoice, invoiceHistory = [] }: Das
                         </div>
                     </div>
                     
-                    {/* Status Chart */}
-                    <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex flex-col">
+                    {/* Status Distribution */}
+                    <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
                         <h3 className="text-lg font-bold text-slate-900 mb-6">Invoice Status</h3>
-                        <div className="items-center justify-center flex-1 min-h-[200px] relative">
-                             <ResponsiveContainer width="100%" height={250}>
+                        <div className="h-[300px] w-full">
+                           <ResponsiveContainer width="100%" height="100%">
                                 <PieChart>
                                     <Pie
-                                        data={pieData}
+                                        data={stats.pieData}
+                                        cx="50%"
+                                        cy="50%"
                                         innerRadius={60}
                                         outerRadius={80}
                                         paddingAngle={5}
                                         dataKey="value"
-                                        stroke="none"
                                     >
-                                        {pieData.map((entry, index) => (
-                                            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                                        {stats.pieData.map((entry: any, index: number) => (
+                                            <Cell key={`cell-${index}`} fill={entry.color} />
                                         ))}
                                     </Pie>
                                     <Tooltip />
-                                    <Legend verticalAlign="bottom" height={36}/>
+                                    <Legend verticalAlign="bottom" height={36} />
                                 </PieChart>
                             </ResponsiveContainer>
-                            {/* Center Text */}
-                            <div className="absolute inset-0 flex items-center justify-center pointer-events-none pb-8">
-                                <div className="text-center">
-                                    <span className="block text-2xl font-bold text-slate-900">100%</span>
-                                    <span className="text-xs text-slate-500">Completion</span>
-                                </div>
-                            </div>
                         </div>
                     </div>
                 </div>
