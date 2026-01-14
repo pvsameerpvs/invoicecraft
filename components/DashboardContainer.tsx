@@ -24,6 +24,7 @@ export const DashboardContainer = ({ onCreateInvoice, invoiceHistory = [] }: Das
         invoices: { value: 0, growth: 0 },
         vat: { value: 0, growth: 0 },
         outstanding: { value: 0, growth: 0 },
+        overdue: { count: 0, value: 0 }, // New Overdue Metrics
         loading: true
     });
 
@@ -166,17 +167,27 @@ export const DashboardContainer = ({ onCreateInvoice, invoiceHistory = [] }: Das
                     </div>
 
                     {/* Outstanding */}
-                    <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex items-start justify-between">
-                        <div>
-                            <p className="text-sm font-medium text-slate-500 mb-1">Outstanding</p>
-                            <h3 className="text-3xl font-extrabold text-slate-900">
-                                {stats.loading ? "..." : fmtMoney(stats.outstanding.value)}
-                            </h3>
-                            {!stats.loading && <GrowthBadge value={stats.outstanding.growth} />}
+                    <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex flex-col justify-between">
+                        <div className="flex items-start justify-between w-full">
+                            <div>
+                                <p className="text-sm font-medium text-slate-500 mb-1">Outstanding</p>
+                                <h3 className="text-3xl font-extrabold text-slate-900">
+                                    {stats.loading ? "..." : fmtMoney(stats.outstanding.value)}
+                                </h3>
+                                {!stats.loading && <GrowthBadge value={stats.outstanding.growth} />}
+                            </div>
+                            <div className="p-3 bg-red-50 text-red-600 rounded-xl">
+                                <AlertCircle className="w-6 h-6" />
+                            </div>
                         </div>
-                        <div className="p-3 bg-red-50 text-red-600 rounded-xl">
-                            <AlertCircle className="w-6 h-6" />
-                        </div>
+
+                        {/* Overdue Alert */}
+                         {!stats.loading && stats.overdue.count > 0 && (
+                            <div className="mt-4 flex items-center gap-2 p-2.5 bg-red-100 text-red-700 rounded-lg text-xs font-bold border border-red-200">
+                                <AlertCircle className="w-4 h-4 flex-shrink-0" />
+                                <span>{stats.overdue.count} Overdue ({fmtMoney(stats.overdue.value)})</span>
+                            </div>
+                        )}
                     </div>
                 </div>
 
