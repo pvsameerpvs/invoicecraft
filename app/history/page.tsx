@@ -70,6 +70,7 @@ function HistoryContent() {
   const [error, setError] = React.useState("");
   const [deleteTarget, setDeleteTarget] = React.useState<InvoiceHistoryRow | null>(null);
   const [currentUser, setCurrentUser] = React.useState("");
+  const [currentRole, setCurrentRole] = React.useState("");
 
   // Preview Modal State
   const [previewInvoice, setPreviewInvoice] = React.useState<InvoiceData | null>(null);
@@ -109,6 +110,7 @@ function HistoryContent() {
   // Initial Load & subsequent param changes
   React.useEffect(() => {
     setCurrentUser(localStorage.getItem("invoicecraft:username") || "");
+    setCurrentRole(localStorage.getItem("invoicecraft:role") || "");
     load();
   }, [load]);
 
@@ -443,6 +445,7 @@ function HistoryContent() {
                       key={`${r.invoiceNumber}-${idx}`}
                       row={r}
                       currentUser={currentUser}
+                      currentRole={currentRole}
                       onPreview={onPreview}
                       onEdit={onEdit}
                       setDeleteTarget={setDeleteTarget}
@@ -553,18 +556,20 @@ function HistoryContent() {
 function InvoiceRow({
   row,
   currentUser,
+  currentRole,
   onPreview,
   onEdit,
   setDeleteTarget,
 }: {
   row: InvoiceHistoryRow;
   currentUser: string;
+  currentRole: string;
   onPreview: (r: InvoiceHistoryRow) => void;
   onEdit: (r: InvoiceHistoryRow) => void;
   setDeleteTarget: (r: InvoiceHistoryRow) => void;
 }) {
   const isOwner = currentUser === row.createdBy;
-  const isAdmin = currentUser === "admin";
+  const isAdmin = currentRole === "admin";
   const canEdit = isAdmin || isOwner;
   const [menuOpen, setMenuOpen] = React.useState(false);
   const menuRef = React.useRef<HTMLDivElement>(null);

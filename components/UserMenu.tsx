@@ -8,13 +8,16 @@ import { Activity, PlusCircle, History, LogOut, LayoutDashboard } from "lucide-r
 export function UserMenu() {
   const router = useRouter();
   const [username, setUsername] = useState("");
+  const [currentRole, setCurrentRole] = useState("");
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     // Client-side only
     const u = localStorage.getItem("invoicecraft:username");
+    const r = localStorage.getItem("invoicecraft:role");
     if (u) setUsername(u);
+    if (r) setCurrentRole(r);
   }, []);
 
   // Close menu when clicking outside
@@ -44,6 +47,7 @@ export function UserMenu() {
     
     // Clear local storage
     localStorage.removeItem("invoicecraft:username");
+    localStorage.removeItem("invoicecraft:role");
     
     toast.success("Logged out");
     router.push("/");
@@ -82,7 +86,7 @@ export function UserMenu() {
               <p className="text-xs text-slate-500 truncate">{username}</p>
            </div>
            
-           {username === "admin" && (
+           {currentRole === "admin" && (
              <button
                onClick={() => {
                  setIsOpen(false);
