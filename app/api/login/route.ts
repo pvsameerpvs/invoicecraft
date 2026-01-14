@@ -1,27 +1,44 @@
 import { NextResponse } from "next/server";
-import { logActivity } from "@/app/lib/sheets";
+import { cookies } from "next/headers";
+import { logActivity } from "../../lib/sheets";
+import { verifyUser } from "@/app/lib/auth";
 
 export async function POST(req: Request) {
-  const body = await req.json();
-  const { username, password } = body;
+  try {
+    const { username, password } = await req.json();
 
-  if ((username === "pooja" && password === "pooja@123") || (username === "admin" && password === "adminjs@321")) {
-    const res = NextResponse.json({ ok: true });
+    const user = await verifyUser(username, password);
 
-    // ✅ Log Activity
-    const userAgent = req.headers.get("user-agent");
-    // Fire and forget logging to avoid slowing down login
-    logActivity(username, "LOGIN", userAgent).catch(console.error);
+    if (user) {
+      // Set Auth Cookie
+      const cookieOptions = {
+        httpOnly: true,
+        path: "/",
+        maxAge: 60 * 60 * 24 * 7, // 1 week
+      };
+      
+      cookies().set("invoicecraft_auth", user.username, cookieOptions);
+      cookies().set("invoicecraft_role", user.role, cookieOptions);
 
-    res.cookies.set("js_auth", "1", {
-      httpOnly: true,
-      sameSite: "lax",
-      path: "/",
-      maxAge: 60 * 60 * 24, // 1 day
-    });
+      // Log Activity
+      try {
+        await logActivity(user.username, "User Logged In", req.headers.get("user-agent"));
+      } catch (e) {
+        console.error("Failed to log activity", e);
+      }
 
-    return res;
+      // Return user role so frontend can store it
+      return NextResponse.json({ ok: true, username: user.username, role: user.role });
+    }
+
+    return NextResponse.json(
+      { ok: false, error: "Invalid username or password" },
+      { status: 401 }
+    );
+  } catch (e: any) {
+    return NextResponse.json(
+      { ok: false, error: e?.message || "Failed" },
+      { status: 500 }
+    );
   }
-
-  return NextResponse.json({ ok: false }, { status: 401 });
 }

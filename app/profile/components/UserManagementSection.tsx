@@ -8,14 +8,45 @@ export const UserManagementSection = () => {
         username: "", password: "", repeatPassword: "", role: "user" 
     });
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const [loading, setLoading] = useState(false);
+    
+    // Check if role defaults to admin if not set
+    const handleRoleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+        setNewUser({ ...newUser, role: e.target.value });
+    };
+
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (newUser.password !== newUser.repeatPassword) {
             toast.error("Passwords do not match");
             return;
         }
-        toast.success(`User ${newUser.username} created (UI Demo)`);
-        setNewUser({ username: "", password: "", repeatPassword: "", role: "user" });
+
+        setLoading(true);
+        try {
+            const res = await fetch("/api/users", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    username: newUser.username,
+                    password: newUser.password,
+                    role: newUser.role
+                })
+            });
+
+            const data = await res.json();
+            
+            if (res.ok) {
+                toast.success(`User ${newUser.username} created successfully!`);
+                setNewUser({ username: "", password: "", repeatPassword: "", role: "user" });
+            } else {
+                toast.error(data.error || "Failed to create user");
+            }
+        } catch (error) {
+            toast.error("Something went wrong");
+        } finally {
+            setLoading(false);
+        }
     };
 
     return (

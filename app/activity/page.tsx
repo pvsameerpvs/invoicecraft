@@ -24,10 +24,11 @@ export default function ActivityPage() {
   const [selectedInvoiceId, setSelectedInvoiceId] = useState<string | null>(null);
 
   useEffect(() => {
-    const user = localStorage.getItem("invoicecraft:username");
-    if (user !== "admin") {
+    const role = localStorage.getItem("invoicecraft:role");
+
+    if (role !== "admin") {
       toast.error("Access Denied: Admin only");
-      router.push("/");
+      router.push("/dashboard");
       return;
     }
     setIsAdmin(true);

@@ -173,8 +173,9 @@ function HistoryContent() {
   };
 
   const onEdit = (row: InvoiceHistoryRow) => {
+    const role = localStorage.getItem("invoicecraft:role");
     const isOwner = currentUser === row.createdBy;
-    const isAdmin = currentUser === "admin";
+    const isAdmin = role === "admin";
     
     if (!isAdmin && !isOwner) {
        toast.error("You can only edit your own invoices");

@@ -22,10 +22,14 @@ export default function ProfilePage() {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<TabId>("personal_info");
 
+  const [role, setRole] = useState<"admin" | "user">("user");
+
   useEffect(() => {
     const u = localStorage.getItem("invoicecraft:username");
+    const r = localStorage.getItem("invoicecraft:role") as "admin" | "user";
     if (u) {
       setUsername(u);
+      setRole(r || "user");
     } else {
       router.push("/");
     }
@@ -34,6 +38,7 @@ export default function ProfilePage() {
 
   const handleLogout = () => {
       localStorage.removeItem("invoicecraft:username");
+      localStorage.removeItem("invoicecraft:role");
       toast.success("Logged out successfully");
       router.push("/");
   };
@@ -41,7 +46,7 @@ export default function ProfilePage() {
   if (loading) return null;
 
   const initials = username ? username.charAt(0).toUpperCase() : "?";
-  const isAdmin = username === "admin";
+  const isAdmin = role === "admin";
 
   return (
     <div className="min-h-screen bg-orange-50 flex flex-col relative">

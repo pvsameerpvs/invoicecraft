@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
-import { getSheetsClient, logActivity } from "@/app/lib/sheets";
+import { cookies } from "next/headers";
+import { getSheetsClient, logActivity } from "../../lib/sheets";
 
 export const dynamic = 'force-dynamic';
 export const runtime = "nodejs";
@@ -181,6 +182,7 @@ export async function PUT(req: Request) {
     if (!sheetId) throw new Error("Missing GOOGLE_SHEET_ID");
 
     const { originalInvoiceNumber, invoice, currentUser } = await req.json();
+    const currentRole = (cookies().get("invoicecraft_role")?.value || "user").toLowerCase().trim();
 
     if (!originalInvoiceNumber || !invoice) {
       return NextResponse.json(
@@ -219,7 +221,7 @@ export async function PUT(req: Request) {
     const row = rows[rowIndex];
     const createdBy = (row[10] || "").toString().trim(); // Column K is index 10
 
-    if (currentUser !== "admin" && createdBy !== currentUser) {
+    if (currentRole !== "admin" && createdBy !== currentUser) {
        return NextResponse.json(
         { ok: false, error: "You are not authorized to edit this invoice" },
         { status: 403 }
@@ -311,6 +313,9 @@ export async function GET(req: Request) {
     const qStatus = (searchParams.get("status") || "").toLowerCase().trim();
     const qDate = (searchParams.get("date") || "").trim();
     const qUser = (searchParams.get("user") || "").toLowerCase().trim();
+
+    const currentUser = cookies().get("invoicecraft_auth")?.value || "";
+    const currentRole = (cookies().get("invoicecraft_role")?.value || "user").toLowerCase().trim();
 
     const sheetId = "1oo7G79VtN-zIQzlpKzVHGKGDObWik7MUPdVA2ZrEayQ";
     if (!sheetId) throw new Error("Missing GOOGLE_SHEET_ID");
@@ -416,6 +421,8 @@ export async function DELETE(req: Request) {
 
     const { invoiceNumber, currentUser } = await req.json();
 
+    const currentRole = (cookies().get("invoicecraft_role")?.value || "user").toLowerCase().trim();
+
     if (!invoiceNumber) {
       return NextResponse.json(
         { ok: false, error: "Missing invoiceNumber" },
@@ -425,15 +432,15 @@ export async function DELETE(req: Request) {
 
     const sheets = getSheetsClient();
 
-    // 1. Find the row index
+    // 1. Find the row index and check permissions
     const res = await sheets.spreadsheets.values.get({
       spreadsheetId: sheetId,
-      range: "Invoices!B:B", // Invoice Number column
+      range: "Invoices!A:L", // Read all so we can check CreatedBy (col K)
     });
 
     const rows = res.data.values || [];
     const rowIndex = rows.findIndex((r) => {
-        const sheetVal = (r[0] || "").toString().trim();
+        const sheetVal = (r[1] || "").toString().trim(); // Invoice Number is B (index 1)
         const searchVal = (invoiceNumber || "").toString().trim();
         return sheetVal === searchVal;
     });
@@ -442,6 +449,17 @@ export async function DELETE(req: Request) {
       return NextResponse.json(
         { ok: false, error: "Invoice not found" },
         { status: 404 }
+      );
+    }
+
+    // Permission Check
+    const row = rows[rowIndex];
+    const createdBy = (row[10] || "").toString().trim(); // Column K is index 10
+
+    if (currentRole !== "admin" && createdBy !== currentUser) {
+       return NextResponse.json(
+        { ok: false, error: "You are not authorized to delete this invoice" },
+        { status: 403 }
       );
     }
 

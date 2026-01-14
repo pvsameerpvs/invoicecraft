@@ -4,10 +4,10 @@ import type { NextRequest } from "next/server";
 export function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
-  if (pathname.startsWith("/invoice") || pathname.startsWith("/dashboard")) {
-    const auth = req.cookies.get("js_auth")?.value;
+  if (pathname.startsWith("/invoice") || pathname.startsWith("/dashboard") || pathname.startsWith("/history") || pathname.startsWith("/profile")) {
+    const auth = req.cookies.get("invoicecraft_auth")?.value;
 
-    if (auth !== "1") {
+    if (!auth) {
       const url = req.nextUrl.clone();
       url.pathname = "/";
       return NextResponse.redirect(url);
@@ -18,5 +18,5 @@ export function middleware(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/invoice/:path*", "/dashboard/:path*"],
+  matcher: ["/invoice/:path*", "/dashboard/:path*", "/history/:path*", "/profile/:path*"],
 };

@@ -29,9 +29,12 @@ export default function HomePage() {
       });
 
       if (res.ok) {
+        const data = await res.json();
         toast.success("Login successful!", { id: t });
-        // ✅ Store username for history tracking
-        localStorage.setItem("invoicecraft:username", username);
+        // ✅ Store username and role for session management
+        localStorage.setItem("invoicecraft:username", data.username);
+        localStorage.setItem("invoicecraft:role", data.role || "user");
+        
         router.push("/dashboard");
         return;
       }
