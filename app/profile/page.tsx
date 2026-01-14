@@ -21,8 +21,28 @@ export default function ProfilePage() {
   const [username, setUsername] = useState("");
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<TabId>("personal_info");
-
   const [role, setRole] = useState<"admin" | "user">("user");
+  const [userData, setUserData] = useState({ email: "", mobile: "" });
+
+  const fetchUserData = () => {
+      fetch('/api/users')
+        .then(res => res.json())
+        .then(data => {
+            if (data.ok && data.user) {
+                setUserData({
+                    email: data.user.email,
+                    mobile: data.user.mobile
+                });
+                const r = localStorage.getItem("invoicecraft:role");
+                if (data.user.role !== r) {
+                    setRole(data.user.role);
+                    localStorage.setItem("invoicecraft:role", data.user.role);
+                }
+            }
+        })
+        .catch(console.error)
+        .finally(() => setLoading(false));
+  };
 
   useEffect(() => {
     const u = localStorage.getItem("invoicecraft:username");
@@ -30,10 +50,11 @@ export default function ProfilePage() {
     if (u) {
       setUsername(u);
       setRole(r || "user");
+      fetchUserData();
     } else {
       router.push("/");
+      setLoading(false);
     }
-    setLoading(false);
   }, [router]);
 
   const handleLogout = () => {
@@ -78,7 +99,13 @@ export default function ProfilePage() {
             {/* Content Area */}
             <div className="lg:col-span-9 space-y-6">
                 {activeTab === "personal_info" && (
-                    <PersonalInfoSection username={username} isAdmin={isAdmin} />
+                    <PersonalInfoSection 
+                        username={username} 
+                        role={role} 
+                        email={userData.email} 
+                        mobile={userData.mobile}
+                        onUpdate={fetchUserData} 
+                    />
                 )}
                 
                 {activeTab === "user_management" && isAdmin && (

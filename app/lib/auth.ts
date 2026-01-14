@@ -55,3 +55,28 @@ export async function verifyUser(username: string, password: string): Promise<Us
     return null;
   }
 }
+
+export async function getUser(username: string): Promise<User | null> {
+    try {
+        const sheets = getSheetsClient();
+        const res = await sheets.spreadsheets.values.get({
+            spreadsheetId: USERS_SHEET_ID,
+            range: "Users!A2:F",
+        });
+        const rows = res.data.values || [];
+        const userRow = rows.find((row) => row[1] === username);
+
+        if (!userRow) return null;
+
+        return {
+            id: userRow[0] || "",
+            username: userRow[1] || "",
+            role: (userRow[3] as "admin" | "user") || "user",
+            email: userRow[4] || "",
+            mobile: userRow[5] || "",
+        };
+    } catch (error) {
+        console.error("Failed to get user:", error);
+        return null;
+    }
+}

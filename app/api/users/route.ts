@@ -1,9 +1,39 @@
 import { NextResponse } from "next/server";
 import { getSheetsClient, logActivity } from "../../lib/sheets";
-import { verifyUser } from "@/app/lib/auth";
+import { verifyUser, getUser } from "@/app/lib/auth";
 import { cookies } from "next/headers";
 
 const USERS_SHEET_ID = "1oo7G79VtN-zIQzlpKzVHGKGDObWik7MUPdVA2ZrEayQ";
+
+// GET: Get current user details
+export async function GET(req: Request) {
+    try {
+        const username = cookies().get("invoicecraft_auth")?.value;
+        if (!username) {
+            return NextResponse.json({ ok: false, error: "Not logged in" }, { status: 401 });
+        }
+        
+        const user = await getUser(username);
+        
+        if (!user) {
+             return NextResponse.json({ ok: false, error: "User not found" }, { status: 404 });
+        }
+
+        // Return safe user data
+        return NextResponse.json({ 
+            ok: true, 
+            user: {
+                username: user.username,
+                role: user.role,
+                email: user.email,
+                mobile: user.mobile
+            } 
+        });
+
+    } catch (e: any) {
+        return NextResponse.json({ ok: false, error: e.message }, { status: 500 });
+    }
+}
 
 // POST: Create a new user
 export async function POST(req: Request) {
@@ -50,6 +80,56 @@ export async function POST(req: Request) {
         await logActivity(currentUser, `CREATED USER ${username}`, req.headers.get("user-agent"));
 
         return NextResponse.json({ ok: true });
+    } catch (e: any) {
+        return NextResponse.json({ ok: false, error: e.message }, { status: 500 });
+    }
+}
+
+// PUT: Update current user details
+export async function PUT(req: Request) {
+    try {
+        const currentUser = cookies().get("invoicecraft_auth")?.value;
+        if (!currentUser) {
+             return NextResponse.json({ ok: false, error: "Not logged in" }, { status: 401 });
+        }
+
+        const { email, mobile } = await req.json();
+
+        const sheets = getSheetsClient();
+
+        // Find the user row
+        const existing = await sheets.spreadsheets.values.get({
+            spreadsheetId: USERS_SHEET_ID,
+            range: "Users!B:B", // Username column
+        });
+
+        const users = (existing.data.values || []).flat(); // List of usernames
+        const rowIndex = users.findIndex(u => u === currentUser);
+
+        if (rowIndex === -1) {
+             return NextResponse.json({ ok: false, error: "User record not found" }, { status: 404 });
+        }
+
+        // B:B includes header at index 0. So row # is index + 1
+        const rowNum = rowIndex + 1; 
+
+        // Update Email (Column E / index 4) and Mobile (Column F / index 5)
+        // Range: E{rowNum}:F{rowNum}
+        
+        await sheets.spreadsheets.values.update({
+             spreadsheetId: USERS_SHEET_ID,
+             range: `Users!E${rowNum}:F${rowNum}`,
+             valueInputOption: "USER_ENTERED",
+             requestBody: {
+                 values: [[email || "", mobile || ""]]
+             }
+        });
+
+        // Log
+        await logActivity(currentUser, `UPDATED PROFILE`, req.headers.get("user-agent"));
+
+        return NextResponse.json({ ok: true });
+
     } catch (e: any) {
         return NextResponse.json({ ok: false, error: e.message }, { status: 500 });
     }
