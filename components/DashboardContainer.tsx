@@ -116,17 +116,17 @@ export const DashboardContainer = ({ onCreateInvoice, invoiceHistory = [] }: Das
                         <p className="text-slate-500">Welcome back, here is your financial overview.</p>
                     </div>
                     
-                    <div className="flex items-center gap-3">
+                    <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full lg:w-auto">
                         {/* Improved Filter Toolbar */}
-                        <div className="flex flex-wrap items-center gap-3 bg-white p-2 rounded-2xl shadow-sm border border-slate-200">
+                        <div className="flex flex-col sm:flex-row items-center gap-3 bg-white p-2 rounded-2xl shadow-sm border border-slate-200">
                              
                              {/* Period Toggles */}
-                             <div className="flex bg-slate-100 p-1 rounded-xl">
+                             <div className="flex bg-slate-100 p-1 rounded-xl w-full sm:w-auto">
                                 {(['monthly', 'yearly', 'all'] as FilterType[]).map((f) => (
                                     <button
                                         key={f}
                                         onClick={() => setFilter(f)}
-                                        className={`px-4 py-1.5 text-sm font-bold rounded-lg capitalize transition-all ${
+                                        className={`flex-1 sm:flex-none px-4 py-1.5 text-sm font-bold rounded-lg capitalize transition-all ${
                                             filter === f 
                                             ? "bg-white text-slate-900 shadow-sm ring-1 ring-black/5" 
                                             : "text-slate-500 hover:text-slate-900"
@@ -137,17 +137,17 @@ export const DashboardContainer = ({ onCreateInvoice, invoiceHistory = [] }: Das
                                 ))}
                             </div>
 
-                            <div className="w-px h-8 bg-slate-200 hidden md:block"></div>
+                            <div className="w-full h-px sm:w-px sm:h-8 bg-slate-100 sm:bg-slate-200"></div>
 
                             {/* Date Selectors */}
                             {filter !== 'all' && (
-                                <div className="flex items-center gap-2">
-                                    <div className="relative">
+                                <div className="flex items-center gap-2 w-full sm:w-auto">
+                                    <div className="relative flex-1 sm:flex-none">
                                         <Calendar className="w-4 h-4 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
                                         <select 
                                             value={year} 
                                             onChange={(e) => setYear(parseInt(e.target.value))}
-                                            className="pl-9 pr-8 py-2 bg-slate-50 hover:bg-slate-100 border border-transparent hover:border-slate-200 rounded-xl text-sm font-bold text-slate-700 focus:outline-none focus:ring-2 focus:ring-orange-500/20 transition-all appearance-none cursor-pointer"
+                                            className="w-full sm:w-auto pl-9 pr-8 py-2 bg-slate-50 hover:bg-slate-100 border border-transparent hover:border-slate-200 rounded-xl text-sm font-bold text-slate-700 focus:outline-none focus:ring-2 focus:ring-orange-500/20 transition-all appearance-none cursor-pointer"
                                         >
                                             {[2023, 2024, 2025, 2026, 2027, 2028, 2029, 2030].map(y => (
                                                 <option key={y} value={y}>{y}</option>
@@ -156,11 +156,11 @@ export const DashboardContainer = ({ onCreateInvoice, invoiceHistory = [] }: Das
                                     </div>
 
                                     {filter === 'monthly' && (
-                                        <div className="relative">
+                                        <div className="relative flex-1 sm:flex-none">
                                             <select 
                                                 value={month} 
                                                 onChange={(e) => setMonth(parseInt(e.target.value))}
-                                                className="pl-4 pr-8 py-2 bg-slate-50 hover:bg-slate-100 border border-transparent hover:border-slate-200 rounded-xl text-sm font-bold text-slate-700 focus:outline-none focus:ring-2 focus:ring-orange-500/20 transition-all appearance-none cursor-pointer min-w-[140px]"
+                                                className="w-full sm:w-auto pl-4 pr-8 py-2 bg-slate-50 hover:bg-slate-100 border border-transparent hover:border-slate-200 rounded-xl text-sm font-bold text-slate-700 focus:outline-none focus:ring-2 focus:ring-orange-500/20 transition-all appearance-none cursor-pointer min-w-[140px]"
                                             >
                                                 {Array.from({ length: 12 }, (_, i) => (
                                                     <option key={i} value={i}>
@@ -190,10 +190,10 @@ export const DashboardContainer = ({ onCreateInvoice, invoiceHistory = [] }: Das
 
                         <button 
                             onClick={onCreateInvoice}
-                            className="flex items-center gap-2 bg-orange-600 text-white px-5 py-2.5 rounded-xl font-bold shadow-lg shadow-orange-600/20 hover:bg-orange-700 active:scale-95 transition-all"
+                            className="flex items-center justify-center gap-2 bg-orange-600 text-white px-5 py-2.5 rounded-xl font-bold shadow-lg shadow-orange-600/20 hover:bg-orange-700 active:scale-95 transition-all"
                         >
                             <PlusCircle className="w-5 h-5" />
-                            <span className="hidden md:inline">Create Invoice</span>
+                            <span className="inline">Create Invoice</span>
                         </button>
                     </div>
                 </div>
