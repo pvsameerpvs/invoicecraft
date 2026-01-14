@@ -1,77 +1,71 @@
 "use client";
 
-import React, { useMemo } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import { 
     AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
     PieChart, Pie, Cell, Legend
 } from "recharts";
-import { PlusCircle, FileText, TrendingUp, AlertCircle, CheckCircle, Percent } from "lucide-react";
+import { PlusCircle, FileText, TrendingUp, AlertCircle, CheckCircle, Percent, TrendingDown } from "lucide-react";
 
 interface DashboardProps {
     onCreateInvoice: () => void;
-    // We'll pass the fetched history data here in the future
     invoiceHistory?: any[]; 
 }
 
 const COLORS = ["#f97316", "#ef4444", "#22c55e"]; // Orange, Red, Green
+type FilterType = 'monthly' | 'yearly' | 'all';
 
 export const DashboardContainer = ({ onCreateInvoice, invoiceHistory = [] }: DashboardProps) => {
+    
+    // --- Server Side Stats State ---
+    const [filter, setFilter] = useState<FilterType>('monthly');
+    const [stats, setStats] = useState({
+        revenue: { value: 0, growth: 0 },
+        invoices: { value: 0, growth: 0 },
+        vat: { value: 0, growth: 0 },
+        outstanding: { value: 0, growth: 0 },
+        loading: true
+    });
 
-    // 1. Calculate Stats
-    const stats = useMemo(() => {
-        let revenue = 0;
-        let outstanding = 0;
-        let paid = 0;
-        let count = 0;
-        const pendingCount = 0; // TODO: Calculate if needed for pie chart
-        
-        invoiceHistory.forEach(item => {
+    // Fetch Stats on Filter Change
+    useEffect(() => {
+        const fetchStats = async () => {
             try {
-                if (!item.payloadJson) return;
-                const data = JSON.parse(item.payloadJson);
-                
-                // Calculate Total for this invoice
-                let invoiceTotal = 0;
-                if (data.overrideTotal) {
-                     invoiceTotal = parseFloat(data.overrideTotal) || 0;
-                } else if (Array.isArray(data.lineItems)) {
-                    invoiceTotal = data.lineItems.reduce((acc: number, line: any) => {
-                        return acc + (parseFloat(line.amount) || 0);
-                    }, 0);
+                setStats(prev => ({ ...prev, loading: true }));
+                const res = await fetch(`/api/dashboard-stats?period=${filter}`);
+                if (res.ok) {
+                    const data = await res.json();
+                    setStats({ ...data, loading: false });
                 }
-
-                revenue += invoiceTotal;
-                count++;
-
-                // Check Status
-                if (data.status === "Paid") {
-                    paid += invoiceTotal;
-                } else {
-                    // Default to Unpaid/Outstanding
-                    outstanding += invoiceTotal;
-                }
-
-            } catch (e) {
-                console.warn("Failed to parse invoice data for stats", e);
+            } catch (error) {
+                console.error("Failed to fetch stats", error);
             }
-        });
-
-        // VAT is only relevant for PAID amounts (Collected VAT)
-        const vat = paid * 0.05;
-
-        // Currency Formatter
-        const fmt = (num: number) => new Intl.NumberFormat('en-AE', { style: 'currency', currency: 'AED' }).format(num);
-
-        return {
-            totalInvoices: count,
-            totalRevenue: fmt(revenue),
-            totalVat: fmt(vat),
-            outstanding: fmt(outstanding),
-            paid: fmt(paid)
         };
-    }, [invoiceHistory]);
+        fetchStats();
+    }, [filter]);
 
-    // 2. Mock Chart Data for "Software-like" feel
+    // Formatters
+    const fmtMoney = (n: number) => new Intl.NumberFormat('en-AE', { style: 'currency', currency: 'AED' }).format(n);
+    const fmtPerc = (n: number) => `${Math.abs(n).toFixed(1)}%`;
+
+    // Helper for Growth Badge
+    const GrowthBadge = ({ value }: { value: number }) => {
+        if (filter === 'all') return null; // No growth for 'All' view usually
+        const isPos = value > 0;
+        const isNeg = value < 0;
+        const colorClass = isPos ? "text-green-600 bg-green-50" : isNeg ? "text-red-600 bg-red-50" : "text-slate-500 bg-slate-100";
+        const Icon = isPos ? TrendingUp : (isNeg ? TrendingDown : TrendingUp); // Icon choice
+
+        return (
+            <div className={`flex items-center gap-1 text-xs font-bold mt-2 px-2 py-1 rounded-lg w-fit ${colorClass}`}>
+                <Icon className="w-3 h-3" />
+                {isPos ? "+" : isNeg ? "-" : ""}{fmtPerc(value)} {filter === 'monthly' ? 'vs last month' : 'vs last year'}
+            </div>
+        );
+    };
+
+    // --- Chart Data (Client Side derived from History for Trends) ---
+    // We keep this responsive to the history prop for the graphs
     const areaData = [
         { name: "Jan", revenue: 4000 },
         { name: "Feb", revenue: 3000 },
@@ -92,68 +86,93 @@ export const DashboardContainer = ({ onCreateInvoice, invoiceHistory = [] }: Das
         <div className="flex-1 bg-slate-50 p-4 md:p-8 overflow-y-auto">
             <div className="max-w-7xl mx-auto space-y-8">
                 
-                {/* Header */}
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                {/* Header & Filter */}
+                <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
                     <div>
                         <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Dashboard</h1>
                         <p className="text-slate-500">Welcome back, here is your financial overview.</p>
                     </div>
-                    <button 
-                        onClick={onCreateInvoice}
-                        className="flex items-center gap-2 bg-orange-600 text-white px-5 py-2.5 rounded-xl font-bold shadow-lg shadow-orange-600/20 hover:bg-orange-700 active:scale-95 transition-all"
-                    >
-                        <PlusCircle className="w-5 h-5" />
-                        Create Invoice
-                    </button>
+                    
+                    <div className="flex items-center gap-3">
+                        {/* Filter Toggles */}
+                        <div className="bg-white p-1 rounded-xl shadow-sm border border-slate-200 flex">
+                            {(['monthly', 'yearly', 'all'] as FilterType[]).map((f) => (
+                                <button
+                                    key={f}
+                                    onClick={() => setFilter(f)}
+                                    className={`px-4 py-2 text-sm font-semibold rounded-lg capitalize transition-all ${
+                                        filter === f 
+                                        ? "bg-slate-900 text-white shadow-md" 
+                                        : "text-slate-500 hover:bg-slate-50 hover:text-slate-900"
+                                    }`}
+                                >
+                                    {f}
+                                </button>
+                            ))}
+                        </div>
+
+                        <button 
+                            onClick={onCreateInvoice}
+                            className="flex items-center gap-2 bg-orange-600 text-white px-5 py-2.5 rounded-xl font-bold shadow-lg shadow-orange-600/20 hover:bg-orange-700 active:scale-95 transition-all"
+                        >
+                            <PlusCircle className="w-5 h-5" />
+                            <span className="hidden md:inline">Create Invoice</span>
+                        </button>
+                    </div>
                 </div>
 
                 {/* Stats Grid */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    {/* Total Revenue */}
                     <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex items-start justify-between">
                         <div>
                             <p className="text-sm font-medium text-slate-500 mb-1">Total Revenue</p>
-                            <h3 className="text-3xl font-extrabold text-slate-900">{stats.totalRevenue}</h3>
-                            <div className="flex items-center gap-1 text-green-600 text-xs font-bold mt-2 bg-green-50 px-2 py-1 rounded-lg w-fit">
-                                <TrendingUp className="w-3 h-3" />
-                                +12.5% vs last month
-                            </div>
+                            <h3 className="text-3xl font-extrabold text-slate-900">
+                                {stats.loading ? "..." : fmtMoney(stats.revenue.value)}
+                            </h3>
+                            {!stats.loading && <GrowthBadge value={stats.revenue.growth} />}
                         </div>
                         <div className="p-3 bg-orange-50 text-orange-600 rounded-xl">
                             <TrendingUp className="w-6 h-6" />
                         </div>
                     </div>
 
+                    {/* Total Invoices */}
                     <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex items-start justify-between">
                         <div>
                             <p className="text-sm font-medium text-slate-500 mb-1">Total Invoices</p>
-                            <h3 className="text-3xl font-extrabold text-slate-900">{stats.totalInvoices}</h3>
-                            <p className="text-xs text-slate-400 mt-2 font-medium">All time generated</p>
+                            <h3 className="text-3xl font-extrabold text-slate-900">
+                                {stats.loading ? "..." : stats.invoices.value}
+                            </h3>
+                             {!stats.loading && <GrowthBadge value={stats.invoices.growth} />}
                         </div>
                         <div className="p-3 bg-blue-50 text-blue-600 rounded-xl">
                             <FileText className="w-6 h-6" />
                         </div>
                     </div>
 
-                    {/* NEW: VAT Amount Card */}
+                    {/* VAT Amount */}
                     <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex items-start justify-between">
                         <div>
                             <p className="text-sm font-medium text-slate-500 mb-1">Tax Amount (5%)</p>
-                            <h3 className="text-3xl font-extrabold text-slate-900">{stats.totalVat}</h3>
-                            <p className="text-xs text-slate-400 mt-2 font-medium">Collected VAT</p>
+                             <h3 className="text-3xl font-extrabold text-slate-900">
+                                {stats.loading ? "..." : fmtMoney(stats.vat.value)}
+                            </h3>
+                             {!stats.loading && <GrowthBadge value={stats.vat.growth} />}
                         </div>
                         <div className="p-3 bg-indigo-50 text-indigo-600 rounded-xl">
                             <Percent className="w-6 h-6" />
                         </div>
                     </div>
 
+                    {/* Outstanding */}
                     <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex items-start justify-between">
                         <div>
                             <p className="text-sm font-medium text-slate-500 mb-1">Outstanding</p>
-                            <h3 className="text-3xl font-extrabold text-slate-900">{stats.outstanding}</h3>
-                             <div className="flex items-center gap-1 text-red-600 text-xs font-bold mt-2 bg-red-50 px-2 py-1 rounded-lg w-fit">
-                                <AlertCircle className="w-3 h-3" />
-                                3 Invoices Overdue
-                            </div>
+                            <h3 className="text-3xl font-extrabold text-slate-900">
+                                {stats.loading ? "..." : fmtMoney(stats.outstanding.value)}
+                            </h3>
+                            {!stats.loading && <GrowthBadge value={stats.outstanding.growth} />}
                         </div>
                         <div className="p-3 bg-red-50 text-red-600 rounded-xl">
                             <AlertCircle className="w-6 h-6" />
