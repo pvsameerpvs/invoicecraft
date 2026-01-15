@@ -18,6 +18,8 @@ import { SettingsSection } from "./components/SettingsSection";
 import { CompanyDetailsSection } from "./components/CompanyDetailsSection";
 import { ThemeSettingsSection } from "./components/ThemeSettingsSection";
 
+import { LogOut } from "lucide-react";
+
 export default function ProfilePage() {
   const router = useRouter();
   const [username, setUsername] = useState("");
@@ -25,6 +27,7 @@ export default function ProfilePage() {
   const [activeTab, setActiveTab] = useState<TabId>("personal_info");
   const [role, setRole] = useState<"admin" | "user">("user");
   const [userData, setUserData] = useState({ email: "", mobile: "", createdAt: "" });
+  const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
 
   const fetchUserData = () => {
       fetch('/api/users')
@@ -60,9 +63,27 @@ export default function ProfilePage() {
     }
   }, [router]);
 
-  const handleLogout = () => {
+  const handleLogoutClick = () => {
+      setIsLogoutModalOpen(true);
+  };
+
+  const confirmLogout = async () => {
+      try {
+          // Server-side logout (clears cookie)
+          await fetch("/api/logout", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ username }) 
+          });
+      } catch (e) {
+          console.error("Logout failed", e);
+      }
+
+      // Client-side cleanup
       localStorage.removeItem("invoicecraft:username");
       localStorage.removeItem("invoicecraft:role");
+      
+      setIsLogoutModalOpen(false);
       toast.success("Logged out successfully");
       router.push("/");
   };
@@ -93,7 +114,7 @@ export default function ProfilePage() {
                     activeTab={activeTab} 
                     setActiveTab={setActiveTab} 
                     isAdmin={isAdmin}
-                    onLogout={handleLogout}
+                    onLogout={handleLogoutClick}
                     username={username}
                     initials={initials}
                     joinedAt={userData.createdAt}
@@ -134,6 +155,37 @@ export default function ProfilePage() {
             </div>
         </div>
       </main>
+
+      {/* Logout Confirmation Modal */}
+      {isLogoutModalOpen && (
+        <div className="fixed inset-0 z-[110] flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
+            <div className="w-full max-w-sm rounded-2xl bg-white shadow-2xl p-6 transform transition-all scale-100">
+                <div className="text-center">
+                    <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-red-100 mb-4">
+                        <LogOut className="h-6 w-6 text-red-600" />
+                    </div>
+                    <h3 className="text-lg font-bold text-slate-900">Confirm Logout</h3>
+                    <p className="mt-2 text-sm text-slate-500">
+                        Are you sure you want to log out of your account?
+                    </p>
+                </div>
+                <div className="mt-6 flex flex-col sm:flex-row gap-3">
+                    <button
+                        onClick={() => setIsLogoutModalOpen(false)}
+                        className="flex-1 rounded-xl bg-slate-100 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-200 transition-colors"
+                    >
+                        No, Stay
+                    </button>
+                    <button
+                        onClick={confirmLogout}
+                        className="flex-1 rounded-xl bg-red-600 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-red-600/20 hover:bg-red-700 transition-colors"
+                    >
+                        Yes, Logout
+                    </button>
+                </div>
+            </div>
+        </div>
+      )}
     </div>
   );
 }
