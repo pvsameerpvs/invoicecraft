@@ -1,6 +1,6 @@
-
 import { NextResponse } from "next/server";
-import { getSheetsClient } from "@/app/lib/sheets";
+import { cookies } from "next/headers";
+import { getSheetsClient, logActivity } from "@/app/lib/sheets";
 
 export const dynamic = 'force-dynamic';
 
@@ -43,6 +43,7 @@ export async function POST(req: Request) {
     try {
         const body = await req.json();
         const sheets = getSheetsClient();
+        const username = cookies().get("invoicecraft_auth")?.value || "Unknown";
         
         // We know the columns: 
         // A: CompanyName, B: CompanyAddress, C: BankCompanyName, D: BankName, E: BankLabel
@@ -74,6 +75,10 @@ export async function POST(req: Request) {
                 values: [values]
             }
         });
+
+        // Log Activity
+        const userAgent = req.headers.get("user-agent");
+        logActivity(username, "UPDATED SETTINGS", userAgent).catch(console.error);
 
         return NextResponse.json({ ok: true });
     } catch (e: any) {
