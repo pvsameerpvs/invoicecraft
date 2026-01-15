@@ -16,6 +16,7 @@ import { UserManagementSection } from "./components/UserManagementSection";
 import { ProductsSection } from "./components/ProductsSection";
 import { SettingsSection } from "./components/SettingsSection";
 import { CompanyDetailsSection } from "./components/CompanyDetailsSection";
+import { ThemeSettingsSection } from "./components/ThemeSettingsSection";
 
 export default function ProfilePage() {
   const router = useRouter();
@@ -121,6 +122,9 @@ export default function ProfilePage() {
 
                 {activeTab === "company_details" && isAdmin && (
                     <CompanyDetailsSection />
+                )}
+                {activeTab === "theme_settings" && isAdmin && (
+                    <ThemeSettingsSection />
                 )}
 
                 {/* Other Settings Tabs */}

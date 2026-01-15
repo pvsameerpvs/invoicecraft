@@ -5,9 +5,11 @@ import { useRouter } from "next/navigation";
 import React from "react";
 import toast from "react-hot-toast";
 import Image from "next/image";
+import { useTheme } from "@/components/ThemeProvider";
 
 export default function HomePage() {
   const router = useRouter();
+  const { logoUrl } = useTheme();
 
   const [username, setUsername] = React.useState("");
   const [password, setPassword] = React.useState("");
@@ -55,7 +57,7 @@ export default function HomePage() {
       <div className="relative z-10 w-full max-w-md bg-white rounded-3xl shadow-2xl shadow-orange-200/50 p-6 sm:p-10 border border-orange-100">
         {/* Header */}
         <div className="flex flex-col items-center text-center gap-4 mb-8">
-             <Image src="/logo-js.png" alt="Logo" width={150} height={150} />
+             <Image src={logoUrl || "/logo-js.png"} alt="Logo" width={150} height={150} className="object-contain" />
           
            <div>
              <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Welcome Back</h1>

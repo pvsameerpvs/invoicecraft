@@ -63,7 +63,7 @@ async function main() {
         valueInputOption: "USER_ENTERED",
         requestBody: {
             values: [
-                ["CompanyName", "CompanyAddress", "BankCompanyName", "BankName", "BankLabel", "AccountNumber", "AccountIban", "FooterNote", "SignatureLabel", "Currency", "CompanyTrn"],
+                ["CompanyName", "CompanyAddress", "BankCompanyName", "BankName", "BankLabel", "AccountNumber", "AccountIban", "FooterNote", "SignatureLabel", "Currency", "CompanyTrn", "Theme", "LogoUrl"],
                
             ]
         }

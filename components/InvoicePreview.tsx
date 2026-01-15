@@ -2,6 +2,7 @@
 
 import React from "react";
 import { InvoiceData } from "../lib/types";
+import { useTheme } from "./ThemeProvider";
 
 interface InvoicePreviewProps {
   value: InvoiceData;
@@ -37,6 +38,8 @@ export const InvoicePreview: React.FC<InvoicePreviewProps> = ({
   value,
   forwardRef,
 }) => {
+  const { logoUrl } = useTheme();
+
   const computedTotal = value.lineItems.reduce((sum, item) => {
     const n = parseFloat(item.amount);
     if (!isNaN(n)) return sum + n;
@@ -80,7 +83,7 @@ export const InvoicePreview: React.FC<InvoicePreviewProps> = ({
                   src={
                     value.logoDataUrl && value.logoDataUrl.trim().length > 0
                       ? value.logoDataUrl
-                      : "/logo-js.png"
+                      : (logoUrl || "/logo-js.png")
                   }
                   alt="Logo"
                   className="h-8 object-contain"

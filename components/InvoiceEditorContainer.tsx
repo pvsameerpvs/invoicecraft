@@ -70,6 +70,7 @@ export function InvoiceEditorContainer({ initialInvoiceId }: Props) {
                         footerNote: settingsData.FooterNote,
                         signatureLabel: settingsData.SignatureLabel,
                         currency: settingsData.Currency,
+                        logoDataUrl: settingsData.LogoUrl, // Pre-fill Logo
                         bankDetails: {
                             companyName: settingsData.BankCompanyName,
                             bankName: settingsData.BankName,

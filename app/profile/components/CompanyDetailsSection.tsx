@@ -43,24 +43,34 @@ export const CompanyDetailsSection = () => {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setSaving(true);
-        const t = toast.loading("Saving company details...");
+        const t = toast.loading("Saving settings...");
 
         try {
+            // 1. Fetch current full settings to preserve Theme/Logo
+            const currentRes = await fetch("/api/settings");
+            const currentData = await currentRes.json();
+
+            // 2. Merge new company details with existing Theme/Logo
+            const payload = {
+                ...currentData, // Keeps Theme, LogoUrl, etc.
+                ...formData     // Overwrites Company info
+            };
+
             const res = await fetch("/api/settings", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(formData)
+                body: JSON.stringify(payload)
             });
 
             const data = await res.json();
             if (data.ok) {
-                toast.success("Settings updated successfully!", { id: t });
+                toast.success("Settings saved successfully!", { id: t });
             } else {
                 throw new Error(data.error || "Failed to save");
             }
         } catch (err: any) {
             console.error(err);
-            toast.error(err.message || "Failed to update settings", { id: t });
+            toast.error(err.message || "Failed to save settings", { id: t });
         } finally {
             setSaving(false);
         }
@@ -88,8 +98,6 @@ export const CompanyDetailsSection = () => {
                 <form onSubmit={handleSubmit} className="space-y-6">
                     {/* General Company Info */}
                     <div className="space-y-4">
-                        <h3 className="text-sm font-semibold text-slate-900 border-b border-slate-100 pb-2">General Information</h3>
-                        
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
                                 <label className="block text-xs font-semibold text-slate-500 mb-1.5 uppercase">Company Name</label>

@@ -8,6 +8,8 @@ export const metadata: Metadata = {
   description: "Editable invoice builder with PDF export",
 };
 
+import { ThemeProvider } from "../components/ThemeProvider";
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
@@ -16,7 +18,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body className="min-h-screen font-sans antialiased bg-slate-100">
         <Toaster position="top-center" />
-        {children}
+        <ThemeProvider>
+          {children}
+        </ThemeProvider>
       </body>
     </html>
   );

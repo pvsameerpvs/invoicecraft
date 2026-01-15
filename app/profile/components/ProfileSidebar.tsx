@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { User, Lock, Users, Bell, Globe, ChevronRight, LogOut, LucideIcon, Shield, CheckCircle2, Package, Building2 } from "lucide-react";
+import { User, Lock, Users, Bell, Globe, ChevronRight, LogOut, LucideIcon, Shield, CheckCircle2, Package, Building2, Palette } from "lucide-react";
 import { TabId } from "./types";
 
 interface SidebarItem {
@@ -27,6 +27,7 @@ export const ProfileSidebar = ({ activeTab, setActiveTab, isAdmin, onLogout, use
         isAdmin ? { id: "user_management", icon: Users, label: "User Management" } : null,
         isAdmin ? { id: "products", icon: Package, label: "Products" } : null,
         isAdmin ? { id: "company_details", icon: Building2, label: "Company Details" } : null,
+        isAdmin ? { id: "theme_settings", icon: Palette, label: "Theme Checking" } : null,
         { id: "notifications", icon: Bell, label: "Notifications" },
         { id: "language", icon: Globe, label: "Language" },
     ];

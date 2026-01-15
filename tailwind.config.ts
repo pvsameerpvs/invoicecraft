@@ -12,9 +12,9 @@ const config: Config = {
       },
       colors: {
         brand: {
-          start: "#F09819",
-          end: "#FF512F",
-          primary: "#FF6B35",
+          start: "var(--color-brand-start)",
+          end: "var(--color-brand-end)",
+          primary: "var(--color-brand-primary)",
         }
       },
       boxShadow: {

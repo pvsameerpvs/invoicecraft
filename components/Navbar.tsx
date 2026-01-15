@@ -3,6 +3,7 @@
 import React from "react";
 import Image from "next/image";
 import { UserMenu } from "./UserMenu";
+import { useTheme } from "@/components/ThemeProvider";
 
 interface NavbarProps {
   label?: string; // e.g. "v1.0 Editor" or "v1.0 History"
@@ -10,6 +11,7 @@ interface NavbarProps {
 }
 
 export function Navbar({ label, variant = "white" }: NavbarProps) {
+  const { logoUrl } = useTheme();
   // Styles based on variant
   const bgClass = variant === "white" 
     ? "bg-white border-b border-slate-200" 
@@ -21,7 +23,7 @@ export function Navbar({ label, variant = "white" }: NavbarProps) {
         {/* Logo */}
         <div className="relative h-10 w-[100px] sm:w-[150px]">
              <Image 
-                src="/logo-js.png" 
+                src={logoUrl || "/logo-js.png"} 
                 alt="Logo" 
                 fill
                 className="object-contain object-left"

@@ -14,7 +14,7 @@ export async function GET() {
     // Fetch Header (Row 1) and Data (Row 2)
     const res = await sheets.spreadsheets.values.get({
       spreadsheetId: SHEET_ID,
-      range: "Settings!A1:K2",
+      range: "Settings!A1:M2",
     });
 
     const rows = res.data.values || [];
@@ -47,6 +47,7 @@ export async function POST(req: Request) {
         // We know the columns: 
         // A: CompanyName, B: CompanyAddress, C: BankCompanyName, D: BankName, E: BankLabel
         // F: AccountNumber, G: AccountIban, H: FooterNote, I: SignatureLabel, J: Currency, K: CompanyTrn
+        // L: Theme, M: LogoUrl 
 
         const values = [
             body.CompanyName || "",
@@ -59,12 +60,15 @@ export async function POST(req: Request) {
             body.FooterNote || "",
             body.SignatureLabel || "",
             body.Currency || "",
-            body.CompanyTrn || ""
+            body.CompanyTrn || "",
+            body.Theme || "orange", // Default theme
+            body.LogoUrl || "" 
         ];
 
         await sheets.spreadsheets.values.update({
             spreadsheetId: SHEET_ID,
-            range: "Settings!A2:K2",
+            // Expanded to M column
+            range: "Settings!A2:M2", 
             valueInputOption: "USER_ENTERED",
             requestBody: {
                 values: [values]
