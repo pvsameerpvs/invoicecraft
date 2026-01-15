@@ -122,14 +122,43 @@ export const ThemeSettingsSection = () => {
                                     <input 
                                         type="file"
                                         accept="image/*"
-                                        onChange={(e) => {
+                                        onChange={async (e) => {
                                             const file = e.target.files?.[0];
-                                            if (file) {
-                                                const reader = new FileReader();
-                                                reader.onload = (ev) => {
-                                                    setLogoUrl(ev.target?.result as string);
-                                                };
-                                                reader.readAsDataURL(file);
+                                            if (!file) return;
+
+                                            // Client-side validation
+                                            if (file.size > 5 * 1024 * 1024) {
+                                                toast.error("File is too large. Max 5MB.");
+                                                return;
+                                            }
+
+                                            setLoading(true);
+                                            const t = toast.loading("Uploading logo...");
+
+                                            try {
+                                                const formData = new FormData();
+                                                formData.append("file", file);
+
+                                                const res = await fetch("/api/upload", {
+                                                    method: "POST",
+                                                    body: formData,
+                                                });
+                                                
+                                                const data = await res.json();
+                                                
+                                                if (res.ok && data.url) {
+                                                    setLogoUrl(data.url);
+                                                    toast.success("Logo uploaded successfully", { id: t });
+                                                } else {
+                                                    throw new Error(data.error || "Upload failed");
+                                                }
+                                            } catch (err: any) {
+                                                console.error(err);
+                                                toast.error(err.message || "Failed to upload logo", { id: t });
+                                            } finally {
+                                                setLoading(false);
+                                                // Reset input to allow selecting same file again
+                                                e.target.value = "";
                                             }
                                         }}
                                         className="block w-full text-xs text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-brand-50 file:text-brand-primary hover:file:bg-brand-100"
