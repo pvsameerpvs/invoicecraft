@@ -4,12 +4,15 @@ import React, { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { Palette, Save, Loader2 } from "lucide-react";
 import { useTheme } from "@/components/ThemeProvider";
+import { ImageCropper } from "@/components/ImageCropper";
 import { themes } from "@/lib/themes";
 
 export const ThemeSettingsSection = () => {
     const { currentTheme, setTheme, logoUrl, setLogoUrl } = useTheme();
     const [loading, setLoading] = useState(false); // Theme is loaded by provider immediately
     const [saving, setSaving] = useState(false);
+    const [cropModalOpen, setCropModalOpen] = useState(false);
+    const [selectedFileSrc, setSelectedFileSrc] = useState<string | null>(null);
 
     // Because theme/logo state is global, we don't fetch from /api/settings here differently.
     // However, saving needs to post everything back. 
@@ -64,7 +67,39 @@ export const ThemeSettingsSection = () => {
         }
     };
 
+    const handleCropComplete = async (croppedBlob: Blob) => {
+        setLoading(true); // Re-use loading state for upload indicator in modal if needed, or separate.
+        const t = toast.loading("Uploading cropped logo...");
+
+        try {
+            const formData = new FormData();
+            formData.append("file", croppedBlob, "logo.png");
+
+            const res = await fetch("/api/upload", {
+                method: "POST",
+                body: formData,
+            });
+
+            const data = await res.json();
+
+            if (res.ok && data.url) {
+                setLogoUrl(data.url);
+                toast.success("Logo uploaded successfully", { id: t });
+                setCropModalOpen(false);
+                setSelectedFileSrc(null);
+            } else {
+                throw new Error(data.error || "Upload failed");
+            }
+        } catch (err: any) {
+            console.error(err);
+            toast.error(err.message || "Failed to upload logo", { id: t });
+        } finally {
+            setLoading(false);
+        }
+    };
+
     return (
+        <>
         <div className="bg-white rounded-3xl shadow-xl shadow-slate-200/50 ring-1 ring-slate-100 overflow-hidden">
             <div className="border-b border-slate-100 bg-slate-50/50 px-6 py-4 flex items-center gap-3">
                 <div className="p-2 bg-white rounded-lg shadow-sm border border-slate-100 text-brand-primary">
@@ -122,7 +157,7 @@ export const ThemeSettingsSection = () => {
                                     <input 
                                         type="file"
                                         accept="image/*"
-                                        onChange={async (e) => {
+                                        onChange={(e) => {
                                             const file = e.target.files?.[0];
                                             if (!file) return;
 
@@ -132,34 +167,15 @@ export const ThemeSettingsSection = () => {
                                                 return;
                                             }
 
-                                            setLoading(true);
-                                            const t = toast.loading("Uploading logo...");
-
-                                            try {
-                                                const formData = new FormData();
-                                                formData.append("file", file);
-
-                                                const res = await fetch("/api/upload", {
-                                                    method: "POST",
-                                                    body: formData,
-                                                });
-                                                
-                                                const data = await res.json();
-                                                
-                                                if (res.ok && data.url) {
-                                                    setLogoUrl(data.url);
-                                                    toast.success("Logo uploaded successfully", { id: t });
-                                                } else {
-                                                    throw new Error(data.error || "Upload failed");
-                                                }
-                                            } catch (err: any) {
-                                                console.error(err);
-                                                toast.error(err.message || "Failed to upload logo", { id: t });
-                                            } finally {
-                                                setLoading(false);
-                                                // Reset input to allow selecting same file again
-                                                e.target.value = "";
-                                            }
+                                            const reader = new FileReader();
+                                            reader.addEventListener("load", () => {
+                                                setSelectedFileSrc(reader.result?.toString() || null);
+                                                setCropModalOpen(true);
+                                            });
+                                            reader.readAsDataURL(file);
+                                            
+                                            // Reset input to allow selecting same file again
+                                            e.target.value = "";
                                         }}
                                         className="block w-full text-xs text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-brand-50 file:text-brand-primary hover:file:bg-brand-100"
                                     />
@@ -191,5 +207,17 @@ export const ThemeSettingsSection = () => {
                 </form>
             </div>
         </div>
+        
+        {cropModalOpen && selectedFileSrc && (
+            <ImageCropper
+                imageSrc={selectedFileSrc}
+                onCropComplete={handleCropComplete}
+                onCancel={() => {
+                    setCropModalOpen(false);
+                    setSelectedFileSrc(null);
+                }}
+            />
+        )}
+        </>
     );
 };
