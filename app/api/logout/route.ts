@@ -13,13 +13,16 @@ export async function POST(req: Request) {
 
     const res = NextResponse.json({ ok: true });
 
-    // Clear Auth Cookie
-    res.cookies.set("js_auth", "", {
-      httpOnly: true,
-      sameSite: "lax",
-      path: "/",
-      maxAge: 0, 
-    });
+    // Clear Auth Cookies
+    const cookieOptions = {
+        httpOnly: true,
+        sameSite: "lax" as const,
+        path: "/",
+        maxAge: 0,
+    };
+
+    res.cookies.set("invoicecraft_auth", "", cookieOptions);
+    res.cookies.set("invoicecraft_role", "", cookieOptions);
 
     return res;
   } catch (e) {

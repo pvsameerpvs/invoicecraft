@@ -11,24 +11,32 @@ export async function POST(req: Request) {
 
     if (user) {
       // Set Auth Cookie
+      // Create the response object first
+      const response = NextResponse.json({ ok: true, username: user.username, role: user.role });
+
+      // Set Auth Cookie with robust options
       const cookieOptions = {
         httpOnly: true,
         path: "/",
         maxAge: 60 * 60 * 24 * 7, // 1 week
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "lax" as const,
       };
       
-      cookies().set("invoicecraft_auth", user.username, cookieOptions);
-      cookies().set("invoicecraft_role", user.role, cookieOptions);
+      // Sanitize username to ensure valid header value
+      const safeUsername = user.username.trim();
+      
+      response.cookies.set("invoicecraft_auth", safeUsername, cookieOptions);
+      response.cookies.set("invoicecraft_role", user.role, cookieOptions);
 
       // Log Activity
       try {
-        await logActivity(user.username, "User Logged In", req.headers.get("user-agent"));
+        await logActivity(safeUsername, "User Logged In", req.headers.get("user-agent"));
       } catch (e) {
         console.error("Failed to log activity", e);
       }
 
-      // Return user role so frontend can store it
-      return NextResponse.json({ ok: true, username: user.username, role: user.role });
+      return response;
     }
 
     return NextResponse.json(
