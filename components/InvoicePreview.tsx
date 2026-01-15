@@ -89,7 +89,11 @@ export const InvoicePreview: React.FC<InvoicePreviewProps> = ({
                                 <h1 className="mt-4 text-3xl font-semibold tracking-wide">
                   TAX INVOICE
                 </h1>
-                <p className="mr-1 text-[10px] uppercase tracking-wide">TRN-104785358300003</p>
+                {value.fromCompanyTrn && (
+                  <p className="mr-1 text-[10px] uppercase tracking-wide">
+                    {value.fromCompanyTrn}
+                  </p>
+                )}
               </header>
 
               {/* Top meta (only on first page to keep same UI/spacing) */}
@@ -212,7 +216,11 @@ export const InvoicePreview: React.FC<InvoicePreviewProps> = ({
                     <div className="whitespace-pre-line">
                       {value.fromCompanyAddress}
                     </div>
-                    <p className="mr-1 text-[10px] uppercase tracking-wide">TRN-104785358300003</p>
+                    {value.fromCompanyTrn && (
+                      <p className="mr-1 text-[10px] uppercase tracking-wide">
+                        {value.fromCompanyTrn}
+                      </p>
+                    )}
                   </div>
 
                   <div className="space-y-1 text-[11px] pt-4">

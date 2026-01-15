@@ -22,6 +22,7 @@ export interface InvoiceData {
   subject: string;
   fromCompanyName: string;
   fromCompanyAddress: string;
+  fromCompanyTrn?: string;
   lineItems: LineItem[];
   currency: string;
   overrideTotal?: string;

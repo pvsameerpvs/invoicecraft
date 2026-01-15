@@ -20,21 +20,21 @@ const initialInvoiceData: InvoiceData = {
   invoiceNumber: "",
   subject: "",
   date: new Date().toISOString().slice(0, 10),
-  fromCompanyName: "Just Search LLC.",
-  fromCompanyAddress:
-    "Damas Tower, 305, Al Maktoum Road,\nDeira, Rigga Al Buteen, Dubai. P.O. box 13500.",
+  fromCompanyName: "", // Fetched from DB
+  fromCompanyAddress: "", // Fetched from DB
+  fromCompanyTrn: "", // Fetched from DB
   lineItems: [],
   currency: "AED",
   overrideTotal: "",
-  footerNote: "Computer Generated",
+  footerNote: "", // Fetched from DB
   bankDetails: {
-    companyName: "HELLO VISION EVENTS LLC",
-    bankName: "ADCB",
+    companyName: "",
+    bankName: "",
     bankLabel: "Bank",
-    accountIban: "AE720030014006537820001",
-    accountNumber: "14006537820001",
+    accountIban: "",
+    accountNumber: "",
   },
-  signatureLabel: "Computer Generated",
+  signatureLabel: "", // Fetched from DB
   status: "Unpaid",
 };
 
@@ -55,6 +55,33 @@ export function InvoiceEditorContainer({ initialInvoiceId }: Props) {
     const init = async () => {
         try {
             let loaded = false;
+            let settingsDefaults: Partial<InvoiceData> = {};
+
+            // 0. Fetch Settings from DB
+            try {
+                const settingsRes = await fetch("/api/settings");
+                const settingsData = await settingsRes.json();
+                
+                if (settingsData && !settingsData.error) {
+                    settingsDefaults = {
+                        fromCompanyName: settingsData.CompanyName,
+                        fromCompanyAddress: settingsData.CompanyAddress,
+                        fromCompanyTrn: settingsData.CompanyTrn,
+                        footerNote: settingsData.FooterNote,
+                        signatureLabel: settingsData.SignatureLabel,
+                        currency: settingsData.Currency,
+                        bankDetails: {
+                            companyName: settingsData.BankCompanyName,
+                            bankName: settingsData.BankName,
+                            bankLabel: settingsData.BankLabel,
+                            accountNumber: settingsData.AccountNumber,
+                            accountIban: settingsData.AccountIban,
+                        }
+                    };
+                }
+            } catch (e) {
+                console.error("Failed to load settings", e);
+            }
 
             // 1. If EDITING existing invoice (ID from Prop)
             if (initialInvoiceId) {
@@ -88,7 +115,12 @@ export function InvoiceEditorContainer({ initialInvoiceId }: Props) {
             // 2. If NEW invoice (only if NOT loaded and NO ID provided)
              try {
                 if (!loaded && !initialInvoiceId) {
-                    setInvoice(prev => ({...prev, invoiceNumber: "Loading..."}));
+                    // Apply database defaults + base structure
+                    setInvoice(prev => ({
+                        ...prev, 
+                        ...settingsDefaults,
+                        invoiceNumber: "Loading..."
+                    }));
                     
                     const res = await fetch("/api/invoice-history");
                     const history = await res.json();

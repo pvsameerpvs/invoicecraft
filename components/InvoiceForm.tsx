@@ -163,6 +163,17 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({
               }
             />
           </div>
+
+          <div>
+             <Label htmlFor="fromCompanyTrn">TRN / Tax ID</Label>
+             <Input
+                id="fromCompanyTrn"
+                value={value.fromCompanyTrn || ""}
+                disabled={lockedDisabled}
+                className="disabled:opacity-70"
+                onChange={(e) => handleFieldChange("fromCompanyTrn", e.target.value)}
+             />
+          </div>
         </div>
       </section>
 
