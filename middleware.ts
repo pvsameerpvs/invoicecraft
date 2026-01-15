@@ -15,7 +15,7 @@ export function middleware(req: NextRequest) {
   }
 
   // 2. Redirect Logged-In Users away from Login Page
-  if (pathname === "/") {
+  if (pathname === "/" || pathname === "/login") {
     if (auth) {
       const url = req.nextUrl.clone();
       url.pathname = "/dashboard";
@@ -27,5 +27,5 @@ export function middleware(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/", "/invoice/:path*", "/dashboard/:path*", "/history/:path*", "/profile/:path*"],
+  matcher: ["/", "/login", "/invoice/:path*", "/dashboard/:path*", "/history/:path*", "/profile/:path*"],
 };
