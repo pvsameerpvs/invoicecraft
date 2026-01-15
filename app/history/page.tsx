@@ -71,6 +71,7 @@ function HistoryContent() {
   const [deleteTarget, setDeleteTarget] = React.useState<InvoiceHistoryRow | null>(null);
   const [currentUser, setCurrentUser] = React.useState("");
   const [currentRole, setCurrentRole] = React.useState("");
+  const [isFiltersOpen, setIsFiltersOpen] = React.useState(false);
 
   // Preview Modal State
   const [previewInvoice, setPreviewInvoice] = React.useState<InvoiceData | null>(null);
@@ -253,8 +254,27 @@ function HistoryContent() {
           </div>
         </div>
 
+        {/* Mobile Filter Toggle */}
+        <div className="md:hidden mb-4">
+            <button 
+                onClick={() => setIsFiltersOpen(!isFiltersOpen)}
+                className="w-full flex items-center justify-between bg-white p-4 rounded-xl shadow-sm border border-slate-200 text-slate-700 font-medium"
+            >
+                <div className="flex items-center gap-2">
+                    <Filter className="w-4 h-4" />
+                    <span>Filters & Search</span>
+                    {(searchParams.toString().length > 0) && (
+                        <span className="flex h-5 w-5 items-center justify-center rounded-full bg-brand-100 text-[10px] text-brand-700">
+                           !
+                        </span>
+                    )}
+                </div>
+                <ChevronDown className={`w-4 h-4 transition-transform ${isFiltersOpen ? "rotate-180" : ""}`} />
+            </button>
+        </div>
+
         {/* Filters Bar */}
-        <div className="rounded-2xl bg-white p-4 shadow-xl shadow-slate-200/50 ring-1 ring-slate-100">
+        <div className={`rounded-2xl bg-white p-4 shadow-xl shadow-slate-200/50 ring-1 ring-slate-100 mb-6 transition-all duration-300 ${isFiltersOpen ? 'block' : 'hidden md:block'}`}>
            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4">
                {/* 1. Global Search */}
                <div className="relative col-span-1 md:col-span-2 lg:col-span-2">
@@ -349,41 +369,41 @@ function HistoryContent() {
            
            {/* Active Filters Summary */}
            {(searchParams.toString().length > 0) && (
-              <div className="mt-3 flex items-center gap-2 overflow-x-auto pb-1">
-                 <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Active Filters:</span>
+              <div className="mt-3 flex items-center gap-2 overflow-x-auto pb-1 scrollbar-hide">
+                 <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider whitespace-nowrap">Active Filters:</span>
                  {searchParams.get('search') && (
-                    <span className="inline-flex items-center gap-1 rounded-full bg-brand-100 px-2.5 py-0.5 text-xs font-medium text-brand-800">
+                    <span className="inline-flex items-center gap-1 rounded-full bg-brand-100 px-2.5 py-0.5 text-xs font-medium text-brand-800 whitespace-nowrap">
                        Search: {searchParams.get('search')}
                        <button onClick={() => updateFilter('search', '')}><X className="w-3 h-3 hover:text-brand-950" /></button>
                     </span>
                  )}
                  {searchParams.get('client') && (
-                    <span className="inline-flex items-center gap-1 rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-medium text-blue-800">
+                    <span className="inline-flex items-center gap-1 rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-medium text-blue-800 whitespace-nowrap">
                        Client: {searchParams.get('client')}
                        <button onClick={() => updateFilter('client', '')}><X className="w-3 h-3 hover:text-blue-950" /></button>
                     </span>
                  )}
                  {searchParams.get('status') && (
-                    <span className="inline-flex items-center gap-1 rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-800">
+                    <span className="inline-flex items-center gap-1 rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-800 whitespace-nowrap">
                        Status: {searchParams.get('status')}
                        <button onClick={() => updateFilter('status', '')}><X className="w-3 h-3 hover:text-green-950" /></button>
                     </span>
                  )}
                   {searchParams.get('year') && (
-                    <span className="inline-flex items-center gap-1 rounded-full bg-indigo-100 px-2.5 py-0.5 text-xs font-medium text-indigo-800">
+                    <span className="inline-flex items-center gap-1 rounded-full bg-indigo-100 px-2.5 py-0.5 text-xs font-medium text-indigo-800 whitespace-nowrap">
                        Year: {searchParams.get('year')}
                        <button onClick={() => updateFilter('year', '')}><X className="w-3 h-3 hover:text-indigo-950" /></button>
                     </span>
                  )}
                  {searchParams.get('month') && (
-                    <span className="inline-flex items-center gap-1 rounded-full bg-pink-100 px-2.5 py-0.5 text-xs font-medium text-pink-800">
+                    <span className="inline-flex items-center gap-1 rounded-full bg-pink-100 px-2.5 py-0.5 text-xs font-medium text-pink-800 whitespace-nowrap">
                        Month: {new Date(0, parseInt(searchParams.get('month')!)).toLocaleString('default', { month: 'short' })}
                        <button onClick={() => updateFilter('month', '')}><X className="w-3 h-3 hover:text-pink-950" /></button>
                     </span>
                  )}
                  <button 
                    onClick={() => replace(pathname)}
-                   className="ml-auto text-xs text-slate-500 hover:text-slate-700 underline"
+                   className="ml-auto text-xs text-slate-500 hover:text-slate-700 underline whitespace-nowrap"
                  >
                     Clear All
                  </button>
@@ -393,7 +413,7 @@ function HistoryContent() {
       </div>
 
       {/* Scrollable Table Content */}
-      <div className="flex-1 overflow-y-auto px-4 pb-8 sm:px-6 lg:px-8 relative z-10">
+      <div className="flex-1 overflow-y-auto px-4 pb-8 sm:px-6 lg:px-8 relative z-10 w-full">
         {error && (
           <div className="mb-4 rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
             {error}
@@ -409,7 +429,7 @@ function HistoryContent() {
           </div>
         ) : (
           <div className="overflow-hidden rounded-3xl bg-white shadow-xl shadow-slate-200/50 ring-1 ring-slate-100">
-            <div className="overflow-x-auto">
+            <div className="w-full overflow-x-auto pb-2">
             <table className="min-w-[1200px] w-full border-collapse text-left text-sm">
               <thead className="sticky top-0 z-20">
                 <tr className="border-b border-brand-100 bg-brand-50 text-xs font-semibold uppercase tracking-wider text-slate-500">
