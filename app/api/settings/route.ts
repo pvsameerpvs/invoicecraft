@@ -38,3 +38,42 @@ export async function GET() {
     return NextResponse.json({ error: e.message }, { status: 500 });
   }
 }
+
+export async function POST(req: Request) {
+    try {
+        const body = await req.json();
+        const sheets = getSheetsClient();
+        
+        // We know the columns: 
+        // A: CompanyName, B: CompanyAddress, C: BankCompanyName, D: BankName, E: BankLabel
+        // F: AccountNumber, G: AccountIban, H: FooterNote, I: SignatureLabel, J: Currency, K: CompanyTrn
+
+        const values = [
+            body.CompanyName || "",
+            body.CompanyAddress || "",
+            body.BankCompanyName || "",
+            body.BankName || "",
+            body.BankLabel || "",
+            body.AccountNumber || "",
+            body.AccountIban || "",
+            body.FooterNote || "",
+            body.SignatureLabel || "",
+            body.Currency || "",
+            body.CompanyTrn || ""
+        ];
+
+        await sheets.spreadsheets.values.update({
+            spreadsheetId: SHEET_ID,
+            range: "Settings!A2:K2",
+            valueInputOption: "USER_ENTERED",
+            requestBody: {
+                values: [values]
+            }
+        });
+
+        return NextResponse.json({ ok: true });
+    } catch (e: any) {
+        console.error("Failed to update settings:", e);
+        return NextResponse.json({ ok: false, error: e.message }, { status: 500 });
+    }
+}

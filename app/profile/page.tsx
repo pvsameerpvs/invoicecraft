@@ -15,6 +15,7 @@ import { PersonalInfoSection } from "./components/PersonalInfoSection";
 import { UserManagementSection } from "./components/UserManagementSection";
 import { ProductsSection } from "./components/ProductsSection";
 import { SettingsSection } from "./components/SettingsSection";
+import { CompanyDetailsSection } from "./components/CompanyDetailsSection";
 
 export default function ProfilePage() {
   const router = useRouter();
@@ -116,6 +117,10 @@ export default function ProfilePage() {
 
                 {activeTab === "products" && isAdmin && (
                     <ProductsSection />
+                )}
+
+                {activeTab === "company_details" && isAdmin && (
+                    <CompanyDetailsSection />
                 )}
 
                 {/* Other Settings Tabs */}
