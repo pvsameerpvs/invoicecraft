@@ -88,3 +88,58 @@ export async function DELETE(req: Request) {
         return NextResponse.json({ error: e.message }, { status: 500 });
     }
 }
+
+export async function PUT(req: Request) {
+    try {
+        const { originalLabel, newLabel, newAmount } = await req.json();
+        console.log("PUT /api/products", { originalLabel, newLabel, newAmount });
+
+        if (!originalLabel || !newLabel) return NextResponse.json({ error: "Label required" }, { status: 400 });
+
+        const sheets = getSheetsClient();
+        
+        // 1. Fetch all rows
+        const res = await sheets.spreadsheets.values.get({
+            spreadsheetId: SHEET_ID,
+            range: "Products!A:B",
+        });
+
+        const rows = res.data.values || [];
+        console.log(`Found ${rows.length} rows in sheet`);
+
+        // Find exact match first, then try trim match
+        let rowIndex = rows.findIndex((r) => r[0] === originalLabel);
+        
+        if (rowIndex === -1) {
+            console.log("Exact match not found. Trying trimmed match...");
+            rowIndex = rows.findIndex((r) => (r[0] || "").toString().trim() === originalLabel.trim());
+        }
+
+        if (rowIndex === -1) {
+             console.error("Product not found in sheet:", originalLabel);
+             return NextResponse.json({ error: "Product not found" }, { status: 404 });
+        }
+
+        console.log(`Found product at row index ${rowIndex} (Sheet Row ${rowIndex + 1})`);
+
+        // 2. Update the row
+        // rowIndex is 0-based index of the array.
+        // Sheet row number is rowIndex + 1
+        
+        await sheets.spreadsheets.values.update({
+            spreadsheetId: SHEET_ID,
+            range: `Products!A${rowIndex + 1}:B${rowIndex + 1}`,
+            valueInputOption: "USER_ENTERED",
+            requestBody: {
+                values: [[newLabel, newAmount]]
+            }
+        });
+        
+        console.log("Product updated successfully");
+
+        return NextResponse.json({ ok: true });
+    } catch (e: any) {
+        console.error("PUT Error:", e);
+        return NextResponse.json({ error: e.message }, { status: 500 });
+    }
+}

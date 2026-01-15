@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { Trash2, Plus, Search, Package } from "lucide-react";
+import { Trash2, Plus, Search, Package, Edit2 } from "lucide-react";
 import toast from "react-hot-toast";
 
 interface Product {
@@ -18,6 +18,7 @@ export function ProductsSection() {
   const [newLabel, setNewLabel] = useState("");
   const [newAmount, setNewAmount] = useState("");
   const [isAdding, setIsAdding] = useState(false);
+  const [editingItem, setEditingItem] = useState<string | null>(null);
 
   useEffect(() => {
     fetchProducts();
@@ -37,29 +38,61 @@ export function ProductsSection() {
     }
   };
 
-  const handleAdd = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newLabel) return;
 
     setIsAdding(true);
     try {
-      const res = await fetch("/api/products", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ label: newLabel, amount: newAmount }),
-      });
+      if (editingItem) {
+        // UPDATE
+        const res = await fetch("/api/products", {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ 
+                originalLabel: editingItem,
+                newLabel: newLabel, 
+                newAmount: newAmount 
+            }),
+        });
 
-      if (!res.ok) throw new Error("Failed to add");
+        if (!res.ok) throw new Error("Failed to update");
+        toast.success("Product updated");
+        setEditingItem(null);
+      } else {
+        // CREATE
+        const res = await fetch("/api/products", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ label: newLabel, amount: newAmount }),
+        });
 
-      toast.success("Product added");
+        if (!res.ok) throw new Error("Failed to add");
+        toast.success("Product added");
+      }
+
       setNewLabel("");
       setNewAmount("");
       fetchProducts();
     } catch (e) {
-      toast.error("Failed to add product");
+      toast.error(editingItem ? "Failed to update product" : "Failed to add product");
     } finally {
       setIsAdding(false);
     }
+  };
+
+  const handleEditClick = (product: Product) => {
+      setEditingItem(product.label);
+      setNewLabel(product.label);
+      setNewAmount(product.amount);
+      // Optional: scroll to top
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleCancelEdit = () => {
+      setEditingItem(null);
+      setNewLabel("");
+      setNewAmount("");
   };
 
   const handleDelete = async (label: string) => {
@@ -96,12 +129,17 @@ export function ProductsSection() {
         <div className="text-sm text-slate-500">{products.length} Products</div>
       </div>
 
-      {/* Add Form */}
-      <form onSubmit={handleAdd} className="bg-white p-4 rounded-xl border border-orange-200 shadow-sm flex flex-col md:flex-row gap-4 items-end">
+      {/* Add/Edit Form */}
+      <form onSubmit={handleSubmit} className="bg-white p-4 rounded-xl border border-orange-200 shadow-sm flex flex-col md:flex-row gap-4 items-end relative overflow-hidden">
+        {editingItem && (
+            <div className="absolute top-0 left-0 w-1 bg-brand-primary h-full"></div>
+        )}
         <div className="flex-1 w-full">
-            <label className="text-xs font-semibold text-slate-500 uppercase">Product Name</label>
+            <label className="text-xs font-semibold text-slate-500 uppercase">
+                {editingItem ? "Edit Product Name" : "New Product Name"}
+            </label>
             <input 
-                className="w-full mt-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-brand-primary outline-none"
+                className="w-full mt-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-brand-primary outline-none transition-all"
                 placeholder="e.g. Website Design"
                 value={newLabel}
                 onChange={e => setNewLabel(e.target.value)}
@@ -112,19 +150,34 @@ export function ProductsSection() {
             <label className="text-xs font-semibold text-slate-500 uppercase">Price</label>
             <input 
                 type="number"
-                className="w-full mt-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-brand-primary outline-none"
+                className="w-full mt-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-brand-primary outline-none transition-all"
                 placeholder="0.00"
                 value={newAmount}
                 onChange={e => setNewAmount(e.target.value)}
             />
         </div>
-        <button 
-            type="submit" 
-            disabled={isAdding || !newLabel}
-            className="h-10 px-6 bg-brand-primary text-white font-medium rounded-lg hover:bg-brand-end transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 min-w-[100px]"
-        >
-            {isAdding ? "Adding..." : <><Plus size={16} /> Add</>}
-        </button>
+        <div className="flex gap-2">
+            {editingItem && (
+                <button 
+                    type="button"
+                    onClick={handleCancelEdit}
+                    className="h-10 px-4 text-slate-500 font-medium rounded-lg hover:bg-slate-100 transition-colors"
+                >
+                    Cancel
+                </button>
+            )}
+            <button 
+                type="submit" 
+                disabled={isAdding || !newLabel}
+                className={`h-10 px-6 font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 min-w-[100px] ${
+                    editingItem ? "bg-slate-900 text-white hover:bg-slate-800" : "bg-brand-primary text-white hover:bg-brand-end"
+                }`}
+            >
+                {isAdding ? (editingItem ? "Updating..." : "Adding...") : (
+                    editingItem ? "Update" : <><Plus size={16} /> Add</>
+                )}
+            </button>
+        </div>
       </form>
 
       {/* List */}
@@ -157,22 +210,34 @@ export function ProductsSection() {
                         <tr>
                             <th className="px-4 py-3">Product Name</th>
                             <th className="px-4 py-3 w-32">Price</th>
-                            <th className="px-4 py-3 w-16"></th>
+                            <th className="px-4 py-3 w-24 text-right">Actions</th>
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-50">
                         {filtered.map((p, i) => (
-                            <tr key={i} className="hover:bg-slate-50 group transition-colors">
-                                <td className="px-4 py-3 font-medium text-slate-900">{p.label}</td>
+                            <tr key={i} className={`group transition-colors ${editingItem === p.label ? "bg-orange-50" : "hover:bg-slate-50"}`}>
+                                <td className="px-4 py-3 font-medium text-slate-900">
+                                    {p.label}
+                                    {editingItem === p.label && <span className="ml-2 text-[10px] text-orange-600 font-bold bg-orange-100 px-1.5 py-0.5 rounded-md uppercase tracking-wide">Editing</span>}
+                                </td>
                                 <td className="px-4 py-3 text-slate-600">{p.amount || "-"}</td>
                                 <td className="px-4 py-3 text-right">
-                                    <button 
-                                        onClick={() => handleDelete(p.label)}
-                                        className="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-md transition-colors opacity-0 group-hover:opacity-100"
-                                        title="Delete"
-                                    >
-                                        <Trash2 size={16} />
-                                    </button>
+                                    <div className="flex justify-end gap-1">
+                                        <button 
+                                            onClick={() => handleEditClick(p)}
+                                            className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors"
+                                            title="Edit"
+                                        >
+                                            <Edit2 size={16} />
+                                        </button>
+                                        <button 
+                                            onClick={() => handleDelete(p.label)}
+                                            className="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-md transition-colors"
+                                            title="Delete"
+                                        >
+                                            <Trash2 size={16} />
+                                        </button>
+                                    </div>
                                 </td>
                             </tr>
                         ))}

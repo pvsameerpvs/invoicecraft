@@ -19,13 +19,7 @@ export const ProfileHeader = ({ username, initials, isAdmin }: ProfileHeaderProp
                  </p>
             </div>
             
-            <div className="flex items-center gap-3">
-                 
-                <button className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white text-brand-primary text-sm font-bold shadow-lg shadow-black/10 hover:bg-slate-50 transition-all active:scale-95">
-                    <Edit2 className="w-4 h-4" />
-                    Edit Profile
-                </button>
-            </div>
+          
         </div>
     );
 };
