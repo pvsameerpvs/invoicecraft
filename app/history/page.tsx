@@ -8,6 +8,7 @@ import { InvoicePreview } from "../../components/InvoicePreview";
 import { downloadInvoicePdf } from "../../lib/pdf";
 import { InvoiceData } from "../../lib/types";
 import toast from "react-hot-toast";
+import { Skeleton } from "../../components/ui/skeleton";
 import { 
   Users, 
   Calendar, 
@@ -420,12 +421,48 @@ function HistoryContent() {
           </div>
         )}
 
+
+
         {loading ? (
-          <div className="flex h-64 items-center justify-center rounded-3xl bg-white shadow-lg shadow-slate-200/50">
-             <div className="flex flex-col items-center gap-2">
-                <div className="h-8 w-8 animate-spin rounded-full border-4 border-brand-200 border-t-brand-primary" />
-                <span className="text-sm font-medium text-slate-500">Loading records...</span>
-             </div>
+          <div className="overflow-hidden rounded-3xl bg-white shadow-xl shadow-slate-200/50 ring-1 ring-slate-100">
+            <div className="w-full overflow-x-auto">
+             <table className="min-w-[1200px] w-full border-collapse text-left text-sm">
+              <thead className="sticky top-0 z-20">
+                <tr className="border-b border-brand-100 bg-brand-50 text-xs font-semibold uppercase tracking-wider text-slate-500">
+                  <th className="px-6 py-4">Created Date</th>
+                  <th className="px-6 py-4">User</th>
+                  <th className="px-6 py-4">Invoice #</th>
+                  <th className="px-6 py-4">Date</th>
+                  <th className="px-6 py-4">Client</th>
+                  <th className="px-6 py-4">Subject</th>
+                  <th className="px-6 py-4">Status</th>
+                  <th className="px-6 py-4">Currency</th>
+                  <th className="px-6 py-4 text-right">Subtotal</th>
+                  <th className="px-6 py-4 text-right">VAT</th>
+                  <th className="px-6 py-4 text-right">Total</th>
+                  <th className="px-6 py-4 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-brand-100 bg-white">
+                 {[...Array(8)].map((_, i) => (
+                     <tr key={i}>
+                         <td className="px-6 py-4"><Skeleton className="h-4 w-24" /></td>
+                         <td className="px-6 py-4"><Skeleton className="h-6 w-16 rounded-full" /></td>
+                         <td className="px-6 py-4"><Skeleton className="h-4 w-20" /></td>
+                         <td className="px-6 py-4"><Skeleton className="h-4 w-24" /></td>
+                         <td className="px-6 py-4"><Skeleton className="h-4 w-32" /></td>
+                         <td className="px-6 py-4"><Skeleton className="h-4 w-40" /></td>
+                         <td className="px-6 py-4"><Skeleton className="h-6 w-16 rounded-full" /></td>
+                         <td className="px-6 py-4"><Skeleton className="h-4 w-12" /></td>
+                         <td className="px-6 py-4"><Skeleton className="h-4 w-16 ml-auto" /></td>
+                         <td className="px-6 py-4"><Skeleton className="h-4 w-12 ml-auto" /></td>
+                         <td className="px-6 py-4"><Skeleton className="h-4 w-20 ml-auto" /></td>
+                         <td className="px-6 py-4"><Skeleton className="h-8 w-8 rounded-full ml-auto" /></td>
+                     </tr>
+                 ))}
+              </tbody>
+             </table>
+            </div>
           </div>
         ) : (
           <div className="overflow-hidden rounded-3xl bg-white shadow-xl shadow-slate-200/50 ring-1 ring-slate-100">

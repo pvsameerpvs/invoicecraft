@@ -13,6 +13,7 @@ interface User {
 }
 
 import { Trash2 } from "lucide-react";
+import { Skeleton } from "../../../components/ui/skeleton";
 
 interface UserManagementSectionProps {
     currentUser?: string;
@@ -24,7 +25,10 @@ export const UserManagementSection = ({ currentUser }: UserManagementSectionProp
         username: "", password: "", repeatPassword: "", role: "user", email: "", mobile: "" 
     });
 
+    const [loadingUsers, setLoadingUsers] = useState(true);
+
     const fetchUsers = async () => {
+        setLoadingUsers(true);
         try {
             const res = await fetch("/api/users/list");
             if (res.ok) {
@@ -33,6 +37,8 @@ export const UserManagementSection = ({ currentUser }: UserManagementSectionProp
             }
         } catch (error) {
             console.error("Failed to fetch users", error);
+        } finally {
+            setLoadingUsers(false);
         }
     };
 
@@ -199,56 +205,81 @@ export const UserManagementSection = ({ currentUser }: UserManagementSectionProp
             <div className="mt-12">
                 <h3 className="text-lg font-bold text-slate-900 mb-4">Existing Users</h3>
                 <div className="overflow-x-auto max-h-[400px] overflow-y-auto scrollbar-thin scrollbar-thumb-slate-200 scrollbar-track-transparent">
-                    <table className="w-full text-left border-collapse bg-white">
-                        <thead className="sticky top-0 bg-white z-10 shadow-sm">
-                            <tr className="border-b border-slate-100 text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                                <th className="py-3 px-2 bg-white">Username</th>
-                                <th className="py-3 px-2 bg-white">Role</th>
-                                <th className="py-3 px-2 bg-white">Email</th>
-                                <th className="py-3 px-2 bg-white">Created At</th>
-                                <th className="py-3 px-2 bg-white text-right">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody className="text-sm text-slate-700">
-                            {users.map(user => (
-                                <tr key={user.id} className="border-b border-slate-50 hover:bg-slate-50 transition-colors">
-                                    <td className="py-3 px-2 font-medium">{user.username}</td>
-                                    <td className="py-3 px-2">
-                                        <span className={`inline-flex items-center px-2 py-1 rounded-md text-xs font-medium ${
-                                            user.role === 'admin' ? 'bg-purple-50 text-purple-700 ring-1 ring-purple-600/10' : 'bg-slate-100 text-slate-600 ring-1 ring-slate-500/10'
-                                        }`}>
-                                            {user.role}
-                                        </span>
-                                    </td>
-                                    <td className="py-3 px-2 text-slate-500">{user.email || "-"}</td>
-                                    <td className="py-3 px-2 text-slate-400 text-xs">
-                                        {user.createdAt ? new Date(user.createdAt).toLocaleDateString() : "-"}
-                                    </td>
-                                    <td className="py-3 px-2 text-right">
-                                        {user.username === currentUser ? (
-                                            <span className="text-xs font-medium text-slate-400 italic pr-2">You</span>
-                                        ) : (
-                                            <button 
-                                                onClick={() => handleDelete(user)}
-                                                disabled={deleting !== null}
-                                                className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                                                title="Delete User"
-                                            >
-                                                <Trash2 className="w-4 h-4" />
-                                            </button>
-                                        )}
-                                    </td>
+                    {loadingUsers ? (
+                         <table className="w-full text-left border-collapse bg-white">
+                             <thead className="sticky top-0 bg-white z-10 shadow-sm">
+                                 <tr className="border-b border-slate-100">
+                                     <th className="py-3 px-2 bg-white"><Skeleton className="h-4 w-24" /></th>
+                                     <th className="py-3 px-2 bg-white"><Skeleton className="h-4 w-16" /></th>
+                                     <th className="py-3 px-2 bg-white"><Skeleton className="h-4 w-32" /></th>
+                                     <th className="py-3 px-2 bg-white"><Skeleton className="h-4 w-24" /></th>
+                                     <th className="py-3 px-2 bg-white text-right"><Skeleton className="h-4 w-8 ml-auto" /></th>
+                                 </tr>
+                             </thead>
+                             <tbody className="bg-white">
+                                 {[...Array(5)].map((_, i) => (
+                                     <tr key={i} className="border-b border-slate-50">
+                                         <td className="py-3 px-2"><Skeleton className="h-4 w-24" /></td>
+                                         <td className="py-3 px-2"><Skeleton className="h-4 w-16" /></td>
+                                         <td className="py-3 px-2"><Skeleton className="h-4 w-40" /></td>
+                                         <td className="py-3 px-2"><Skeleton className="h-4 w-24" /></td>
+                                         <td className="py-3 px-2"><Skeleton className="h-8 w-8 ml-auto rounded-lg" /></td>
+                                     </tr>
+                                 ))}
+                             </tbody>
+                         </table>
+                    ) : (
+                        <table className="w-full text-left border-collapse bg-white">
+                            <thead className="sticky top-0 bg-white z-10 shadow-sm">
+                                <tr className="border-b border-slate-100 text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                                    <th className="py-3 px-2 bg-white">Username</th>
+                                    <th className="py-3 px-2 bg-white">Role</th>
+                                    <th className="py-3 px-2 bg-white">Email</th>
+                                    <th className="py-3 px-2 bg-white">Created At</th>
+                                    <th className="py-3 px-2 bg-white text-right">Actions</th>
                                 </tr>
-                            ))}
-                            {users.length === 0 && (
-                                <tr>
-                                    <td colSpan={5} className="py-8 text-center text-slate-400">
-                                        No users found.
-                                    </td>
-                                </tr>
-                            )}
-                        </tbody>
-                    </table>
+                            </thead>
+                            <tbody className="text-sm text-slate-700">
+                                {users.map(user => (
+                                    <tr key={user.id} className="border-b border-slate-50 hover:bg-slate-50 transition-colors">
+                                        <td className="py-3 px-2 font-medium">{user.username}</td>
+                                        <td className="py-3 px-2">
+                                            <span className={`inline-flex items-center px-2 py-1 rounded-md text-xs font-medium ${
+                                                user.role === 'admin' ? 'bg-purple-50 text-purple-700 ring-1 ring-purple-600/10' : 'bg-slate-100 text-slate-600 ring-1 ring-slate-500/10'
+                                            }`}>
+                                                {user.role}
+                                            </span>
+                                        </td>
+                                        <td className="py-3 px-2 text-slate-500">{user.email || "-"}</td>
+                                        <td className="py-3 px-2 text-slate-400 text-xs">
+                                            {user.createdAt ? new Date(user.createdAt).toLocaleDateString() : "-"}
+                                        </td>
+                                        <td className="py-3 px-2 text-right">
+                                            {user.username === currentUser ? (
+                                                <span className="text-xs font-medium text-slate-400 italic pr-2">You</span>
+                                            ) : (
+                                                <button 
+                                                    onClick={() => handleDelete(user)}
+                                                    disabled={deleting !== null}
+                                                    className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                                                    title="Delete User"
+                                                >
+                                                    <Trash2 className="w-4 h-4" />
+                                                </button>
+                                            )}
+                                        </td>
+                                    </tr>
+                                ))}
+                                {users.length === 0 && (
+                                    <tr>
+                                        <td colSpan={5} className="py-8 text-center text-slate-400">
+                                            No users found.
+                                        </td>
+                                    </tr>
+                                )}
+                            </tbody>
+                        </table>
+                    )}
                 </div>
             </div>
         </section>

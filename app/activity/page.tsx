@@ -4,6 +4,7 @@ import React, { useEffect, useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { UserMenu } from "../../components/UserMenu";
+import { Skeleton } from "../../components/ui/skeleton";
 import toast from "react-hot-toast";
 
 type ActivityLog = {
@@ -150,10 +151,30 @@ export default function ActivityPage() {
         {/* Content Area */}
         <div className="flex-1 overflow-y-auto px-4 pb-8 sm:px-6 lg:px-8 relative z-10">
             {loading ? (
-                <div className="flex h-64 items-center justify-center rounded-3xl bg-white shadow-lg shadow-slate-200/50">
-                    <div className="flex flex-col items-center gap-2">
-                        <div className="h-8 w-8 animate-spin rounded-full border-4 border-brand-200 border-t-brand-primary" />
-                        <span className="text-sm font-medium text-slate-500">Loading records...</span>
+                <div className="overflow-hidden rounded-3xl bg-white shadow-xl shadow-slate-200/50 ring-1 ring-slate-100">
+                    <div className="w-full overflow-x-auto">
+                        <table className="min-w-full divide-y divide-brand-100">
+                             <thead className="bg-brand-50">
+                                <tr>
+                                    <th className="px-6 py-4"><Skeleton className="h-4 w-20" /></th>
+                                    <th className="px-6 py-4"><Skeleton className="h-4 w-32" /></th>
+                                    <th className="px-6 py-4"><Skeleton className="h-4 w-24" /></th>
+                                    <th className="px-6 py-4"><Skeleton className="h-4 w-24" /></th>
+                                    <th className="px-6 py-4 text-right"><Skeleton className="h-4 w-16 ml-auto" /></th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-brand-100 bg-white">
+                                {[...Array(5)].map((_, i) => (
+                                    <tr key={i}>
+                                        <td className="px-6 py-4"><Skeleton className="h-4 w-24" /></td>
+                                        <td className="px-6 py-4"><Skeleton className="h-4 w-40" /></td>
+                                        <td className="px-6 py-4"><Skeleton className="h-6 w-20 rounded-full" /></td>
+                                        <td className="px-6 py-4"><Skeleton className="h-4 w-32" /></td>
+                                        <td className="px-6 py-4"><Skeleton className="h-8 w-16 ml-auto rounded-lg" /></td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             ) : (

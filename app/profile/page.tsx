@@ -20,6 +20,8 @@ import { ThemeSettingsSection } from "./components/ThemeSettingsSection";
 
 import { LogOut } from "lucide-react";
 
+import { Skeleton } from "../../components/ui/skeleton";
+
 export default function ProfilePage() {
   const router = useRouter();
   const [username, setUsername] = useState("");
@@ -28,6 +30,8 @@ export default function ProfilePage() {
   const [role, setRole] = useState<"admin" | "user">("user");
   const [userData, setUserData] = useState({ email: "", mobile: "", createdAt: "" });
   const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
+
+  // ... (fetchUserData and useEffects remain the same) ...
 
   const fetchUserData = () => {
       fetch('/api/users')
@@ -69,7 +73,6 @@ export default function ProfilePage() {
 
   const confirmLogout = async () => {
       try {
-          // Server-side logout (clears cookie)
           await fetch("/api/logout", {
               method: "POST",
               headers: { "Content-Type": "application/json" },
@@ -79,7 +82,6 @@ export default function ProfilePage() {
           console.error("Logout failed", e);
       }
 
-      // Client-side cleanup
       localStorage.removeItem("invoicecraft:username");
       localStorage.removeItem("invoicecraft:role");
       
@@ -88,7 +90,60 @@ export default function ProfilePage() {
       router.push("/");
   };
 
-  if (loading) return null;
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-brand-50 flex flex-col relative">
+        <Navbar label="Profile" variant="transparent" />
+        <div className="absolute top-0 left-0 w-full h-64 bg-slate-200 animate-pulse z-0" />
+        
+        <div className="relative z-10 px-4 md:px-8 pt-8 pb-4">
+             {/* Profile Header Skeleton */}
+            <div className="flex items-end justify-between">
+                <div className="flex items-end gap-6 text-white">
+                    <Skeleton className="h-24 w-24 rounded-2xl bg-white/20" />
+                    <div className="mb-2 space-y-2">
+                         <Skeleton className="h-4 w-32 bg-white/20" />
+                         <Skeleton className="h-8 w-48 bg-white/20" />
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <main className="flex-1 px-4 md:px-8 pb-8 max-w-7xl mx-auto w-full relative z-10">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                 {/* Sidebar Skeleton */}
+                <div className="lg:col-span-3 space-y-6">
+                    <div className="bg-white rounded-3xl p-6 shadow-sm border border-slate-100">
+                         <div className="flex flex-col items-center gap-4 mb-8">
+                             <Skeleton className="h-24 w-24 rounded-2xl" />
+                             <Skeleton className="h-6 w-32" />
+                             <Skeleton className="h-4 w-20" />
+                         </div>
+                         <div className="space-y-4">
+                             {[1,2,3,4,5].map(i => (
+                                 <Skeleton key={i} className="h-10 w-full rounded-xl" />
+                             ))}
+                         </div>
+                    </div>
+                </div>
+                
+                 {/* Content Skeleton */}
+                <div className="lg:col-span-9">
+                    <div className="bg-white rounded-3xl p-8 shadow-sm border border-slate-100 space-y-6">
+                        <Skeleton className="h-8 w-48 mb-6" />
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <Skeleton className="h-12 w-full rounded-xl" />
+                            <Skeleton className="h-12 w-full rounded-xl" />
+                            <Skeleton className="h-12 w-full rounded-xl" />
+                            <Skeleton className="h-12 w-full rounded-xl" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+      </div>
+    );
+  }
 
   const initials = username ? username.charAt(0).toUpperCase() : "?";
   const isAdmin = role === "admin";

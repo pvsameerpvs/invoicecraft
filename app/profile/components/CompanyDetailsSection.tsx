@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { Building2, Save, Loader2 } from "lucide-react";
+import { Skeleton } from "../../../components/ui/skeleton";
 
 export const CompanyDetailsSection = () => {
     const [loading, setLoading] = useState(true);
@@ -77,8 +78,39 @@ export const CompanyDetailsSection = () => {
     };
 
     if (loading) return (
-        <div className="flex h-64 w-full items-center justify-center rounded-3xl bg-white shadow-sm ring-1 ring-slate-100">
-            <Loader2 className="w-8 h-8 animate-spin text-brand-primary" />
+        <div className="bg-white rounded-3xl shadow-xl shadow-slate-200/50 ring-1 ring-slate-100 overflow-hidden">
+            <div className="border-b border-slate-100 bg-slate-50/50 px-6 py-4 flex items-center gap-3">
+                 <Skeleton className="h-10 w-10 rounded-lg" />
+                 <div className="space-y-2">
+                     <Skeleton className="h-4 w-48" />
+                     <Skeleton className="h-3 w-64" />
+                 </div>
+            </div>
+            <div className="p-6 space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                     {[1,2,3].map(i => (
+                         <div key={i} className="space-y-2">
+                             <Skeleton className="h-3 w-24" />
+                             <Skeleton className="h-10 w-full rounded-lg" />
+                         </div>
+                     ))}
+                </div>
+                <div className="space-y-2">
+                    <Skeleton className="h-3 w-32" />
+                    <Skeleton className="h-24 w-full rounded-lg" />
+                </div>
+                 <div className="pt-4 space-y-4">
+                     <Skeleton className="h-4 w-32" />
+                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                         {[1,2,3,4,5].map(i => (
+                             <div key={i} className="space-y-2">
+                                 <Skeleton className="h-3 w-24" />
+                                 <Skeleton className="h-10 w-full rounded-lg" />
+                             </div>
+                         ))}
+                     </div>
+                </div>
+            </div>
         </div>
     );
 

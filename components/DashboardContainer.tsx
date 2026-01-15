@@ -27,6 +27,7 @@ const scrollbarHideStyles = `
 const COLORS = ["#f97316", "#ef4444", "#22c55e"]; // Orange, Red, Green
 type FilterType = 'monthly' | 'yearly' | 'all';
 
+import { Skeleton } from "./ui/skeleton";
 import { useTheme } from "./ThemeProvider";
 import { themes } from "../lib/themes";
 
@@ -213,9 +214,9 @@ export const DashboardContainer = ({ onCreateInvoice, invoiceHistory = [] }: Das
                         <div>
                             <p className="text-sm font-medium text-slate-500 mb-1">Total Revenue</p>
                             <h3 className="text-3xl font-extrabold text-slate-900">
-                                {stats.loading ? "..." : fmtMoney(stats.revenue.value)}
+                                {stats.loading ? <Skeleton className="h-9 w-32" /> : fmtMoney(stats.revenue.value)}
                             </h3>
-                            {!stats.loading && <GrowthBadge value={stats.revenue.growth} />}
+                            {!stats.loading ? <GrowthBadge value={stats.revenue.growth} /> : <Skeleton className="h-6 w-24 mt-2 rounded-lg" />}
                         </div>
                         <div className="p-3 bg-brand-50 text-brand-600 rounded-xl">
                             <TrendingUp className="w-6 h-6" />
@@ -227,12 +228,12 @@ export const DashboardContainer = ({ onCreateInvoice, invoiceHistory = [] }: Das
                         <div>
                             <p className="text-sm font-medium text-slate-500 mb-1">Total Paid Invoices</p>
                             <h3 className="text-3xl font-extrabold text-slate-900">
-                                {stats.loading ? "..." : paidCount}
+                                {stats.loading ? <Skeleton className="h-9 w-24" /> : paidCount}
                             </h3>
                              <p className="text-xs font-bold text-green-600 mt-1">
-                                {stats.loading ? "..." : fmtMoney(stats.revenue.value)}
+                                {stats.loading ? <Skeleton className="h-3 w-16" /> : fmtMoney(stats.revenue.value)}
                             </p>
-                             {!stats.loading && <GrowthBadge value={stats.invoices.growth} />}
+                             {!stats.loading ? <GrowthBadge value={stats.invoices.growth} /> : <Skeleton className="h-6 w-24 mt-2 rounded-lg" />}
                         </div>
                         <div className="p-3 bg-green-50 text-green-600 rounded-xl">
                             <CheckCircle className="w-6 h-6" />
@@ -244,9 +245,9 @@ export const DashboardContainer = ({ onCreateInvoice, invoiceHistory = [] }: Das
                         <div>
                             <p className="text-sm font-medium text-slate-500 mb-1">Tax Amount (5%)</p>
                              <h3 className="text-3xl font-extrabold text-slate-900">
-                                {stats.loading ? "..." : fmtMoney(stats.vat.value)}
+                                {stats.loading ? <Skeleton className="h-9 w-24" /> : fmtMoney(stats.vat.value)}
                             </h3>
-                             {!stats.loading && <GrowthBadge value={stats.vat.growth} />}
+                             {!stats.loading ? <GrowthBadge value={stats.vat.growth} /> : <Skeleton className="h-6 w-24 mt-2 rounded-lg" />}
                         </div>
                         <div className="p-3 bg-indigo-50 text-indigo-600 rounded-xl">
                             <Percent className="w-6 h-6" />
@@ -258,12 +259,12 @@ export const DashboardContainer = ({ onCreateInvoice, invoiceHistory = [] }: Das
                         <div>
                             <p className="text-sm font-medium text-slate-500 mb-1">Total Unpaid Invoices</p>
                             <h3 className="text-3xl font-extrabold text-slate-900">
-                                {stats.loading ? "..." : fmtMoney(stats.outstanding.value)}
+                                {stats.loading ? <Skeleton className="h-9 w-32" /> : fmtMoney(stats.outstanding.value)}
                             </h3>
                              <p className="text-xs font-bold text-slate-500 mt-1">
-                                {stats.loading ? "..." : `${stats.outstanding.count} Invoices`}
+                                {stats.loading ? <Skeleton className="h-3 w-20" /> : `${stats.outstanding.count} Invoices`}
                             </p>
-                            {!stats.loading && <GrowthBadge value={stats.outstanding.growth} />}
+                            {!stats.loading ? <GrowthBadge value={stats.outstanding.growth} /> : <Skeleton className="h-6 w-24 mt-2 rounded-lg" />}
                         </div>
                         <div className="p-3 bg-red-50 text-red-600 rounded-xl">
                             <AlertCircle className="w-6 h-6" />
@@ -275,10 +276,10 @@ export const DashboardContainer = ({ onCreateInvoice, invoiceHistory = [] }: Das
                         <div>
                             <p className="text-sm font-medium text-slate-500 mb-1">Total Overdue Invoices</p>
                             <h3 className="text-3xl font-extrabold text-slate-900">
-                                {stats.loading ? "..." : fmtMoney(stats.overdue.value)}
+                                {stats.loading ? <Skeleton className="h-9 w-32" /> : fmtMoney(stats.overdue.value)}
                             </h3>
                             <p className="text-xs font-bold text-red-500 mt-1">
-                                {stats.loading ? "..." : `${stats.overdue.count} Overdue`}
+                                {stats.loading ? <Skeleton className="h-3 w-20" /> : `${stats.overdue.count} Overdue`}
                             </p>
                         </div>
                         <div className="p-3 bg-red-100 text-red-700 rounded-xl">

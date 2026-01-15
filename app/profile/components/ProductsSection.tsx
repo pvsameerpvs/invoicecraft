@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import { Trash2, Plus, Search, Package, Edit2 } from "lucide-react";
+import { Skeleton } from "../../../components/ui/skeleton";
 import toast from "react-hot-toast";
 
 interface Product {
@@ -212,7 +213,26 @@ export function ProductsSection() {
           {/* Table */}
           <div className="max-h-[500px] overflow-y-auto">
               {loading ? (
-                  <div className="p-8 text-center text-slate-500">Loading products...</div>
+                  <div className="p-4 bg-white">
+                      <table className="w-full text-sm text-left">
+                          <thead className="bg-slate-50 text-slate-500 font-medium border-b border-slate-100">
+                             <tr>
+                                <th className="px-4 py-3 w-40"><Skeleton className="h-4 w-24" /></th>
+                                <th className="px-4 py-3 w-32"><Skeleton className="h-4 w-16" /></th>
+                                <th className="px-4 py-3 w-24 text-right"><Skeleton className="h-4 w-12 ml-auto" /></th>
+                             </tr>
+                          </thead>
+                          <tbody className="divide-y divide-slate-50">
+                             {[...Array(5)].map((_, i) => (
+                                <tr key={i}>
+                                    <td className="px-4 py-3"><Skeleton className="h-4 w-32" /></td>
+                                    <td className="px-4 py-3"><Skeleton className="h-4 w-20" /></td>
+                                    <td className="px-4 py-3"><Skeleton className="h-8 w-16 ml-auto rounded-md" /></td>
+                                </tr>
+                             ))}
+                          </tbody>
+                      </table>
+                  </div>
               ) : filtered.length === 0 ? (
                   <div className="p-12 flex flex-col items-center justify-center text-slate-400 gap-3">
                       <Package size={48} className="opacity-20" />
