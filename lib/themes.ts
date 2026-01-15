@@ -1,5 +1,6 @@
 // Full Tailwind Colors for mapping
 const palettes = {
+    // Standard
     orange: {
         50: "#fff7ed", 100: "#ffedd5", 200: "#fed7aa", 300: "#fdba74", 400: "#fb923c",
         500: "#f97316", 600: "#ea580c", 700: "#c2410c", 800: "#9a3412", 900: "#7c2d12", 950: "#431407"
@@ -19,10 +20,27 @@ const palettes = {
     teal: {
         50: "#f0f9ff", 100: "#e0f2fe", 200: "#bae6fd", 300: "#7dd3fc", 400: "#38bdf8",
         500: "#0ea5e9", 600: "#0284c7", 700: "#0369a1", 800: "#075985", 900: "#0c4a6e", 950: "#082f49"
+    },
+    // New / Refined
+    black: {
+        50: "#f8fafc", 100: "#f1f5f9", 200: "#e2e8f0", 300: "#cbd5e1", 400: "#94a3b8",
+        500: "#64748b", 600: "#475569", 700: "#334155", 800: "#1e293b", 900: "#0f172a", 950: "#020617"
+    },
+    gold: {
+        50: "#fffbeb", 100: "#fef3c7", 200: "#fde68a", 300: "#fcd34d", 400: "#fbbf24",
+        500: "#f59e0b", 600: "#d97706", 700: "#b45309", 800: "#92400e", 900: "#78350f", 950: "#451a03"
+    },
+    rose: {
+        50: "#fff1f2", 100: "#ffe4e6", 200: "#fecdd3", 300: "#fda4af", 400: "#fb7185",
+        500: "#f43f5e", 600: "#e11d48", 700: "#be123c", 800: "#9f1239", 900: "#881337", 950: "#4c0519"
+    },
+    lavender: {
+        50: "#f5f3ff", 100: "#ede9fe", 200: "#ddd6fe", 300: "#c4b5fd", 400: "#a78bfa",
+        500: "#8b5cf6", 600: "#7c3aed", 700: "#6d28d9", 800: "#5b21b6", 900: "#4c1d95", 950: "#2e1065"
     }
 };
 
-export type ThemeId = "orange" | "blue" | "purple" | "green" | "teal";
+export type ThemeId = "orange" | "blue" | "purple" | "green" | "teal" | "black" | "gold" | "rose" | "lavender";
 
 export interface Theme {
     id: ThemeId;
@@ -76,6 +94,39 @@ export const themes: Theme[] = [
         colors: {
             start: "#00c6ff", end: "#0072ff", primary: "#06b6d4",
             ...palettes.teal
+        }
+    },
+    // New Premium Themes
+    {
+        id: "black",
+        label: "Midnight Black",
+        colors: {
+            start: "#434343", end: "#000000", primary: "#0f172a",
+            ...palettes.black
+        }
+    },
+    {
+        id: "gold",
+        label: "Luxury Gold",
+        colors: {
+            start: "#f2994a", end: "#f2c94c", primary: "#b45309",
+            ...palettes.gold
+        }
+    },
+    {
+        id: "rose",
+        label: "Dusty Rose",
+        colors: {
+            start: "#ff758c", end: "#ff7eb3", primary: "#e11d48",
+            ...palettes.rose
+        }
+    },
+     {
+        id: "lavender",
+        label: "Soft Lavender",
+        colors: {
+            start: "#a18cd1", end: "#fbc2eb", primary: "#6d28d9",
+            ...palettes.lavender
         }
     }
 ];
