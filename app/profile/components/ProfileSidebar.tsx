@@ -78,7 +78,7 @@ export const ProfileSidebar = ({ activeTab, setActiveTab, isAdmin, onLogout, use
                             <button 
                                 key={i} 
                                 onClick={() => setActiveTab(menuItem.id)}
-                                className={`flex w-full items-center justify-between px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${activeTab === menuItem.id ? "bg-orange-50 text-brand-primary" : "text-slate-600 hover:bg-slate-50"}`}
+                                className={`flex w-full items-center justify-between px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${activeTab === menuItem.id ? "bg-brand-50 text-brand-primary" : "text-slate-600 hover:bg-slate-50"}`}
                             >
                                 <div className="flex items-center gap-3">
                                     <menuItem.icon className="w-4 h-4" />

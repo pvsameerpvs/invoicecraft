@@ -73,7 +73,7 @@ export default function ProfilePage() {
   const isAdmin = role === "admin";
 
   return (
-    <div className="min-h-screen bg-orange-50 flex flex-col relative">
+    <div className="min-h-screen bg-brand-50 flex flex-col relative">
       <Navbar label="Profile" variant="transparent" />
       
       {/* Global Background Gradient */}

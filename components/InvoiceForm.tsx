@@ -116,14 +116,14 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({
   <Button
     type="button"
     onClick={() => setIsEditingLockedFields((v) => !v)}
-    className="h-10 rounded-xl bg-white px-4 text-sm font-medium text-brand-primary shadow-sm ring-1 ring-orange-200 hover:bg-orange-50"
+    className="h-10 rounded-xl bg-white px-4 text-sm font-medium text-brand-primary shadow-sm ring-1 ring-brand-200 hover:bg-brand-50"
   >
     {isEditingLockedFields ? "Lock fields" : "Edit locked fields"}
   </Button>
 </div>
 
 
-      <section className="space-y-2 rounded-lg border border-orange-200 bg-white p-4 shadow-sm">
+      <section className="space-y-2 rounded-lg border border-brand-200 bg-white p-4 shadow-sm">
         <h2 className="text-sm font-semibold">Branding</h2>
         <div className="space-y-3">
           <div>
@@ -177,7 +177,7 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({
         </div>
       </section>
 
-      <section className="space-y-2 rounded-lg border border-orange-200 bg-white p-4 shadow-sm">
+      <section className="space-y-2 rounded-lg border border-brand-200 bg-white p-4 shadow-sm">
         <h2 className="text-sm font-semibold">Invoice details</h2>
         <div className="grid grid-cols-2 gap-3">
           <div>
@@ -248,7 +248,7 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({
              <Label htmlFor="status">Status</Label>
              <select
                 id="status"
-                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 border-orange-200"
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 border-brand-200"
                 value={value.status || "Unpaid"}
                 onChange={(e) => handleFieldChange("status", e.target.value)}
              >
@@ -259,7 +259,7 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({
         </div>
       </section>
 
-      <section className="space-y-2 rounded-lg border border-orange-200 bg-white p-4 shadow-sm">
+      <section className="space-y-2 rounded-lg border border-brand-200 bg-white p-4 shadow-sm">
   <div className="flex items-center justify-between">
     <h2 className="text-sm font-semibold">Line items</h2>
 
@@ -275,10 +275,10 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({
   </div>
 
   {isAddItemPickerOpen && (
-    <div className="mt-2 grid grid-cols-1 gap-2 rounded-lg border border-orange-200 bg-orange-50 p-3">
+    <div className="mt-2 grid grid-cols-1 gap-2 rounded-lg border border-brand-200 bg-brand-50 p-3">
       <Label>Select an item</Label>
       <select
-        className="h-10 w-full rounded-md border border-orange-200 bg-white px-3 text-sm outline-none focus:ring-2 focus:ring-brand-primary/50"
+        className="h-10 w-full rounded-md border border-brand-200 bg-white px-3 text-sm outline-none focus:ring-2 focus:ring-brand-primary/50"
         defaultValue=""
         onChange={(e) => {
           const v = e.target.value;
@@ -317,7 +317,7 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({
       <div className="flex justify-end">
         <Button
           type="button"
-          className="h-8 px-3 text-[11px] border-orange-200 bg-white text-orange-700 hover:bg-orange-50"
+          className="h-8 px-3 text-[11px] border-brand-200 bg-white text-brand-700 hover:bg-brand-50"
           onClick={() => setIsAddItemPickerOpen(false)}
         >
           Close
@@ -331,7 +331,7 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({
     {value.lineItems.map((item, index) => (
       <div
         key={item.id}
-        className="rounded-xl border border-orange-200 bg-white p-3 shadow-md shadow-orange-100"
+        className="rounded-xl border border-brand-200 bg-white p-3 shadow-md shadow-brand-100"
       >
         <div className="mb-2 flex items-center justify-between">
           <p className="text-sm font-semibold text-slate-900">
@@ -339,7 +339,7 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({
           </p>
           <Button
             type="button"
-            className="h-8 px-3 border-orange-200 bg-white text-xs text-red-500 hover:bg-red-50"
+            className="h-8 px-3 border-brand-200 bg-white text-xs text-red-500 hover:bg-red-50"
             onClick={() => removeLineItem(item.id)}
           >
             ✕ Remove
@@ -374,7 +374,7 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({
     ))}
   </div>
 
-  <div className="mt-3 grid grid-cols-1 gap-3 border-t border-dashed border-orange-200 pt-3 text-xs sm:grid-cols-2">
+  <div className="mt-3 grid grid-cols-1 gap-3 border-t border-dashed border-brand-200 pt-3 text-xs sm:grid-cols-2">
     <div>
       <Label htmlFor="currency">Currency label</Label>
       <Input
@@ -401,7 +401,7 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({
   </div>
 </section>
 
-      <section className="space-y-2 rounded-lg border border-orange-200 bg-white p-4 shadow-sm">
+      <section className="space-y-2 rounded-lg border border-brand-200 bg-white p-4 shadow-sm">
         <h2 className="text-sm font-semibold">Payment / signature</h2>
 
         <div className="space-y-3">

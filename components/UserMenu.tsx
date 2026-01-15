@@ -59,7 +59,7 @@ export function UserMenu() {
     <div className="relative" ref={menuRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-3 rounded-xl bg-white p-2 pr-4 shadow-sm ring-1 ring-orange-200 hover:ring-brand-primary/50 transition-all"
+        className="flex items-center gap-3 rounded-xl bg-white p-2 pr-4 shadow-sm ring-1 ring-brand-200 hover:ring-brand-primary/50 transition-all"
       >
         <div className="flex h-8 w-8 items-center justify-center rounded-full bg-brand-primary text-xs font-bold text-white uppercase shadow-md shadow-brand-primary/20">
           {username.charAt(0)}
@@ -74,13 +74,13 @@ export function UserMenu() {
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 top-full z-[100] mt-2 w-48 rounded-xl bg-white p-1 shadow-xl ring-1 ring-orange-100">
+        <div className="absolute right-0 top-full z-[100] mt-2 w-48 rounded-xl bg-white p-1 shadow-xl ring-1 ring-brand-100">
            <div 
              onClick={() => {
                 setIsOpen(false);
                 router.push("/profile");
              }}
-             className="px-3 py-2 border-b border-orange-50 mb-1 cursor-pointer hover:bg-orange-50 rounded-t-lg transition-colors"
+             className="px-3 py-2 border-b border-brand-50 mb-1 cursor-pointer hover:bg-brand-50 rounded-t-lg transition-colors"
            >
               <p className="text-xs font-medium text-slate-900">Signed in as</p>
               <p className="text-xs text-slate-500 truncate">{username}</p>
@@ -92,7 +92,7 @@ export function UserMenu() {
                  setIsOpen(false);
                  router.push("/activity");
                }}
-               className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-xs font-medium text-slate-700 hover:bg-orange-50 hover:text-brand-primary"
+               className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-xs font-medium text-slate-700 hover:bg-brand-50 hover:text-brand-primary"
              >
                <Activity className="h-4 w-4" />
                Activity Logs
@@ -104,7 +104,7 @@ export function UserMenu() {
                  setIsOpen(false);
                  router.push("/dashboard");
                }}
-               className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-xs font-medium text-slate-700 hover:bg-orange-50 hover:text-brand-primary"
+               className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-xs font-medium text-slate-700 hover:bg-brand-50 hover:text-brand-primary"
              >
                <LayoutDashboard className="h-4 w-4" />
                Dashboard
@@ -116,7 +116,7 @@ export function UserMenu() {
                  setIsOpen(false);
                  router.push("/invoice");
                }}
-               className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-xs font-medium text-slate-700 hover:bg-orange-50 hover:text-brand-primary"
+               className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-xs font-medium text-slate-700 hover:bg-brand-50 hover:text-brand-primary"
              >
                <PlusCircle className="h-4 w-4" />
                New Invoice
@@ -127,7 +127,7 @@ export function UserMenu() {
                  setIsOpen(false);
                  router.push("/history");
                }}
-               className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-xs font-medium text-slate-700 hover:bg-orange-50 hover:text-brand-primary"
+               className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-xs font-medium text-slate-700 hover:bg-brand-50 hover:text-brand-primary"
              >
                <History className="h-4 w-4" />
                Invoice History

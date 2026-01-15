@@ -212,7 +212,7 @@ function HistoryContent() {
   };
 
   return (
-    <div className="h-screen flex flex-col bg-orange-50 selection:bg-orange-100 selection:text-orange-900 overflow-hidden">
+    <div className="h-screen flex flex-col bg-brand-50 selection:bg-brand-100 selection:text-brand-900 overflow-hidden">
       <Navbar label="v1.0 History" variant="white" />
 
       <main className="flex-1 flex flex-col min-h-0 relative">
@@ -245,7 +245,7 @@ function HistoryContent() {
 
             <button
               onClick={load}
-              className="flex items-center gap-2 h-10 rounded-xl bg-orange-500 px-6 text-sm font-medium text-white shadow-lg hover:bg-orange-400 transition-all shadow-orange-900/20"
+              className="flex items-center gap-2 h-10 rounded-xl bg-brand-500 px-6 text-sm font-medium text-white shadow-lg hover:bg-brand-400 transition-all shadow-brand-900/20"
             >
               <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
               Refresh
@@ -352,9 +352,9 @@ function HistoryContent() {
               <div className="mt-3 flex items-center gap-2 overflow-x-auto pb-1">
                  <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Active Filters:</span>
                  {searchParams.get('search') && (
-                    <span className="inline-flex items-center gap-1 rounded-full bg-orange-100 px-2.5 py-0.5 text-xs font-medium text-orange-800">
+                    <span className="inline-flex items-center gap-1 rounded-full bg-brand-100 px-2.5 py-0.5 text-xs font-medium text-brand-800">
                        Search: {searchParams.get('search')}
-                       <button onClick={() => updateFilter('search', '')}><X className="w-3 h-3 hover:text-orange-950" /></button>
+                       <button onClick={() => updateFilter('search', '')}><X className="w-3 h-3 hover:text-brand-950" /></button>
                     </span>
                  )}
                  {searchParams.get('client') && (
@@ -403,7 +403,7 @@ function HistoryContent() {
         {loading ? (
           <div className="flex h-64 items-center justify-center rounded-3xl bg-white shadow-lg shadow-slate-200/50">
              <div className="flex flex-col items-center gap-2">
-                <div className="h-8 w-8 animate-spin rounded-full border-4 border-orange-200 border-t-brand-primary" />
+                <div className="h-8 w-8 animate-spin rounded-full border-4 border-brand-200 border-t-brand-primary" />
                 <span className="text-sm font-medium text-slate-500">Loading records...</span>
              </div>
           </div>
@@ -412,7 +412,7 @@ function HistoryContent() {
             <div className="overflow-x-auto">
             <table className="min-w-[1200px] w-full border-collapse text-left text-sm">
               <thead className="sticky top-0 z-20">
-                <tr className="border-b border-orange-100 bg-orange-50 text-xs font-semibold uppercase tracking-wider text-slate-500">
+                <tr className="border-b border-brand-100 bg-brand-50 text-xs font-semibold uppercase tracking-wider text-slate-500">
                   <th className="px-6 py-4">Created Date</th>
                   <th className="px-6 py-4">User</th>
                   <th className="px-6 py-4">Invoice #</th>
@@ -428,7 +428,7 @@ function HistoryContent() {
                 </tr>
               </thead>
 
-              <tbody className="divide-y divide-orange-100 bg-white">
+              <tbody className="divide-y divide-brand-100 bg-white">
                 {rows.length === 0 ? (
                   <tr>
                     <td colSpan={12} className="px-6 py-12 text-center text-slate-500">
@@ -586,7 +586,7 @@ function InvoiceRow({
   }, []);
 
   return (
-    <tr className="group transition-colors hover:bg-orange-50 relative">
+    <tr className="group transition-colors hover:bg-brand-50 relative">
       <td className="px-6 py-4 whitespace-nowrap text-xs text-slate-500">
         {formatDate(row.createdAt)}
       </td>
@@ -661,7 +661,7 @@ function InvoiceRow({
                     setMenuOpen(false);
                     onPreview(row);
                   }}
-                  className="block w-full px-4 py-2 text-left text-sm text-slate-700 hover:bg-orange-50 hover:text-orange-600"
+                  className="block w-full px-4 py-2 text-left text-sm text-slate-700 hover:bg-brand-50 hover:text-brand-600"
                 >
                  Preview
                 </button>
@@ -671,7 +671,7 @@ function InvoiceRow({
                       setMenuOpen(false);
                       onEdit(row);
                     }}
-                    className="block w-full px-4 py-2 text-left text-sm text-slate-700 hover:bg-orange-50 hover:text-orange-600"
+                    className="block w-full px-4 py-2 text-left text-sm text-slate-700 hover:bg-brand-50 hover:text-brand-600"
                   >
                     Edit Invoice
                   </button>

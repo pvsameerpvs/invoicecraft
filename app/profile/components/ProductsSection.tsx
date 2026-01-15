@@ -130,7 +130,7 @@ export function ProductsSection() {
       </div>
 
       {/* Add/Edit Form */}
-      <form onSubmit={handleSubmit} className="bg-white p-4 rounded-xl border border-orange-200 shadow-sm flex flex-col md:flex-row gap-4 items-end relative overflow-hidden">
+      <form onSubmit={handleSubmit} className="bg-white p-4 rounded-xl border border-brand-200 shadow-sm flex flex-col md:flex-row gap-4 items-end relative overflow-hidden">
         {editingItem && (
             <div className="absolute top-0 left-0 w-1 bg-brand-primary h-full"></div>
         )}
@@ -181,9 +181,9 @@ export function ProductsSection() {
       </form>
 
       {/* List */}
-      <div className="bg-white rounded-xl border border-orange-200 shadow-sm overflow-hidden">
+      <div className="bg-white rounded-xl border border-brand-200 shadow-sm overflow-hidden">
         {/* Search */}
-        <div className="p-4 border-b border-orange-100 bg-orange-50/50">
+        <div className="p-4 border-b border-brand-100 bg-brand-50/50">
             <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
                 <input 
@@ -215,10 +215,10 @@ export function ProductsSection() {
                     </thead>
                     <tbody className="divide-y divide-slate-50">
                         {filtered.map((p, i) => (
-                            <tr key={i} className={`group transition-colors ${editingItem === p.label ? "bg-orange-50" : "hover:bg-slate-50"}`}>
+                            <tr key={i} className={`group transition-colors ${editingItem === p.label ? "bg-brand-50" : "hover:bg-slate-50"}`}>
                                 <td className="px-4 py-3 font-medium text-slate-900">
                                     {p.label}
-                                    {editingItem === p.label && <span className="ml-2 text-[10px] text-orange-600 font-bold bg-orange-100 px-1.5 py-0.5 rounded-md uppercase tracking-wide">Editing</span>}
+                                    {editingItem === p.label && <span className="ml-2 text-[10px] text-brand-600 font-bold bg-brand-100 px-1.5 py-0.5 rounded-md uppercase tracking-wide">Editing</span>}
                                 </td>
                                 <td className="px-4 py-3 text-slate-600">{p.amount || "-"}</td>
                                 <td className="px-4 py-3 text-right">

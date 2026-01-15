@@ -132,7 +132,7 @@ export const ThemeSettingsSection = () => {
                                                 reader.readAsDataURL(file);
                                             }
                                         }}
-                                        className="block w-full text-xs text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-orange-50 file:text-brand-primary hover:file:bg-orange-100"
+                                        className="block w-full text-xs text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-brand-50 file:text-brand-primary hover:file:bg-brand-100"
                                     />
                                     <p className="text-[10px] text-slate-400 mt-1">Recommended: PNG with transparent background.</p>
                                 </div>
@@ -144,7 +144,7 @@ export const ThemeSettingsSection = () => {
                         <button 
                             type="submit" 
                             disabled={saving}
-                            className="bg-brand-primary hover:bg-brand-end text-white text-sm font-bold py-2.5 px-6 rounded-xl shadow-lg shadow-orange-200/50 flex items-center gap-2 active:scale-95 transition-all disabled:opacity-70 disabled:cursor-not-allowed"
+                            className="bg-brand-primary hover:bg-brand-end text-white text-sm font-bold py-2.5 px-6 rounded-xl shadow-lg shadow-brand-200/50 flex items-center gap-2 active:scale-95 transition-all disabled:opacity-70 disabled:cursor-not-allowed"
                         >
                             {saving ? (
                                 <>

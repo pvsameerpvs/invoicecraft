@@ -163,7 +163,7 @@ export const InvoicePreview: React.FC<InvoicePreviewProps> = ({
                     {pageItems.map((item, rowIndex) => {
                       const globalIndex = pageIndex * rowsPerPage + rowIndex;
                       return (
-                        <tr key={item.id} className="border-b border-orange-200">
+                        <tr key={item.id} className="border-b border-brand-200">
                           <td className="px-2 py-2 align-top text-[11px]">
                             {globalIndex + 1}
                           </td>

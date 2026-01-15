@@ -35,7 +35,7 @@ export default function DashboardPage() {
          <Navbar label="Dashboard" variant="white" />
          {loading ? (
              <div className="flex-1 flex items-center justify-center">
-                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-600"></div>
+                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-600"></div>
              </div>
          ) : (
              <React.Suspense fallback={<div>Loading stats...</div>}>

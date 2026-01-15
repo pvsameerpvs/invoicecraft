@@ -33,7 +33,7 @@ export function Navbar({ label, variant = "white" }: NavbarProps) {
         
         {/* Version Badge (Optional) */}
         {label && (
-          <span className="hidden rounded-full bg-orange-100 px-3 py-1 text-xs font-medium text-brand-primary sm:inline-flex ring-1 ring-orange-500/10">
+          <span className="hidden rounded-full bg-brand-100 px-3 py-1 text-xs font-medium text-brand-primary sm:inline-flex ring-1 ring-brand-500/10">
             {label}
           </span>
         )}

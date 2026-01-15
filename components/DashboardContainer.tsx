@@ -27,11 +27,19 @@ const scrollbarHideStyles = `
 const COLORS = ["#f97316", "#ef4444", "#22c55e"]; // Orange, Red, Green
 type FilterType = 'monthly' | 'yearly' | 'all';
 
+import { useTheme } from "./ThemeProvider";
+import { themes } from "../lib/themes";
+
 export const DashboardContainer = ({ onCreateInvoice, invoiceHistory = [] }: DashboardProps) => {
     
     // --- Server Side Stats State ---
     const router = useRouter();
     const searchParams = useSearchParams();
+    
+    // Theme Hook
+    const { currentTheme } = useTheme();
+    const theme = useMemo(() => themes.find(t => t.id === currentTheme) || themes[0], [currentTheme]);
+    const brandColor = theme.colors.primary;
 
     // Initialize state from URL params
     const [filter, setFilter] = useState<FilterType>((searchParams.get('period') as FilterType) || 'monthly');
@@ -147,7 +155,7 @@ export const DashboardContainer = ({ onCreateInvoice, invoiceHistory = [] }: Das
                                         <select 
                                             value={year} 
                                             onChange={(e) => setYear(parseInt(e.target.value))}
-                                            className="w-full sm:w-auto pl-9 pr-8 py-2 bg-slate-50 hover:bg-slate-100 border border-transparent hover:border-slate-200 rounded-xl text-sm font-bold text-slate-700 focus:outline-none focus:ring-2 focus:ring-orange-500/20 transition-all appearance-none cursor-pointer"
+                                            className="w-full sm:w-auto pl-9 pr-8 py-2 bg-slate-50 hover:bg-slate-100 border border-transparent hover:border-slate-200 rounded-xl text-sm font-bold text-slate-700 focus:outline-none focus:ring-2 focus:ring-brand-primary/20 transition-all appearance-none cursor-pointer"
                                         >
                                             {[2023, 2024, 2025, 2026, 2027, 2028, 2029, 2030].map(y => (
                                                 <option key={y} value={y}>{y}</option>
@@ -160,7 +168,7 @@ export const DashboardContainer = ({ onCreateInvoice, invoiceHistory = [] }: Das
                                             <select 
                                                 value={month} 
                                                 onChange={(e) => setMonth(parseInt(e.target.value))}
-                                                className="w-full sm:w-auto pl-4 pr-8 py-2 bg-slate-50 hover:bg-slate-100 border border-transparent hover:border-slate-200 rounded-xl text-sm font-bold text-slate-700 focus:outline-none focus:ring-2 focus:ring-orange-500/20 transition-all appearance-none cursor-pointer min-w-[140px]"
+                                                className="w-full sm:w-auto pl-4 pr-8 py-2 bg-slate-50 hover:bg-slate-100 border border-transparent hover:border-slate-200 rounded-xl text-sm font-bold text-slate-700 focus:outline-none focus:ring-2 focus:ring-brand-primary/20 transition-all appearance-none cursor-pointer min-w-[140px]"
                                             >
                                                 {Array.from({ length: 12 }, (_, i) => (
                                                     <option key={i} value={i}>
@@ -181,7 +189,7 @@ export const DashboardContainer = ({ onCreateInvoice, invoiceHistory = [] }: Das
                                     setYear(now.getFullYear());
                                     setMonth(now.getMonth());
                                 }}
-                                className="p-2 text-slate-400 hover:text-orange-600 hover:bg-orange-50 rounded-xl transition-colors"
+                                className="p-2 text-slate-400 hover:text-brand-600 hover:bg-brand-50 rounded-xl transition-colors"
                                 title="Reset Filters"
                              >
                                 <RotateCcw className="w-4 h-4" />
@@ -190,7 +198,7 @@ export const DashboardContainer = ({ onCreateInvoice, invoiceHistory = [] }: Das
 
                         <button 
                             onClick={onCreateInvoice}
-                            className="flex items-center justify-center gap-2 bg-orange-600 text-white px-5 py-2.5 rounded-xl font-bold shadow-lg shadow-orange-600/20 hover:bg-orange-700 active:scale-95 transition-all"
+                            className="flex items-center justify-center gap-2 bg-brand-primary text-white px-5 py-2.5 rounded-xl font-bold shadow-lg shadow-brand-primary/20 hover:bg-brand-end active:scale-95 transition-all"
                         >
                             <PlusCircle className="w-5 h-5" />
                             <span className="inline">Create Invoice</span>
@@ -209,7 +217,7 @@ export const DashboardContainer = ({ onCreateInvoice, invoiceHistory = [] }: Das
                             </h3>
                             {!stats.loading && <GrowthBadge value={stats.revenue.growth} />}
                         </div>
-                        <div className="p-3 bg-orange-50 text-orange-600 rounded-xl">
+                        <div className="p-3 bg-brand-50 text-brand-600 rounded-xl">
                             <TrendingUp className="w-6 h-6" />
                         </div>
                     </div>
@@ -289,8 +297,8 @@ export const DashboardContainer = ({ onCreateInvoice, invoiceHistory = [] }: Das
                                 <AreaChart data={stats.chartData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
                                     <defs>
                                         <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
-                                            <stop offset="5%" stopColor="#f97316" stopOpacity={0.2}/>
-                                            <stop offset="95%" stopColor="#f97316" stopOpacity={0}/>
+                                            <stop offset="5%" stopColor={brandColor} stopOpacity={0.2}/>
+                                            <stop offset="95%" stopColor={brandColor} stopOpacity={0}/>
                                         </linearGradient>
                                     </defs>
                                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
@@ -300,7 +308,7 @@ export const DashboardContainer = ({ onCreateInvoice, invoiceHistory = [] }: Das
                                         contentStyle={{ backgroundColor: '#1e293b', borderRadius: '8px', border: 'none', color: '#f8fafc' }}
                                         itemStyle={{ color: '#f8fafc' }}
                                     />
-                                    <Area type="monotone" dataKey="revenue" stroke="#f97316" strokeWidth={3} fillOpacity={1} fill="url(#colorRevenue)" />
+                                    <Area type="monotone" dataKey="revenue" stroke={brandColor} strokeWidth={3} fillOpacity={1} fill="url(#colorRevenue)" />
                                 </AreaChart>
                             </ResponsiveContainer>
                         </div>
@@ -339,7 +347,7 @@ export const DashboardContainer = ({ onCreateInvoice, invoiceHistory = [] }: Das
                         <h3 className="font-bold text-slate-900">Recent Invoices</h3>
                         <button 
                             onClick={() => router.push('/history')}
-                            className="text-sm font-bold text-orange-600 hover:text-orange-700"
+                            className="text-sm font-bold text-brand-600 hover:text-brand-700"
                         >
                             View All
                         </button>
@@ -356,7 +364,7 @@ export const DashboardContainer = ({ onCreateInvoice, invoiceHistory = [] }: Das
                                 <div className="text-right">
                                      <p className="font-bold text-slate-900 text-sm">{invoice.currency} {invoice.total}</p>
                                      <span className={`inline-flex items-center gap-1 text-[10px] uppercase font-bold px-2 py-0.5 rounded-full mt-1 ${
-                                         invoice.status === 'Paid' ? 'text-green-600 bg-green-50' : 'text-orange-600 bg-orange-50'
+                                         invoice.status === 'Paid' ? 'text-green-600 bg-green-50' : 'text-brand-600 bg-brand-50'
                                      }`}>
                                         {invoice.status === 'Paid' ? <CheckCircle className="w-3 h-3" /> : <AlertCircle className="w-3 h-3" />}
                                         {invoice.status || 'Unpaid'}

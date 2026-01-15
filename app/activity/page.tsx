@@ -88,7 +88,7 @@ export default function ActivityPage() {
   if (!isAdmin) return null;
 
   return (
-    <div className="h-screen flex flex-col bg-orange-50 selection:bg-orange-100 selection:text-orange-900 overflow-hidden">
+    <div className="h-screen flex flex-col bg-brand-50 selection:bg-brand-100 selection:text-brand-900 overflow-hidden">
       <header className="flex-none sticky top-0 z-50 flex h-16 items-center justify-between border-b border-slate-200 bg-white px-4 shadow-sm sm:px-6">
         <div className="flex items-center gap-4">
           <Image src="/logo-js.png" alt="Logo" width={150} height={150} className="w-[100px] h-auto sm:w-[150px]" />
@@ -152,19 +152,19 @@ export default function ActivityPage() {
             {loading ? (
                 <div className="flex h-64 items-center justify-center rounded-3xl bg-white shadow-lg shadow-slate-200/50">
                     <div className="flex flex-col items-center gap-2">
-                        <div className="h-8 w-8 animate-spin rounded-full border-4 border-orange-200 border-t-brand-primary" />
+                        <div className="h-8 w-8 animate-spin rounded-full border-4 border-brand-200 border-t-brand-primary" />
                         <span className="text-sm font-medium text-slate-500">Loading records...</span>
                     </div>
                 </div>
             ) : (
                 <div className="overflow-hidden rounded-3xl bg-white shadow-xl shadow-slate-200/50 ring-1 ring-slate-100">
                     <div className="overflow-x-auto">
-                        <table className="min-w-full divide-y divide-orange-100">
+                        <table className="min-w-full divide-y divide-brand-100">
                             {/* INVOICE GROUPS TABLE */}
                             {activeTab === "invoices" && (
                                 <>
                                 <thead className="sticky top-0 z-20">
-                                    <tr className="border-b border-orange-100 bg-orange-50 text-xs font-semibold uppercase tracking-wider text-slate-500">
+                                    <tr className="border-b border-brand-100 bg-brand-50 text-xs font-semibold uppercase tracking-wider text-slate-500">
                                         <th className="px-6 py-4 text-left">Invoice #</th>
                                         <th className="px-6 py-4 text-left">Last Modified</th>
                                         <th className="px-6 py-4 text-left">Latest Action</th>
@@ -172,9 +172,9 @@ export default function ActivityPage() {
                                         <th className="px-6 py-4 text-right">Actions</th>
                                     </tr>
                                 </thead>
-                                <tbody className="divide-y divide-orange-100 bg-white">
+                                    <tbody className="divide-y divide-brand-100 bg-white">
                                     {invoiceGroups.map((group) => (
-                                        <tr key={group.id} className="hover:bg-orange-50 transition-colors group">
+                                        <tr key={group.id} className="hover:bg-brand-50 transition-colors group">
                                             <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-brand-primary">
                                                 {group.id}
                                             </td>
@@ -187,7 +187,7 @@ export default function ActivityPage() {
                                                     ? "bg-green-100 text-green-800"
                                                     : group.lastAction === "DELETED"
                                                     ? "bg-red-100 text-red-800"
-                                                    : "bg-orange-100 text-orange-800"
+                                                    : "bg-brand-100 text-brand-800"
                                                 }`}>
                                                     {group.lastAction}
                                                 </span>
@@ -198,7 +198,7 @@ export default function ActivityPage() {
                                             <td className="px-6 py-4 text-right">
                                                 <button 
                                                     onClick={() => setSelectedInvoiceId(group.id)}
-                                                    className="rounded-lg bg-orange-50 px-3 py-1.5 text-xs font-semibold text-orange-600 hover:bg-orange-100 transition-colors"
+                                                    className="rounded-lg bg-brand-50 px-3 py-1.5 text-xs font-semibold text-brand-600 hover:bg-brand-100 transition-colors"
                                                 >
                                                     View History
                                                 </button>
@@ -216,16 +216,16 @@ export default function ActivityPage() {
                             {activeTab === "system" && (
                                 <>
                                 <thead className="sticky top-0 z-20">
-                                    <tr className="border-b border-orange-100 bg-orange-50 text-xs font-semibold uppercase tracking-wider text-slate-500">
+                                    <tr className="border-b border-brand-100 bg-brand-50 text-xs font-semibold uppercase tracking-wider text-slate-500">
                                         <th className="px-6 py-4 text-left">Timestamp</th>
                                         <th className="px-6 py-4 text-left">User</th>
                                         <th className="px-6 py-4 text-left">Action</th>
                                         <th className="px-6 py-4 text-left">Device Info</th>
                                     </tr>
                                 </thead>
-                                <tbody className="divide-y divide-orange-100 bg-white">
+                                <tbody className="divide-y divide-brand-100 bg-white">
                                     {systemLogs.map((log, idx) => (
-                                        <tr key={idx} className="hover:bg-orange-50 transition-colors">
+                                        <tr key={idx} className="hover:bg-brand-50 transition-colors">
                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500">
                                                 {new Date(log.timestamp).toLocaleString()}
                                             </td>
@@ -301,7 +301,7 @@ export default function ActivityPage() {
                                                 ? "bg-green-100 text-green-800"
                                                 : log.action.includes("DELETED")
                                                 ? "bg-red-100 text-red-800"
-                                                : "bg-orange-100 text-orange-800"
+                                                : "bg-brand-100 text-brand-800"
                                             }`}>
                                                 {log.action}
                                             </span>

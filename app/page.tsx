@@ -50,11 +50,12 @@ export default function HomePage() {
   };
 
   return (
-    <main className="min-h-screen flex items-center justify-center bg-orange-50 relative selection:bg-orange-100 selection:text-orange-900 p-4">
+
+    <main className="min-h-screen flex items-center justify-center bg-brand-50 relative selection:bg-brand-100 selection:text-brand-900 p-4">
       {/* Background decoration */}
       <div className="absolute top-0 left-0 w-full h-1/2 bg-gradient-to-br from-brand-start to-brand-end z-0" />
       
-      <div className="relative z-10 w-full max-w-md bg-white rounded-3xl shadow-2xl shadow-orange-200/50 p-6 sm:p-10 border border-orange-100">
+      <div className="relative z-10 w-full max-w-md bg-white rounded-3xl shadow-2xl shadow-brand-200/50 p-6 sm:p-10 border border-brand-100">
         {/* Header */}
         <div className="flex flex-col items-center text-center gap-4 mb-8">
              <Image src={logoUrl || "/logo-js.png"} alt="Logo" width={150} height={150} className="object-contain" />

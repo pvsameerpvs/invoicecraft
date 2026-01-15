@@ -27,6 +27,12 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
         root.style.setProperty("--color-brand-primary", theme.colors.primary);
         
         // Also simpler hex for imperative usage if needed
+        // Apply Full Palette
+        const shades = [50, 100, 200, 300, 400, 500, 600, 700, 800, 900, 950] as const;
+        shades.forEach(shade => {
+            root.style.setProperty(`--color-brand-${shade}`, (theme.colors as any)[shade]);
+        });
+        
         setCurrentTheme(themeId);
     };
 
