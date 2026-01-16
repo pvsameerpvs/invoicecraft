@@ -11,7 +11,8 @@ import {
   LogOut, 
   ChevronLeft, 
   ChevronRight,
-  Settings
+  Settings,
+  Building2
 } from "lucide-react";
 import toast from "react-hot-toast";
 
@@ -42,7 +43,9 @@ export function NavigationSidebar() {
     { label: "New Invoice", href: "/invoice", icon: PlusCircle },
     { label: "History", href: "/history", icon: History },
     ...(isAdmin ? [{ label: "Activity Logs", href: "/activity", icon: Activity }] : []),
-    { label: "Profile", href: "/profile", icon: User },
+    ...(isAdmin ? [{ label: "Company Details", href: "/profile?tab=company_details", icon: Building2 }] : []),
+    { label: "Settings", href: "/profile?tab=security", icon: Settings },
+    { label: "Profile", href: "/profile?tab=personal_info", icon: User },
   ];
 
   const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);

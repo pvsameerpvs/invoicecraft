@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import toast from "react-hot-toast";
 
 // Types
@@ -23,12 +23,21 @@ import { Skeleton } from "../../components/ui/skeleton";
 
 export default function ProfilePage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [username, setUsername] = useState("");
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<TabId>("personal_info");
   const [role, setRole] = useState<"admin" | "user">("user");
   const [userData, setUserData] = useState({ email: "", mobile: "", createdAt: "" });
   const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
+
+  // Handle Tab Deep Linking
+  useEffect(() => {
+     const tab = searchParams.get("tab");
+     if (tab) {
+         setActiveTab(tab as TabId); 
+     }
+  }, [searchParams]);
 
   // ... (fetchUserData and useEffects remain the same) ...
 
