@@ -11,6 +11,7 @@ import toast from "react-hot-toast";
 import { History, PlusCircle } from "lucide-react";
 import Link from "next/link";
 import { Navbar } from "./Navbar";
+import { PremiumLoader } from "./ui/premium-loader";
 
 const initialInvoiceData: InvoiceData = {
   logoDataUrl: undefined,
@@ -44,6 +45,7 @@ interface Props {
 
 export function InvoiceEditorContainer({ initialInvoiceId }: Props) {
   const [invoice, setInvoice] = useState<InvoiceData>(initialInvoiceData);
+  const [loading, setLoading] = useState(true);
   const previewRef = useRef<HTMLDivElement | null>(null);
 
   /* New State for tabs */
@@ -161,6 +163,10 @@ export function InvoiceEditorContainer({ initialInvoiceId }: Props) {
         } catch {
              // ignore errors
         }
+        finally {
+            // Emulate a slight delay for the "premium" feel if it loads instantly
+            setTimeout(() => setLoading(false), 800);
+        }
     };
 
     init();
@@ -214,7 +220,9 @@ export function InvoiceEditorContainer({ initialInvoiceId }: Props) {
   const isUpdateMode = !!originalInvoiceNumber;
 
   return (
-    <div className="flex min-h-screen lg:h-screen flex-col bg-slate-50 text-slate-900">
+    <>
+    {loading && <PremiumLoader />}
+    <div className="flex min-h-screen lg:h-screen flex-col bg-transparent text-slate-900">
       {/* 1. Header */}
       {/* 1. Navbar */}
       <Navbar label="v1.0 Editor" variant="white" />
@@ -240,7 +248,7 @@ export function InvoiceEditorContainer({ initialInvoiceId }: Props) {
       {/* 2. Main Layout (Sidebar + Preview) */}
       <main className="flex flex-1 flex-col lg:flex-row lg:overflow-hidden">
         {/* Left Sidebar: Form */}
-        <aside className={`w-full lg:w-[500px] flex-none lg:overflow-y-auto border-r border-slate-200 bg-white p-4 sm:p-6 scrollbar-thin scrollbar-thumb-slate-200 hover:scrollbar-thumb-slate-300 z-10 ${mobileTab === "preview" ? "hidden lg:block" : ""}`}>
+        <aside className={`w-full lg:w-[500px] flex-none lg:overflow-y-auto border-r border-slate-200 bg-white/50 backdrop-blur-2xl p-4 sm:p-6 scrollbar-thin scrollbar-thumb-slate-200 hover:scrollbar-thumb-slate-300 z-10 ${mobileTab === "preview" ? "hidden lg:block" : ""}`}>
            <div className="mb-6 flex items-center justify-between">
               <h2 className="text-lg font-semibold text-slate-900">Invoice Details</h2>
               <div className="text-xs text-slate-500">Auto-saving...</div>
@@ -255,7 +263,7 @@ export function InvoiceEditorContainer({ initialInvoiceId }: Props) {
         </aside>
 
         {/* Right Content: PDF Preview */}
-        <section className={`invoice-preview-section flex flex-1 justify-center lg:overflow-y-auto bg-slate-100/50 p-4 lg:p-12 ${mobileTab === "edit" ? "hidden lg:flex" : "flex"}`}>
+        <section className={`invoice-preview-section flex flex-1 justify-center lg:overflow-y-auto bg-transparent p-4 lg:p-12 ${mobileTab === "edit" ? "hidden lg:flex" : "flex"}`}>
             <div className="h-fit w-full flex flex-col items-center">
                <InvoicePreview value={invoice} forwardRef={previewRef} />
                
@@ -273,5 +281,6 @@ export function InvoiceEditorContainer({ initialInvoiceId }: Props) {
         </section>
       </main>
     </div>
+    </>
   );
 }
