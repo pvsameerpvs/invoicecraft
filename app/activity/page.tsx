@@ -1,9 +1,9 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { UserMenu } from "../../components/UserMenu";
+import { Navbar } from "../../components/Navbar";
 import { Skeleton } from "../../components/ui/skeleton";
 import toast from "react-hot-toast";
 
@@ -90,22 +90,14 @@ export default function ActivityPage() {
 
   return (
     <div className="h-screen flex flex-col bg-brand-50 selection:bg-brand-100 selection:text-brand-900 overflow-hidden">
-      <header className="flex-none sticky top-0 z-50 flex h-16 items-center justify-between border-b border-slate-200 bg-white px-4 shadow-sm sm:px-6">
-        <div className="flex items-center gap-4">
-          <Image src="/logo-js.png" alt="Logo" width={150} height={150} className="w-[100px] h-auto sm:w-[150px]" />
-          <span className="hidden rounded-full bg-red-100 px-2.5 py-0.5 text-xs font-medium text-red-800 sm:inline-flex">
-            Admin Activity Log
-          </span>
-        </div>
-        <UserMenu />
-      </header>
+      <Navbar label="Admin Activity Log" variant="transparent" />
 
       <main className="flex-1 flex flex-col min-h-0 relative">
         <div className="absolute top-0 left-0 w-full h-64 bg-gradient-to-br from-brand-start to-brand-end -z-0" />
 
         {/* Header Controls */}
         <div className="relative z-10 flex-none px-4 pt-8 pb-4 sm:px-6 lg:px-8">
-            <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between text-white">
+            <div className="mb-6 flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between text-white">
                 <div>
                    <h1 className="text-3xl font-bold tracking-tight">Activity Dashboard</h1>
                    <p className="mt-2 text-white/80 text-sm max-w-2xl">
@@ -113,12 +105,12 @@ export default function ActivityPage() {
                    </p>
                 </div>
                 
-                <div className="flex gap-3">
+                <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
                      {/* Tabs */}
-                    <div className="flex rounded-xl bg-white/20 p-1 backdrop-blur-sm border border-white/20">
+                    <div className="flex rounded-xl bg-white/20 p-1 backdrop-blur-sm border border-white/20 w-full sm:w-auto">
                         <button
                           onClick={() => setActiveTab("invoices")}
-                          className={`rounded-lg px-4 py-1.5 text-sm font-medium transition-all ${
+                          className={`flex-1 sm:flex-none rounded-lg px-4 py-1.5 text-sm font-medium transition-all whitespace-nowrap ${
                             activeTab === "invoices" 
                             ? "bg-white text-brand-primary shadow-sm" 
                             : "text-white hover:bg-white/10"
@@ -128,7 +120,7 @@ export default function ActivityPage() {
                         </button>
                         <button
                           onClick={() => setActiveTab("system")}
-                          className={`rounded-lg px-4 py-1.5 text-sm font-medium transition-all ${
+                          className={`flex-1 sm:flex-none rounded-lg px-4 py-1.5 text-sm font-medium transition-all whitespace-nowrap ${
                             activeTab === "system" 
                             ? "bg-white text-brand-primary shadow-sm" 
                             : "text-white hover:bg-white/10"
@@ -138,12 +130,7 @@ export default function ActivityPage() {
                         </button>
                     </div>
 
-                    <button
-                        onClick={() => router.push("/invoice")}
-                        className="h-10 rounded-xl bg-white/10 px-4 text-sm font-medium text-white shadow-sm hover:bg-white/20 backdrop-blur-sm border border-white/20 transition-all"
-                    >
-                        Back to Editor
-                    </button>
+                    
                 </div>
             </div>
         </div>
