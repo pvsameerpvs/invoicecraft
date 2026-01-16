@@ -20,7 +20,7 @@ export function NavigationSidebar() {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const [isCollapsed, setIsCollapsed] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
   const [username, setUsername] = useState("");
 
