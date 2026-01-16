@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { 
   LayoutDashboard, 
   PlusCircle, 
@@ -19,6 +19,7 @@ import toast from "react-hot-toast";
 export function NavigationSidebar() {
   const router = useRouter();
   const pathname = usePathname();
+  const searchParams = useSearchParams();
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
   const [username, setUsername] = useState("");
@@ -41,11 +42,12 @@ export function NavigationSidebar() {
   const menuItems = [
     { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
     { label: "New Invoice", href: "/invoice", icon: PlusCircle },
-    { label: "History", href: "/history", icon: History },
+    { label: "Invoice History", href: "/history", icon: History },
     ...(isAdmin ? [{ label: "Activity Logs", href: "/activity", icon: Activity }] : []),
+    { label: "Profile", href: "/profile?tab=personal_info", icon: User },
     ...(isAdmin ? [{ label: "Company Details", href: "/profile?tab=company_details", icon: Building2 }] : []),
     { label: "Settings", href: "/profile?tab=security", icon: Settings },
-    { label: "Profile", href: "/profile?tab=personal_info", icon: User },
+   
   ];
 
   const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
@@ -93,7 +95,20 @@ export function NavigationSidebar() {
       {/* Nav Items */}
       <nav className="flex-1 space-y-2 p-2">
         {menuItems.map((item) => {
-          const isActive = pathname === item.href || (item.href !== "/" && pathname?.startsWith(item.href));
+          let isActive = false;
+
+          // Check for query param if present in item.href
+          if (item.href.includes("?")) {
+              const [basePath, queryString] = item.href.split("?");
+              const params = new URLSearchParams(queryString);
+              const tabParam = params.get("tab");
+              const currentTab = searchParams.get("tab");
+              
+              isActive = pathname === basePath && currentTab === tabParam;
+          } else {
+              // Standard path check
+              isActive = pathname === item.href || (item.href !== "/" && pathname?.startsWith(item.href) && !searchParams.get("tab"));
+          }
           
           return (
             <button
