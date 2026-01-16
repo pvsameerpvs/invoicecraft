@@ -62,81 +62,93 @@ export function UserMenu() {
       <div className="relative" ref={menuRef}>
         <button
           onClick={() => setIsOpen(!isOpen)}
-          className="flex items-center gap-3 rounded-xl bg-white p-2 pr-4 shadow-sm ring-1 ring-brand-200 hover:ring-brand-primary/50 transition-all"
+          className="group flex items-center gap-2 rounded-full bg-white p-1 pr-3 shadow-md ring-1 ring-slate-200 transition-all hover:ring-brand-primary/50 hover:shadow-lg active:scale-95"
         >
-          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-brand-primary text-xs font-bold text-white uppercase shadow-md shadow-brand-primary/20">
-            {username.charAt(0)}
+          <div className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-tr from-brand-start to-brand-end text-sm font-bold text-white shadow-sm ring-2 ring-white">
+            {username.charAt(0).toUpperCase()}
           </div>
-          <div className="hidden flex-col items-start text-xs sm:flex">
-             <span className="font-semibold text-slate-900">{username}</span>
-             <span className="text-[10px] text-slate-400">View Profile</span>
+          <span className="hidden text-sm font-medium text-slate-700 sm:block max-w-[100px] truncate">
+             {username}
+          </span>
+          <div className={`ml-1 text-slate-400 transition-transform duration-300 ${isOpen ? "rotate-180" : ""}`}>
+             <svg width="10" height="6" viewBox="0 0 10 6" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M1 1L5 5L9 1" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
           </div>
-          
-          {/* Simple down arrow using CSS border */}
-          <div className={`ml-auto hidden h-0 w-0 border-l-[4px] border-r-[4px] border-t-[4px] border-l-transparent border-r-transparent border-t-slate-400 transition-transform sm:block ${isOpen ? "rotate-180" : ""}`} />
         </button>
   
         {isOpen && (
-          <div className="absolute right-0 top-full z-[100] mt-2 w-48 rounded-xl bg-white p-1 shadow-xl ring-1 ring-brand-100">
-             <div 
-               onClick={() => {
-                  setIsOpen(false);
-                  router.push("/profile");
-               }}
-               className="px-3 py-2 border-b border-brand-50 mb-1 cursor-pointer hover:bg-brand-50 rounded-t-lg transition-colors"
-             >
-                <p className="text-xs font-medium text-slate-900">Signed in as</p>
-                <p className="text-xs text-slate-500 truncate">{username}</p>
+          <div className="absolute right-0 top-full z-[120] mt-3 w-72 origin-top-right rounded-2xl bg-white p-2 shadow-2xl ring-1 ring-slate-900/5 animate-in fade-in zoom-in-95 duration-200">
+             
+             {/* Profile Section */}
+             <div className="mb-2 rounded-xl bg-slate-50 p-4 border border-slate-100">
+                <div className="flex items-center gap-3">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-brand-start to-brand-end text-lg font-bold text-white shadow-md ring-4 ring-white">
+                        {username.charAt(0).toUpperCase()}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                        <p className="truncate text-sm font-bold text-slate-900">{username}</p>
+                        <p className="text-xs text-brand-primary font-medium capitalize">{currentRole || "User"}</p>
+                    </div>
+                </div>
+                <button 
+                   onClick={() => {
+                      setIsOpen(false);
+                      router.push("/profile");
+                   }}
+                   className="mt-3 w-full rounded-lg bg-white border border-slate-200 py-2 text-xs font-semibold text-slate-700 shadow-sm hover:bg-slate-50 hover:text-brand-primary hover:border-brand-200 transition-all"
+                >
+                   View Profile
+                </button>
+             </div>
+
+             <div className="space-y-1">
+                 {currentRole === "admin" && (
+                   <button
+                     onClick={() => {
+                       setIsOpen(false);
+                       router.push("/activity");
+                     }}
+                     className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-medium text-slate-600 hover:bg-slate-50 hover:text-brand-primary transition-colors"
+                   >
+                     <Activity className="h-4 w-4" />
+                     Activity Logs
+                   </button>
+                 )}
+                 
+                 <button
+                     onClick={() => {
+                       setIsOpen(false);
+                       router.push("/dashboard");
+                     }}
+                     className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-medium text-slate-600 hover:bg-slate-50 hover:text-brand-primary transition-colors"
+                   >
+                     <LayoutDashboard className="h-4 w-4" />
+                     Dashboard
+                   </button>
+
+                  <button
+                     onClick={() => {
+                       setIsOpen(false);
+                       router.push("/invoice");
+                     }}
+                     className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-medium text-slate-600 hover:bg-slate-50 hover:text-brand-primary transition-colors"
+                   >
+                     <PlusCircle className="h-4 w-4" />
+                     New Invoice
+                   </button>
+      
+                  <button
+                     onClick={() => {
+                       setIsOpen(false);
+                       router.push("/history");
+                     }}
+                     className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-medium text-slate-600 hover:bg-slate-50 hover:text-brand-primary transition-colors"
+                   >
+                     <History className="h-4 w-4" />
+                     Invoice History
+                   </button>
              </div>
              
-             {currentRole === "admin" && (
-               <button
-                 onClick={() => {
-                   setIsOpen(false);
-                   router.push("/activity");
-                 }}
-                 className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-xs font-medium text-slate-700 hover:bg-brand-50 hover:text-brand-primary"
-               >
-                 <Activity className="h-4 w-4" />
-                 Activity Logs
-               </button>
-             )}
-             {/* NEW: Dashboard Link */}
-             <button
-                 onClick={() => {
-                   setIsOpen(false);
-                   router.push("/dashboard");
-                 }}
-                 className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-xs font-medium text-slate-700 hover:bg-brand-50 hover:text-brand-primary"
-               >
-                 <LayoutDashboard className="h-4 w-4" />
-                 Dashboard
-               </button>
-  
-              {/* NEW: Back to Editor / New Invoice */}
-              <button
-                 onClick={() => {
-                   setIsOpen(false);
-                   router.push("/invoice");
-                 }}
-                 className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-xs font-medium text-slate-700 hover:bg-brand-50 hover:text-brand-primary"
-               >
-                 <PlusCircle className="h-4 w-4" />
-                 New Invoice
-               </button>
-  
-              <button
-                 onClick={() => {
-                   setIsOpen(false);
-                   router.push("/history");
-                 }}
-                 className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-xs font-medium text-slate-700 hover:bg-brand-50 hover:text-brand-primary"
-               >
-                 <History className="h-4 w-4" />
-                 Invoice History
-               </button>
-             
-             <div className="my-1 border-t border-slate-100"></div>
+             <div className="my-2 border-t border-slate-100"></div>
   
              <button
                // Just open the modal, don't logout immediately
@@ -144,10 +156,10 @@ export function UserMenu() {
                    setIsOpen(false);
                    setIsLogoutModalOpen(true);
                }}
-               className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-xs font-medium text-red-600 hover:bg-red-50"
+               className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-medium text-slate-600 hover:bg-red-50 hover:text-red-600 transition-colors"
              >
                <LogOut className="h-4 w-4" />
-               Logout
+               Sign Out
              </button>
           </div>
         )}
