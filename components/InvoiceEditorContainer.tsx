@@ -10,7 +10,6 @@ import { downloadInvoicePdf } from "../lib/pdf";
 import toast from "react-hot-toast";
 import { History, PlusCircle } from "lucide-react";
 import Link from "next/link";
-import { Navbar } from "./Navbar";
 import { PremiumLoader } from "./ui/premium-loader";
 
 const initialInvoiceData: InvoiceData = {
@@ -222,10 +221,8 @@ export function InvoiceEditorContainer({ initialInvoiceId }: Props) {
   return (
     <>
     {loading && <PremiumLoader />}
-    <div className="flex min-h-screen lg:h-screen flex-col bg-transparent text-slate-900">
-      {/* 1. Header */}
-      {/* 1. Navbar */}
-      <Navbar label="v1.0 Editor" variant="white" />
+    <div className="flex h-full flex-col bg-transparent text-slate-900 relative">
+      {/* 1. Header removed (global) */}
 
       {/* MOBILE TABS CONTROL (Sticky Top) */}
       <div className="lg:hidden sticky top-0 z-40 bg-white/80 backdrop-blur-md border-b border-slate-200 px-4 py-2">
@@ -246,7 +243,7 @@ export function InvoiceEditorContainer({ initialInvoiceId }: Props) {
       </div>
 
       {/* 2. Main Layout (Sidebar + Preview) */}
-      <main className="flex flex-1 flex-col lg:flex-row lg:overflow-hidden">
+      <main className="flex flex-1 flex-col overflow-y-auto lg:flex-row lg:overflow-hidden">
         {/* Left Sidebar: Form */}
         <aside className={`w-full lg:w-[500px] flex-none lg:overflow-y-auto border-r border-slate-200 bg-white/50 backdrop-blur-2xl p-4 sm:p-6 scrollbar-thin scrollbar-thumb-slate-200 hover:scrollbar-thumb-slate-300 z-10 ${mobileTab === "preview" ? "hidden lg:block" : ""}`}>
            <div className="mb-6 flex items-center justify-between">
@@ -273,7 +270,7 @@ export function InvoiceEditorContainer({ initialInvoiceId }: Props) {
                      onClick={handleDownload}
                      className="flex items-center gap-2 bg-slate-900 text-white px-6 py-3 rounded-full shadow-xl shadow-slate-900/20 font-semibold active:scale-95 transition-all"
                   >
-                    <span>{isUpdateMode ? "Edit & Download PDF" : "Download PDF"}</span>
+                    <span>{isUpdateMode ? "Update & Download PDF" : "Save & Download PDF"}</span>
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
                   </button>
                </div>

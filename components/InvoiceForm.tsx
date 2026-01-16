@@ -531,7 +531,7 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({
 
       <div className="flex justify-end">
         <Button type="button" onClick={onDownloadPdf} className="bg-gradient-to-r from-brand-start to-brand-end hover:shadow-lg hover:shadow-brand-primary/30 transition-all">
-          {isUpdate ? "Edit & Download PDF" : "Download PDF"}
+          {isUpdate ? "Update & Download PDF" : "Save & Download PDF"}
         </Button>
       </div>
     </div>

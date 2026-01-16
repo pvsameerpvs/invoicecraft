@@ -3,7 +3,6 @@
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { UserMenu } from "../../components/UserMenu";
-import { Navbar } from "../../components/Navbar";
 import { Skeleton } from "../../components/ui/skeleton";
 import toast from "react-hot-toast";
 
@@ -89,9 +88,9 @@ export default function ActivityPage() {
   if (!isAdmin) return null;
 
   return (
-    <div className="h-screen flex flex-col bg-brand-50 selection:bg-brand-100 selection:text-brand-900 overflow-hidden">
-      <Navbar label="Admin Activity Log" variant="transparent" />
-
+    <div className="h-full flex flex-col bg-brand-50 relative selection:bg-brand-100 selection:text-brand-900">
+      
+      {/* Background decoration */}
       <main className="flex-1 flex flex-col min-h-0 relative">
         <div className="absolute top-0 left-0 w-full h-64 bg-gradient-to-br from-brand-start to-brand-end -z-0" />
 

@@ -3,7 +3,6 @@
 import React from "react";
 import Image from "next/image";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
-import { Navbar } from "../../components/Navbar";
 import { InvoicePreview } from "../../components/InvoicePreview";
 import { downloadInvoicePdf } from "../../lib/pdf";
 import { InvoiceData } from "../../lib/types";
@@ -214,8 +213,7 @@ function HistoryContent() {
   };
 
   return (
-    <div className="h-screen flex flex-col bg-brand-50 selection:bg-brand-100 selection:text-brand-900 overflow-hidden">
-      <Navbar label="v1.0 History" variant="white" />
+    <div className="h-full flex flex-col bg-brand-50 selection:bg-brand-100 selection:text-brand-900 overflow-hidden">
 
       <main className="flex-1 flex flex-col min-h-0 relative">
       {/* Background decoration */}

@@ -9,6 +9,7 @@ export const metadata: Metadata = {
 };
 
 import { ThemeProvider } from "../components/ThemeProvider";
+import { SidebarLayout } from "../components/SidebarLayout";
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -19,7 +20,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className="min-h-screen font-sans antialiased bg-slate-100">
         <Toaster position="top-center" />
         <ThemeProvider>
-          {children}
+          <SidebarLayout>
+            {children}
+          </SidebarLayout>
         </ThemeProvider>
       </body>
     </html>

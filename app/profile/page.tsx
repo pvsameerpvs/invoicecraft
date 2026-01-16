@@ -2,7 +2,6 @@
 
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Navbar } from "../../components/Navbar";
 import toast from "react-hot-toast";
 
 // Types
@@ -92,8 +91,7 @@ export default function ProfilePage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-brand-50 flex flex-col relative">
-        <Navbar label="Profile" variant="transparent" />
+      <div className="h-full overflow-y-auto bg-brand-50 flex flex-col relative">
         <div className="absolute top-0 left-0 w-full h-64 bg-slate-200 animate-pulse z-0" />
         
         <div className="relative z-10 px-4 md:px-8 pt-8 pb-4">
@@ -149,8 +147,7 @@ export default function ProfilePage() {
   const isAdmin = role === "admin";
 
   return (
-    <div className="min-h-screen bg-brand-50 flex flex-col relative">
-      <Navbar label="Profile" variant="transparent" />
+    <div className="h-full overflow-y-auto bg-brand-50 flex flex-col relative">
       
       {/* Global Background Gradient */}
       <div className="absolute top-0 left-0 w-full h-64 bg-gradient-to-br from-brand-start to-brand-end z-0" />

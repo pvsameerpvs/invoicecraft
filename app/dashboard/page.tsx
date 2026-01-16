@@ -3,7 +3,6 @@
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { DashboardContainer } from "../../components/DashboardContainer";
-import { Navbar } from "../../components/Navbar";
 import { Skeleton } from "../../components/ui/skeleton";
 import toast from "react-hot-toast";
 
@@ -32,8 +31,7 @@ export default function DashboardPage() {
   }, []);
 
   return (
-    <div className="flex h-screen flex-col bg-slate-50">
-         <Navbar label="Dashboard" variant="white" />
+    <div className="flex flex-1 h-full flex-col">
          {loading ? (
              <div className="flex-1 bg-slate-50 p-4 md:p-8 overflow-hidden">
                  <div className="max-w-7xl mx-auto space-y-8">
