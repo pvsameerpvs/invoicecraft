@@ -15,14 +15,17 @@ import {
   Building2
 } from "lucide-react";
 import toast from "react-hot-toast";
+import { useUnsavedChanges } from "./providers/UnsavedChangesContext";
 
 export function NavigationSidebar() {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+
   const [isCollapsed, setIsCollapsed] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
   const [username, setUsername] = useState("");
+  const { checkUnsavedChanges } = useUnsavedChanges();
 
   useEffect(() => {
     const role = localStorage.getItem("invoicecraft:role");
@@ -113,7 +116,7 @@ export function NavigationSidebar() {
           return (
             <button
               key={item.href}
-              onClick={() => router.push(item.href)}
+              onClick={() => checkUnsavedChanges(() => router.push(item.href))}
               className={`group flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all ${
                 isActive 
                   ? "bg-brand-50 text-brand-primary shadow-sm" 

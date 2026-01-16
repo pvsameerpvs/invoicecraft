@@ -8,9 +8,11 @@ import { UserMenu } from "./UserMenu";
 import { InvoiceData } from "../lib/types";
 import { downloadInvoicePdf } from "../lib/pdf";
 import toast from "react-hot-toast";
-import { History, PlusCircle, ChevronLeft } from "lucide-react";
+import { History, PlusCircle, ChevronLeft, AlertTriangle } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { PremiumLoader } from "./ui/premium-loader";
+import { useUnsavedChanges } from "./providers/UnsavedChangesContext";
 
 const initialInvoiceData: InvoiceData = {
   logoDataUrl: undefined,
@@ -46,6 +48,38 @@ export function InvoiceEditorContainer({ initialInvoiceId }: Props) {
   const [invoice, setInvoice] = useState<InvoiceData>(initialInvoiceData);
   const [loading, setLoading] = useState(true);
   const previewRef = useRef<HTMLDivElement | null>(null);
+
+  const router = useRouter();
+  const { isDirty, setIsDirty, checkUnsavedChanges } = useUnsavedChanges();
+
+  // Reset dirty state on mount/unmount
+  useEffect(() => {
+     setIsDirty(false);
+     return () => setIsDirty(false);
+  }, []);
+
+  // Protect against refresh/close tab
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (isDirty) {
+        e.preventDefault();
+        e.returnValue = ""; 
+      }
+    };
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, [isDirty]);
+
+  const handleBackClick = (e: React.MouseEvent) => {
+      e.preventDefault();
+      checkUnsavedChanges(() => router.push("/dashboard"));
+  };
+
+  const handleInvoiceChange = (newData: InvoiceData | ((prev: InvoiceData) => InvoiceData)) => {
+      setInvoice(newData);
+      setIsDirty(true);
+  };
+
 
   /* New State for tabs */
   const [mobileTab, setMobileTab] = useState<"edit" | "preview">("edit");
@@ -247,17 +281,19 @@ export function InvoiceEditorContainer({ initialInvoiceId }: Props) {
       <main className="flex flex-1 flex-col min-h-0 overflow-y-auto lg:overflow-hidden lg:flex-row">
         {/* Left Sidebar: Form */}
         <aside className={`w-full lg:w-[500px] flex-none flex flex-col border-r border-slate-200 bg-white/50 backdrop-blur-2xl z-10 ${mobileTab === "preview" ? "hidden lg:flex" : "flex"}`}>
+
+
            {/* Sticky Header */}
            <div className="flex-none p-4 sm:p-6 border-b border-slate-100 bg-white/40 backdrop-blur-md z-20 sticky top-0 lg:static">
-              <Link 
-                href="/dashboard"
+              <button 
+                onClick={handleBackClick}
                 className="inline-flex items-center gap-2 text-sm font-medium text-slate-500 hover:text-brand-primary mb-4 transition-colors group"
               >
                   <div className="p-1 rounded-full bg-slate-100 group-hover:bg-brand-50 transition-colors">
                     <ChevronLeft className="w-4 h-4" />
                   </div>
                   Back to Dashboard
-              </Link>
+              </button>
               
               <div className="flex items-center justify-between">
                 <h2 className="text-lg font-semibold text-slate-900">Invoice Details</h2>
@@ -269,7 +305,7 @@ export function InvoiceEditorContainer({ initialInvoiceId }: Props) {
            <div className="p-4 sm:p-6 lg:flex-1 lg:overflow-y-auto scrollbar-thin scrollbar-thumb-slate-200 hover:scrollbar-thumb-slate-300">
                <InvoiceForm
                   value={invoice}
-                  onChange={setInvoice}
+                  onChange={handleInvoiceChange}
                   onDownloadPdf={handleDownload}
                   isUpdate={isUpdateMode}
                 />
@@ -295,6 +331,7 @@ export function InvoiceEditorContainer({ initialInvoiceId }: Props) {
         </section>
       </main>
     </div>
+
     </>
   );
 }

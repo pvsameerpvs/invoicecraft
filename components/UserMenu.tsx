@@ -4,6 +4,7 @@ import React, { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import { Activity, PlusCircle, History, LogOut, LayoutDashboard } from "lucide-react";
+import { useUnsavedChanges } from "./providers/UnsavedChangesContext";
 
 export function UserMenu() {
   const router = useRouter();
@@ -12,6 +13,7 @@ export function UserMenu() {
   const [isOpen, setIsOpen] = useState(false);
   const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
+  const { checkUnsavedChanges } = useUnsavedChanges();
 
   useEffect(() => {
     // Client-side only
@@ -61,7 +63,7 @@ export function UserMenu() {
     <>
       <div className="relative" ref={menuRef}>
         <button
-          onClick={() => setIsOpen(!isOpen)}
+          onClick={() => checkUnsavedChanges(() => setIsOpen(!isOpen))}
           className="group flex items-center gap-2 rounded-full bg-white p-1 pr-3 shadow-md ring-1 ring-slate-200 transition-all hover:ring-brand-primary/50 hover:shadow-lg active:scale-95"
         >
           <div className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-tr from-brand-start to-brand-end text-sm font-bold text-white shadow-sm ring-2 ring-white">

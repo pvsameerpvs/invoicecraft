@@ -5,6 +5,8 @@ import { usePathname } from "next/navigation";
 import { NavigationSidebar } from "./NavigationSidebar";
 import { Navbar } from "./Navbar";
 
+import { UnsavedChangesProvider } from "./providers/UnsavedChangesContext";
+
 export function SidebarLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
 
@@ -37,23 +39,25 @@ export function SidebarLayout({ children }: { children: React.ReactNode }) {
   const isInvoicePage = pathname?.startsWith("/invoice");
 
   return (
-    <div className="flex h-screen flex-col bg-slate-50 overflow-hidden">
-      {/* Global Header - Full Width */}
-      <Navbar label={navLabel} variant={navVariant} />
+    <UnsavedChangesProvider>
+        <div className="flex h-screen flex-col bg-slate-50 overflow-hidden">
+        {/* Global Header - Full Width */}
+        <Navbar label={navLabel} variant={navVariant} />
 
-      <div className="flex flex-1 overflow-hidden">
-        {/* Global Sidebar - Below Header */}
-        {!isInvoicePage && (
-            <Suspense fallback={<div className="hidden md:flex w-64 bg-white/50 border-r border-slate-200" />}>
-                <NavigationSidebar />
-            </Suspense>
-        )}
-        
-        {/* Content Area */}
-        <div className="flex-1 flex flex-col h-full overflow-hidden relative">
-          {children}
+        <div className="flex flex-1 overflow-hidden">
+            {/* Global Sidebar - Below Header */}
+            {!isInvoicePage && (
+                <Suspense fallback={<div className="hidden md:flex w-64 bg-white/50 border-r border-slate-200" />}>
+                    <NavigationSidebar />
+                </Suspense>
+            )}
+            
+            {/* Content Area */}
+            <div className="flex-1 flex flex-col h-full overflow-hidden relative">
+            {children}
+            </div>
         </div>
-      </div>
-    </div>
+        </div>
+    </UnsavedChangesProvider>
   );
 }
