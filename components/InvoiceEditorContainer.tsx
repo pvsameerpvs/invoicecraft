@@ -8,7 +8,7 @@ import { UserMenu } from "./UserMenu";
 import { InvoiceData } from "../lib/types";
 import { downloadInvoicePdf } from "../lib/pdf";
 import toast from "react-hot-toast";
-import { History, PlusCircle } from "lucide-react";
+import { History, PlusCircle, ChevronLeft } from "lucide-react";
 import Link from "next/link";
 import { PremiumLoader } from "./ui/premium-loader";
 
@@ -242,25 +242,42 @@ export function InvoiceEditorContainer({ initialInvoiceId }: Props) {
          </div>
       </div>
 
+     
       {/* 2. Main Layout (Sidebar + Preview) */}
-      <main className="flex flex-1 flex-col overflow-y-auto lg:flex-row lg:overflow-hidden">
+      <main className="flex flex-1 flex-col min-h-0 overflow-y-auto lg:overflow-hidden lg:flex-row">
         {/* Left Sidebar: Form */}
-        <aside className={`w-full lg:w-[500px] flex-none lg:overflow-y-auto border-r border-slate-200 bg-white/50 backdrop-blur-2xl p-4 sm:p-6 scrollbar-thin scrollbar-thumb-slate-200 hover:scrollbar-thumb-slate-300 z-10 ${mobileTab === "preview" ? "hidden lg:block" : ""}`}>
-           <div className="mb-6 flex items-center justify-between">
-              <h2 className="text-lg font-semibold text-slate-900">Invoice Details</h2>
-              <div className="text-xs text-slate-500">Auto-saving...</div>
+        <aside className={`w-full lg:w-[500px] flex-none flex flex-col border-r border-slate-200 bg-white/50 backdrop-blur-2xl z-10 ${mobileTab === "preview" ? "hidden lg:flex" : "flex"}`}>
+           {/* Sticky Header */}
+           <div className="flex-none p-4 sm:p-6 border-b border-slate-100 bg-white/40 backdrop-blur-md z-20 sticky top-0 lg:static">
+              <Link 
+                href="/dashboard"
+                className="inline-flex items-center gap-2 text-sm font-medium text-slate-500 hover:text-brand-primary mb-4 transition-colors group"
+              >
+                  <div className="p-1 rounded-full bg-slate-100 group-hover:bg-brand-50 transition-colors">
+                    <ChevronLeft className="w-4 h-4" />
+                  </div>
+                  Back to Dashboard
+              </Link>
+              
+              <div className="flex items-center justify-between">
+                <h2 className="text-lg font-semibold text-slate-900">Invoice Details</h2>
+                <div className="text-xs text-slate-500">Auto-saving...</div>
+              </div>
            </div>
            
-           <InvoiceForm
-              value={invoice}
-              onChange={setInvoice}
-              onDownloadPdf={handleDownload}
-              isUpdate={isUpdateMode}
-            />
+           {/* Scrollable Form Content */}
+           <div className="p-4 sm:p-6 lg:flex-1 lg:overflow-y-auto scrollbar-thin scrollbar-thumb-slate-200 hover:scrollbar-thumb-slate-300">
+               <InvoiceForm
+                  value={invoice}
+                  onChange={setInvoice}
+                  onDownloadPdf={handleDownload}
+                  isUpdate={isUpdateMode}
+                />
+           </div>
         </aside>
 
         {/* Right Content: PDF Preview */}
-        <section className={`invoice-preview-section flex flex-1 justify-center lg:overflow-y-auto bg-transparent p-4 lg:p-12 ${mobileTab === "edit" ? "hidden lg:flex" : "flex"}`}>
+        <section className={`invoice-preview-section flex flex-1 justify-center overflow-y-auto bg-transparent p-4 lg:p-12 ${mobileTab === "edit" ? "hidden lg:flex" : "flex"}`}>
             <div className="h-fit w-full flex flex-col items-center">
                <InvoicePreview value={invoice} forwardRef={previewRef} />
                

@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { Suspense } from "react";
 import { usePathname } from "next/navigation";
 import { NavigationSidebar } from "./NavigationSidebar";
 import { Navbar } from "./Navbar";
@@ -43,7 +43,11 @@ export function SidebarLayout({ children }: { children: React.ReactNode }) {
 
       <div className="flex flex-1 overflow-hidden">
         {/* Global Sidebar - Below Header */}
-        {!isInvoicePage && <NavigationSidebar />}
+        {!isInvoicePage && (
+            <Suspense fallback={<div className="hidden md:flex w-64 bg-white/50 border-r border-slate-200" />}>
+                <NavigationSidebar />
+            </Suspense>
+        )}
         
         {/* Content Area */}
         <div className="flex-1 flex flex-col h-full overflow-hidden relative">

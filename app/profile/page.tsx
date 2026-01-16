@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import toast from "react-hot-toast";
 
@@ -21,7 +21,7 @@ import { LogOut } from "lucide-react";
 
 import { Skeleton } from "../../components/ui/skeleton";
 
-export default function ProfilePage() {
+function ProfileContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [username, setUsername] = useState("");
@@ -38,8 +38,6 @@ export default function ProfilePage() {
          setActiveTab(tab as TabId); 
      }
   }, [searchParams]);
-
-  // ... (fetchUserData and useEffects remain the same) ...
 
   const fetchUserData = () => {
       fetch('/api/users')
@@ -248,5 +246,17 @@ export default function ProfilePage() {
         </div>
       )}
     </div>
+  );
+}
+
+export default function ProfilePage() {
+  return (
+    <Suspense fallback={
+        <div className="h-full overflow-y-auto bg-brand-50 flex flex-col relative">
+             <div className="absolute top-0 left-0 w-full h-64 bg-slate-200 animate-pulse z-0" />
+        </div>
+    }>
+        <ProfileContent />
+    </Suspense>
   );
 }
