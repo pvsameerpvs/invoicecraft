@@ -86,7 +86,7 @@ export const InvoicePreview: React.FC<InvoicePreviewProps> = ({
                       : (logoUrl || "/logo-js.png")
                   }
                   alt="Logo"
-                  className="h-8 object-contain"
+                  className="h-20 w-auto max-w-[250px] object-contain"
                 />
 
                                 <h1 className="mt-4 text-3xl font-semibold tracking-wide">
