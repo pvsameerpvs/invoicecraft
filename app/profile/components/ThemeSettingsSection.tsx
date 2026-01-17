@@ -139,8 +139,33 @@ export const ThemeSettingsSection = () => {
                                         )}
                                     </button>
                                 ))}
+                                
+                                {/* Custom Color Picker */}
+                                <div className="relative h-10 w-10">
+                                    <input 
+                                        type="color" 
+                                        onChange={(e) => setTheme(e.target.value)}
+                                        className="h-10 w-10 rounded-full cursor-pointer absolute inset-0 opacity-0 z-10"
+                                        title="Custom Color"
+                                    />
+                                    <div className={`h-10 w-10 rounded-full border-2 flex items-center justify-center bg-white transition-all ${currentTheme.startsWith("#") ? "border-slate-900 scale-110" : "border-slate-200"}`}>
+                                        <div 
+                                            className="h-6 w-6 rounded-full border border-slate-200"
+                                            style={{ 
+                                                background: currentTheme.startsWith("#") 
+                                                    ? currentTheme 
+                                                    : "conic-gradient(red, orange, yellow, green, blue, indigo, violet)" 
+                                            }}
+                                        />
+                                    </div>
+                                    {currentTheme.startsWith("#") && (
+                                         <div className="absolute inset-0 flex items-center justify-center text-white pointer-events-none z-20">
+                                            <svg className="w-4 h-4 drop-shadow-sm" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+                                        </div>
+                                    )}
+                                </div>
                             </div>
-                            <p className="text-xs text-slate-400 mt-2">Select a theme to preview it instantly.</p>
+                            <p className="text-xs text-slate-400 mt-2">Select a preset or choose a custom color.</p>
                         </div>
 
                         {/* Logo Upload */}

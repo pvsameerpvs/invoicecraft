@@ -2,17 +2,21 @@
 
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { ThemeId, themes } from "@/lib/themes";
+import { generatePalette } from "@/lib/colors";
+import { toast } from "react-hot-toast";
 
 interface ThemeContextType {
-    currentTheme: ThemeId;
+    currentTheme: string;
     logoUrl: string | undefined;
     companyName: string;
     navbarTitle: string;
+    invoiceTemplate: string;
     showCompanyName: boolean;
-    setTheme: (id: ThemeId) => void;
+    setTheme: (id: string) => void;
     setLogoUrl: (url: string) => void;
     setCompanyName: (name: string) => void;
     setNavbarTitle: (title: string) => void;
+    setInvoiceTemplate: (template: string) => void;
     setShowCompanyName: (show: boolean) => void;
     refreshSettings: () => Promise<void>;
 }
@@ -20,25 +24,44 @@ interface ThemeContextType {
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-    const [currentTheme, setCurrentTheme] = useState<ThemeId>("orange");
+    const [currentTheme, setCurrentTheme] = useState<string>("orange");
     const [logoUrl, setLogoUrl] = useState<string | undefined>(undefined);
     const [companyName, setCompanyName] = useState("");
     const [navbarTitle, setNavbarTitle] = useState("");
+    const [invoiceTemplate, setInvoiceTemplate] = useState("classic");
     const [showCompanyName, setShowCompanyName] = useState(false);
 
-    const applyTheme = (themeId: ThemeId) => {
-        const theme = themes.find(t => t.id === themeId) || themes[0];
+    const applyTheme = (themeId: string) => {
+        // Check if it's a preset theme
+        const preset = themes.find(t => t.id === themeId);
+        
+        let colors;
+        if (preset) {
+            colors = preset.colors;
+        } else if (themeId.startsWith("#")) {
+            // It's a custom hex color
+            const palette = generatePalette(themeId);
+            colors = {
+                start: palette[500], // Use base as start
+                end: palette[600],   // Slightly darker as end
+                primary: palette[500],
+                ...palette
+            };
+        } else {
+            // Fallback
+            colors = themes[0].colors;
+        }
         
         const root = document.documentElement;
-        root.style.setProperty("--color-brand-start", theme.colors.start);
-        root.style.setProperty("--color-brand-end", theme.colors.end);
-        root.style.setProperty("--color-brand-primary", theme.colors.primary);
+        root.style.setProperty("--color-brand-start", colors.start);
+        root.style.setProperty("--color-brand-end", colors.end);
+        root.style.setProperty("--color-brand-primary", colors.primary);
         
-        // Also simpler hex for imperative usage if needed
         // Apply Full Palette
         const shades = [50, 100, 200, 300, 400, 500, 600, 700, 800, 900, 950] as const;
         shades.forEach(shade => {
-            root.style.setProperty(`--color-brand-${shade}`, (theme.colors as any)[shade]);
+            // TS check: colors object needs to have index signature or we cast
+            root.style.setProperty(`--color-brand-${shade}`, (colors as any)[shade]);
         });
         
         setCurrentTheme(themeId);
@@ -46,13 +69,12 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 
     const refreshSettings = async () => {
         try {
-            // Using a simple cache bust/timestamp if needed, but for now standard fetch
             const res = await fetch("/api/settings?t=" + Date.now());
             const data = await res.json();
             
             if (data && !data.error) {
                 if (data.Theme) {
-                    applyTheme(data.Theme as ThemeId);
+                    applyTheme(data.Theme);
                 }
                 if (data.LogoUrl) {
                     setLogoUrl(data.LogoUrl);
@@ -63,7 +85,9 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
                 if (data.NavbarTitle) {
                     setNavbarTitle(data.NavbarTitle);
                 }
-                // Check explicitly for "true" string or boolean true
+                if (data.InvoiceTemplate) {
+                    setInvoiceTemplate(data.InvoiceTemplate);
+                }
                 if (data.ShowCompanyName === "true" || data.ShowCompanyName === true) {
                     setShowCompanyName(true);
                 } else {
@@ -79,21 +103,19 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
         refreshSettings();
     }, []);
 
-    // Prevent hydration mismatch by rendering children only after mount (optional, but safer for style injection)
-    // Actually for CSS vars on root, we want to render immediately, 
-    // but the initial state might be "orange" while server sends plain HTML.
-    
     return (
         <ThemeContext.Provider value={{
             currentTheme,
             logoUrl,
             companyName,
             navbarTitle,
+            invoiceTemplate,
             showCompanyName,
             setTheme: applyTheme,
             setLogoUrl,
             setCompanyName,
             setNavbarTitle,
+            setInvoiceTemplate,
             setShowCompanyName,
             refreshSettings
         }}>
