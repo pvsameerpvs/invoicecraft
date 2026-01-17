@@ -1,7 +1,6 @@
 "use client";
 
 import React from "react";
-import Image from "next/image";
 import { UserMenu } from "./UserMenu";
 import { useTheme } from "@/components/ThemeProvider";
 
@@ -11,7 +10,7 @@ interface NavbarProps {
 }
 
 export function Navbar({ label, variant = "white" }: NavbarProps) {
-  const { logoUrl } = useTheme();
+  const { logoUrl, companyName, showCompanyName, navbarTitle } = useTheme();
   // Styles based on variant
   const bgClass = variant === "white" 
     ? "bg-white border-b border-slate-200" 
@@ -21,15 +20,20 @@ export function Navbar({ label, variant = "white" }: NavbarProps) {
     <header className={`sticky top-0 z-50 flex h-16 w-full flex-none items-center justify-between px-4 shadow-sm transition-all sm:px-6 ${bgClass}`}>
       <div className="flex items-center gap-4">
         {/* Logo */}
-        <div className="relative h-10 w-[100px] sm:w-[150px]">
-             <Image 
+        <div className="h-10">
+             <img 
                 src={logoUrl || "/logo-js.png"} 
                 alt="Logo" 
-                fill
-                className="object-contain object-left"
-                priority
+                className="h-full w-auto object-contain object-left"
              />
         </div>
+        
+        {/* Company Name (Optional) */}
+        {showCompanyName && (navbarTitle || companyName) && (
+            <span className="text-lg font-bold text-slate-900 hidden sm:block">
+                {navbarTitle || companyName}
+            </span>
+        )}
         
         {/* Version Badge (Optional) */}
         {label && (

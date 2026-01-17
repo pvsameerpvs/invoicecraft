@@ -2,14 +2,13 @@
 
 import React, { useEffect, useState } from "react";
 import toast from "react-hot-toast";
-import { Palette, Save, Loader2 } from "lucide-react";
+import { Palette, Save, Loader2, Type } from "lucide-react";
 import { useTheme } from "@/components/ThemeProvider";
 import { ImageCropper } from "@/components/ImageCropper";
 import { themes } from "@/lib/themes";
 
 export const ThemeSettingsSection = () => {
-    const { currentTheme, setTheme, logoUrl, setLogoUrl } = useTheme();
-    const [loading, setLoading] = useState(false); // Theme is loaded by provider immediately
+    const { currentTheme, setTheme, logoUrl, setLogoUrl, showCompanyName, setShowCompanyName, companyName, navbarTitle, setNavbarTitle } = useTheme();
     const [saving, setSaving] = useState(false);
     const [cropModalOpen, setCropModalOpen] = useState(false);
     const [selectedFileSrc, setSelectedFileSrc] = useState<string | null>(null);
@@ -43,7 +42,10 @@ export const ThemeSettingsSection = () => {
             const payload = {
                 ...currentData,
                 Theme: currentTheme,
-                LogoUrl: logoUrl
+                LogoUrl: logoUrl,
+                ShowCompanyName: showCompanyName,
+                CompanyName: companyName,
+                NavbarTitle: navbarTitle
             };
 
             // 3. Save
@@ -68,7 +70,6 @@ export const ThemeSettingsSection = () => {
     };
 
     const handleCropComplete = async (croppedBlob: Blob) => {
-        setLoading(true); // Re-use loading state for upload indicator in modal if needed, or separate.
         const t = toast.loading("Uploading cropped logo...");
 
         try {
@@ -94,7 +95,7 @@ export const ThemeSettingsSection = () => {
             console.error(err);
             toast.error(err.message || "Failed to upload logo", { id: t });
         } finally {
-            setLoading(false);
+            // Loading handled by toast
         }
     };
 
@@ -182,7 +183,50 @@ export const ThemeSettingsSection = () => {
                                     <p className="text-[10px] text-slate-400 mt-1">Recommended: PNG with transparent background.</p>
                                 </div>
                              </div>
+                            </div>
+
+
+                        {/* Navbar Options */}
+                        <div className="pt-2 border-t border-slate-100 mt-4">
+                            <label className="flex items-center gap-3 cursor-pointer group">
+                                <div className="relative inline-flex items-center">
+                                    <input 
+                                        type="checkbox" 
+                                        className="sr-only peer" 
+                                        checked={showCompanyName}
+                                        onChange={(e) => setShowCompanyName(e.target.checked)}
+                                    />
+                                    <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-brand-100 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-brand-primary"></div>
+                                </div>
+                                <span className="text-sm font-medium text-slate-700 group-hover:text-slate-900">Show Company Name in Navbar?</span>
+                            </label>
+                            <p className="text-xs text-slate-400 mt-2 ml-14">
+                                Enable this if your logo does not include the company name text.
+                            </p>
                         </div>
+
+                        {/* Navbar Display Name - Conditionally shown or just below */}
+                        {showCompanyName && (
+                             <div className="pt-2">
+                                <label className="block text-xs font-semibold text-slate-500 mb-1.5 uppercase">Navbar Display Name (Optional)</label>
+                                <div className="relative">
+                                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                                        <Type className="h-4 w-4" />
+                                    </div>
+                                    <input 
+                                        type="text"
+                                        value={navbarTitle}
+                                        onChange={(e) => setNavbarTitle(e.target.value)}
+                                        placeholder={companyName || "e.g. My App"}
+                                        className="block w-full rounded-lg border-slate-200 bg-slate-50 pl-10 pr-3 py-2.5 text-sm focus:border-brand-primary/50 focus:ring-4 focus:ring-brand-primary/10 transition-all placeholder:text-slate-400"
+                                    />
+                                </div>
+                                <p className="text-[10px] text-slate-400 mt-1.5 flex items-center gap-1.5">
+                                    <span className="w-1 h-1 rounded-full bg-slate-400"></span>
+                                    <span>If provided, this text will be shown in the navbar instead of your Company Name.</span>
+                                </p>
+                            </div>
+                        )}
                     </div>
 
                     <div className="pt-4 flex justify-end">

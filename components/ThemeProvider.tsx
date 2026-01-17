@@ -6,8 +6,14 @@ import { ThemeId, themes } from "@/lib/themes";
 interface ThemeContextType {
     currentTheme: ThemeId;
     logoUrl: string | undefined;
+    companyName: string;
+    navbarTitle: string;
+    showCompanyName: boolean;
     setTheme: (id: ThemeId) => void;
     setLogoUrl: (url: string) => void;
+    setCompanyName: (name: string) => void;
+    setNavbarTitle: (title: string) => void;
+    setShowCompanyName: (show: boolean) => void;
     refreshSettings: () => Promise<void>;
 }
 
@@ -16,7 +22,9 @@ const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
     const [currentTheme, setCurrentTheme] = useState<ThemeId>("orange");
     const [logoUrl, setLogoUrl] = useState<string | undefined>(undefined);
-    const [mounted, setMounted] = useState(false);
+    const [companyName, setCompanyName] = useState("");
+    const [navbarTitle, setNavbarTitle] = useState("");
+    const [showCompanyName, setShowCompanyName] = useState(false);
 
     const applyTheme = (themeId: ThemeId) => {
         const theme = themes.find(t => t.id === themeId) || themes[0];
@@ -49,6 +57,18 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
                 if (data.LogoUrl) {
                     setLogoUrl(data.LogoUrl);
                 }
+                if (data.CompanyName) {
+                    setCompanyName(data.CompanyName);
+                }
+                if (data.NavbarTitle) {
+                    setNavbarTitle(data.NavbarTitle);
+                }
+                // Check explicitly for "true" string or boolean true
+                if (data.ShowCompanyName === "true" || data.ShowCompanyName === true) {
+                    setShowCompanyName(true);
+                } else {
+                    setShowCompanyName(false);
+                }
             }
         } catch (e) {
             console.error("Failed to load theme settings", e);
@@ -56,7 +76,6 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     };
 
     useEffect(() => {
-        setMounted(true);
         refreshSettings();
     }, []);
 
@@ -68,8 +87,14 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
         <ThemeContext.Provider value={{
             currentTheme,
             logoUrl,
+            companyName,
+            navbarTitle,
+            showCompanyName,
             setTheme: applyTheme,
             setLogoUrl,
+            setCompanyName,
+            setNavbarTitle,
+            setShowCompanyName,
             refreshSettings
         }}>
             {children}
