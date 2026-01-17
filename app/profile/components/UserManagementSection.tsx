@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import toast from "react-hot-toast";
 
 interface User {
@@ -48,27 +49,32 @@ export const UserManagementSection = ({ currentUser }: UserManagementSectionProp
 
     const [loading, setLoading] = useState(false);
     const [deleting, setDeleting] = useState<string | null>(null);
+    const [userToDelete, setUserToDelete] = useState<User | null>(null);
 
     // Check if role defaults to admin if not set
     const handleRoleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
         setNewUser({ ...newUser, role: e.target.value });
     };
 
-    const handleDelete = async (user: User) => {
-        if (!confirm(`Are you sure you want to delete user ${user.username}?`)) return;
+    const handleDelete = (user: User) => {
+        setUserToDelete(user);
+    };
+
+    const confirmDelete = async () => {
+        if (!userToDelete) return;
         
-        setDeleting(user.id);
+        setDeleting(userToDelete.id);
         try {
             const res = await fetch("/api/users", {
                 method: "DELETE",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ id: user.id })
+                body: JSON.stringify({ id: userToDelete.id })
             });
 
             const data = await res.json();
             
             if (res.ok) {
-                toast.success(`User ${user.username} deleted`);
+                toast.success(`User ${userToDelete.username} deleted`);
                 fetchUsers();
             } else {
                 toast.error(data.error || "Failed to delete user");
@@ -77,6 +83,7 @@ export const UserManagementSection = ({ currentUser }: UserManagementSectionProp
             toast.error("Something went wrong");
         } finally {
             setDeleting(null);
+            setUserToDelete(null);
         }
     };
 
@@ -118,7 +125,8 @@ export const UserManagementSection = ({ currentUser }: UserManagementSectionProp
     };
 
     return (
-        <section className="bg-white rounded-3xl p-8 shadow-sm ring-1 ring-slate-100 animate-in fade-in slide-in-from-bottom-4 duration-500">
+        <>
+            <section className="bg-white rounded-3xl p-8 shadow-sm ring-1 ring-slate-100 animate-in fade-in slide-in-from-bottom-4 duration-500">
             <div className="mb-6">
                 <h2 className="text-lg font-bold text-slate-900">Create New User</h2>
                 <p className="text-sm text-slate-400">Add a new user to the system.</p>
@@ -283,5 +291,68 @@ export const UserManagementSection = ({ currentUser }: UserManagementSectionProp
                 </div>
             </div>
         </section>
+
+            {userToDelete && (
+                <DeleteConfirmationModal 
+                    user={userToDelete}
+                    onCancel={() => setUserToDelete(null)}
+                    onConfirm={confirmDelete}
+                    isDeleting={deleting !== null}
+                />
+            )}
+        </>
+    );
+};
+
+const DeleteConfirmationModal = ({ 
+    user, 
+    onCancel, 
+    onConfirm, 
+    isDeleting 
+}: { 
+    user: User, 
+    onCancel: () => void, 
+    onConfirm: () => void, 
+    isDeleting: boolean 
+}) => {
+    const [mounted, setMounted] = useState(false);
+
+    useEffect(() => {
+        setMounted(true);
+        return () => setMounted(false);
+    }, []);
+
+    if (!mounted) return null;
+
+    return createPortal(
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-in fade-in duration-200">
+            <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm p-6 animate-in zoom-in-95 duration-200">
+                <div className="text-center">
+                    <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 mb-4">
+                        <Trash2 className="h-6 w-6 text-red-600" />
+                    </div>
+                    <h3 className="text-lg font-bold text-slate-900">Delete User?</h3>
+                    <p className="text-sm text-slate-500 mt-2">
+                        Are you sure you want to delete <span className="font-bold text-slate-700">{user.username}</span>? This cannot be undone.
+                    </p>
+                </div>
+                <div className="mt-6 flex gap-3">
+                    <button
+                        onClick={onCancel}
+                        className="flex-1 px-4 py-2.5 bg-slate-100 text-slate-700 text-sm font-semibold rounded-xl hover:bg-slate-200 transition-colors"
+                    >
+                        Cancel
+                    </button>
+                    <button
+                        onClick={onConfirm}
+                        disabled={isDeleting}
+                        className="flex-1 px-4 py-2.5 bg-red-600 text-white text-sm font-semibold rounded-xl hover:bg-red-700 shadow-lg shadow-red-600/20 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+                    >
+                        {isDeleting ? "Deleting..." : "Yes, Delete"}
+                    </button>
+                </div>
+            </div>
+        </div>,
+        document.body
     );
 };
