@@ -12,15 +12,9 @@ export interface User {
 }
 
 
-export async function verifyUser(username: string, password: string): Promise<User | null> {
+export async function verifyUser(SHEET_ID: string, username: string, password: string): Promise<User | null> {
   console.log(`[Auth] Verifying user: ${username}`);
   try {
-    
-      const SHEET_ID = await getTenantSheetId("coducer");
-      if (!SHEET_ID) {
-      console.log("[Auth] Sheet ID not found");
-      return null;
-      }
     const sheets = getSheetsClient();
     console.log(`[Auth] Client initialized. Fetching from ${SHEET_ID}...`);
     

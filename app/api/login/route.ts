@@ -11,8 +11,14 @@ export async function POST(req: Request) {
     const subdomain = getSubdomainFromRequest(req);
     const sheetId = await getTenantSheetId(subdomain);
     console.log("sheetId", sheetId);
+    if (!sheetId) {
+      return NextResponse.json(
+        { ok: false, error: "Sheet ID not found", subdomain },
+        { status: 404 }
+      );
+    }
 
-    const user = await verifyUser(username, password);
+    const user = await verifyUser(sheetId, username, password);
 
 
     if (user) {
