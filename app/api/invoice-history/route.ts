@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { getSheetsClient, logActivity } from "../../lib/sheets";
+import { getTenantSheetId } from "@/lib/user.id";
 
 export const dynamic = 'force-dynamic';
 export const runtime = "nodejs";
@@ -15,12 +16,18 @@ function money(n: number) {
  * Body: InvoiceData (full invoice json)
  * Saves:
  * - one row to Invoices!A:J
- * - line items to LineItems!A:D
+ * - line items to LineItems!A:D  
  */
 export async function POST(req: Request) {
   try {
-    const sheetId = "1oo7G79VtN-zIQzlpKzVHGKGDObWik7MUPdVA2ZrEayQ";
-    if (!sheetId) throw new Error("Missing GOOGLE_SHEET_ID");
+    const SHEET_ID = await getTenantSheetId("coducer");
+  if (!SHEET_ID) {
+  return NextResponse.json(
+    { ok: false, error: "Sheet ID not found" },
+    { status: 404 }
+  );
+  }
+                     
 
     const invoice = await req.json();
 
@@ -47,7 +54,7 @@ export async function POST(req: Request) {
 
     // ✅ Check if invoice number already exists
     const existing = await sheets.spreadsheets.values.get({
-      spreadsheetId: sheetId,
+      spreadsheetId: SHEET_ID,
       range: "Invoices!B:B", // invoice numbers column
     });
 
@@ -66,7 +73,7 @@ export async function POST(req: Request) {
 
     // ✅ Save invoice row
     await sheets.spreadsheets.values.append({
-      spreadsheetId: sheetId,
+      spreadsheetId: SHEET_ID,
       range: "Invoices!A:L",
       valueInputOption: "USER_ENTERED",
       requestBody: {
@@ -99,7 +106,7 @@ export async function POST(req: Request) {
 
     if (lineRows.length > 0) {
       await sheets.spreadsheets.values.append({
-        spreadsheetId: sheetId,
+        spreadsheetId: SHEET_ID,
         range: "LineItems!A:D",
         valueInputOption: "USER_ENTERED",
         requestBody: { values: lineRows },
@@ -178,8 +185,14 @@ async function deleteLineItems(sheets: any, sheetId: string, invoiceNumber: stri
  */
 export async function PUT(req: Request) {
   try {
-    const sheetId = "1oo7G79VtN-zIQzlpKzVHGKGDObWik7MUPdVA2ZrEayQ";
-    if (!sheetId) throw new Error("Missing GOOGLE_SHEET_ID");
+    const SHEET_ID = await getTenantSheetId("coducer");
+                   if (!SHEET_ID) {
+                     return NextResponse.json(
+                       { ok: false, error: "Sheet ID not found" },
+                       { status: 404 }
+                     );
+                   }
+                 
 
     const { originalInvoiceNumber, invoice, currentUser } = await req.json();
     const currentRole = (cookies().get("invoicecraft_role")?.value || "user").toLowerCase().trim();
@@ -195,7 +208,7 @@ export async function PUT(req: Request) {
 
     // 1. Find the row index
     const res = await sheets.spreadsheets.values.get({
-      spreadsheetId: sheetId,
+      spreadsheetId: SHEET_ID,
       range: "Invoices!A:L", // Read all columns to get CreatedBy and Status
     });
 
@@ -247,7 +260,7 @@ export async function PUT(req: Request) {
     const rangeToUpdate = `Invoices!B${sheetRowNumber}:L${sheetRowNumber}`;
 
     await sheets.spreadsheets.values.update({
-      spreadsheetId: sheetId,
+      spreadsheetId: SHEET_ID,
       range: rangeToUpdate,
       valueInputOption: "USER_ENTERED",
       requestBody: {
@@ -270,7 +283,7 @@ export async function PUT(req: Request) {
     });
 
     // 3. Sync Line Items (Delete Old -> Insert New)
-    await deleteLineItems(sheets, sheetId, originalInvoiceNumber);
+    await deleteLineItems(sheets, SHEET_ID, originalInvoiceNumber);
 
     const lineRows = (invoice.lineItems || []).map((it: any) => [
       invoice.invoiceNumber,
@@ -281,7 +294,7 @@ export async function PUT(req: Request) {
 
     if (lineRows.length > 0) {
       await sheets.spreadsheets.values.append({
-        spreadsheetId: sheetId,
+        spreadsheetId: SHEET_ID,
         range: "LineItems!A:D",
         valueInputOption: "USER_ENTERED",
         requestBody: { values: lineRows },
@@ -317,13 +330,19 @@ export async function GET(req: Request) {
     const currentUser = cookies().get("invoicecraft_auth")?.value || "";
     const currentRole = (cookies().get("invoicecraft_role")?.value || "user").toLowerCase().trim();
 
-    const sheetId = "1oo7G79VtN-zIQzlpKzVHGKGDObWik7MUPdVA2ZrEayQ";
-    if (!sheetId) throw new Error("Missing GOOGLE_SHEET_ID");
+    const SHEET_ID = await getTenantSheetId("coducer");
+                   if (!SHEET_ID) {
+                     return NextResponse.json(
+                       { ok: false, error: "Sheet ID not found" },
+                       { status: 404 }
+                     );
+                   }
+                 
 
     const sheets = getSheetsClient();
 
     const res = await sheets.spreadsheets.values.get({
-      spreadsheetId: sheetId,
+      spreadsheetId: SHEET_ID,
       range: "Invoices!A:L",
     });
 
@@ -416,8 +435,14 @@ export async function GET(req: Request) {
  */
 export async function DELETE(req: Request) {
   try {
-    const sheetId = "1oo7G79VtN-zIQzlpKzVHGKGDObWik7MUPdVA2ZrEayQ";
-    if (!sheetId) throw new Error("Missing GOOGLE_SHEET_ID");
+    const SHEET_ID = await getTenantSheetId("coducer");
+                   if (!SHEET_ID) {
+                     return NextResponse.json(
+                       { ok: false, error: "Sheet ID not found" },
+                       { status: 404 }
+                     );
+                   }
+                 
 
     const { invoiceNumber, currentUser } = await req.json();
 
@@ -434,7 +459,7 @@ export async function DELETE(req: Request) {
 
     // 1. Find the row index and check permissions
     const res = await sheets.spreadsheets.values.get({
-      spreadsheetId: sheetId,
+      spreadsheetId: SHEET_ID,
       range: "Invoices!A:L", // Read all so we can check CreatedBy (col K)
     });
 
@@ -463,7 +488,7 @@ export async function DELETE(req: Request) {
       );
     }
 
-    const sheetDetails = await sheets.spreadsheets.get({ spreadsheetId: sheetId });
+    const sheetDetails = await sheets.spreadsheets.get({ spreadsheetId: SHEET_ID });
     const sheet = sheetDetails.data.sheets?.find(s => s.properties?.title === "Invoices");
     const sheetIdNum = sheet?.properties?.sheetId;
 
@@ -472,7 +497,7 @@ export async function DELETE(req: Request) {
     }
 
     await sheets.spreadsheets.batchUpdate({
-        spreadsheetId: sheetId,
+        spreadsheetId: SHEET_ID,
         requestBody: {
             requests: [
                 {
@@ -490,7 +515,7 @@ export async function DELETE(req: Request) {
     });
 
     // 2. Cascade Delete Line Items
-    await deleteLineItems(sheets, sheetId, invoiceNumber);
+    await deleteLineItems(sheets, SHEET_ID, invoiceNumber);
 
     // ✅ Log Activity
     const userAgent = req.headers.get("user-agent");

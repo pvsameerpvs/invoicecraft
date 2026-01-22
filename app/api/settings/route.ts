@@ -1,15 +1,22 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { getSheetsClient, logActivity } from "@/app/lib/sheets";
+import { getTenantSheetId } from "@/lib/user.id";
 
 export const dynamic = 'force-dynamic';
 
 // Same Sheet ID as used in other routes
-const SHEET_ID = process.env.GOOGLE_SHEET_ID || "1oo7G79VtN-zIQzlpKzVHGKGDObWik7MUPdVA2ZrEayQ";
 
 export async function GET() {
   try {
     const sheets = getSheetsClient();
+      const SHEET_ID = await getTenantSheetId("coducer");
+      if (!SHEET_ID) {
+      return NextResponse.json(
+        { ok: false, error: "Sheet ID not found" },
+        { status: 404 }
+      );
+      }
     
     // Fetch Header (Row 1) and Data (Row 2)
     const res = await sheets.spreadsheets.values.get({
@@ -41,6 +48,13 @@ export async function GET() {
 
 export async function POST(req: Request) {
     try {
+        const SHEET_ID = await getTenantSheetId("coducer");
+  if (!SHEET_ID) {
+  return NextResponse.json(
+    { ok: false, error: "Sheet ID not found" },
+    { status: 404 }
+  );
+  }
         const body = await req.json();
         const sheets = getSheetsClient();
         const username = cookies().get("invoicecraft_auth")?.value || "Unknown";

@@ -2,11 +2,18 @@
 import { NextResponse } from "next/server";
 import { getSheetsClient } from "@/app/lib/sheets";
 import { cookies } from "next/headers";
+import { getTenantSheetId } from "@/lib/user.id";
 
-const USERS_SHEET_ID = "1oo7G79VtN-zIQzlpKzVHGKGDObWik7MUPdVA2ZrEayQ";
 
 export async function GET(req: Request) {
     try {
+          const SHEET_ID = await getTenantSheetId("coducer");
+          if (!SHEET_ID) {
+          return NextResponse.json(
+            { ok: false, error: "Sheet ID not found" },
+            { status: 404 }
+          );
+          }
         // Security Check: Only admins can list users
         const role = cookies().get("invoicecraft_role")?.value;
         if (role !== "admin") {
@@ -15,7 +22,7 @@ export async function GET(req: Request) {
 
         const sheets = getSheetsClient();
         const res = await sheets.spreadsheets.values.get({
-            spreadsheetId: USERS_SHEET_ID,
+            spreadsheetId: SHEET_ID,
             range: "Users!A2:G", // A to G to include CreatedAt
         });
 

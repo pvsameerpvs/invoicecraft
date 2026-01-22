@@ -1,12 +1,20 @@
 import { NextResponse } from "next/server";
 import { getSheetsClient } from "@/app/lib/sheets";
+import { getTenantSheetId } from "@/lib/user.id";
 
 export const dynamic = 'force-dynamic';
 
-const SHEET_ID = "1oo7G79VtN-zIQzlpKzVHGKGDObWik7MUPdVA2ZrEayQ";
+
 
 export async function GET() {
   try {
+    const SHEET_ID = await getTenantSheetId("coducer");
+    if (!SHEET_ID) {
+    return NextResponse.json(
+      { ok: false, error: "Sheet ID not found" },
+      { status: 404 }
+    );
+    }
     const sheets = getSheetsClient();
     const res = await sheets.spreadsheets.values.get({
       spreadsheetId: SHEET_ID,
@@ -32,7 +40,13 @@ export async function POST(req: Request) {
     try {
         const { label, amount } = await req.json();
         if (!label) return NextResponse.json({ error: "Label required" }, { status: 400 });
-
+  const SHEET_ID = await getTenantSheetId("coducer");
+  if (!SHEET_ID) {
+  return NextResponse.json(
+    { ok: false, error: "Sheet ID not found" },
+    { status: 404 }
+  );
+  }
         const sheets = getSheetsClient();
         await sheets.spreadsheets.values.append({
             spreadsheetId: SHEET_ID,
@@ -53,7 +67,13 @@ export async function DELETE(req: Request) {
     try {
         const { label } = await req.json();
         if (!label) return NextResponse.json({ error: "Label required" }, { status: 400 });
-
+  const SHEET_ID = await getTenantSheetId("coducer");
+  if (!SHEET_ID) {
+  return NextResponse.json(
+    { ok: false, error: "Sheet ID not found" },
+    { status: 404 }
+  );
+  }
         const sheets = getSheetsClient();
         
         // 1. Fetch all rows
@@ -95,7 +115,13 @@ export async function PUT(req: Request) {
         console.log("PUT /api/products", { originalLabel, newLabel, newAmount });
 
         if (!originalLabel || !newLabel) return NextResponse.json({ error: "Label required" }, { status: 400 });
-
+  const SHEET_ID = await getTenantSheetId("coducer");
+  if (!SHEET_ID) {
+  return NextResponse.json(
+    { ok: false, error: "Sheet ID not found" },
+    { status: 404 }
+  );
+  }
         const sheets = getSheetsClient();
         
         // 1. Fetch all rows

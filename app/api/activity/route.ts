@@ -1,15 +1,25 @@
 import { NextResponse } from "next/server";
 import { getSheetsClient } from "@/app/lib/sheets";
+import { getTenantSheetId } from "@/lib/user.id";
 
 // SHARED CONSTANTS
 // SHARED CONSTANTS
-const SHEET_ID = "1oo7G79VtN-zIQzlpKzVHGKGDObWik7MUPdVA2ZrEayQ";
+
 
 export const dynamic = 'force-dynamic';
 export const runtime = "nodejs";
 
 export async function GET() {
+
   try {
+    const SHEET_ID = await getTenantSheetId("coducer");
+    if (!SHEET_ID) {
+      return NextResponse.json(
+        { ok: false, error: "Sheet ID not found" },
+        { status: 404 }
+      );
+    }
+
     const sheets = getSheetsClient();
 
     const res = await sheets.spreadsheets.values.get({

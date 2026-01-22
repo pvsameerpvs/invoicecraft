@@ -2,12 +2,20 @@ import { NextResponse } from "next/server";
 import { getSheetsClient, logActivity } from "../../lib/sheets";
 import { verifyUser, getUser } from "@/app/lib/auth";
 import { cookies } from "next/headers";
+import { getTenantSheetId } from "@/lib/user.id";
 
-const USERS_SHEET_ID = "1oo7G79VtN-zIQzlpKzVHGKGDObWik7MUPdVA2ZrEayQ";
+
 
 // GET: Get current user details
 export async function GET(req: Request) {
     try {
+          const SHEET_ID = await getTenantSheetId("coducer");
+          if (!SHEET_ID) {
+          return NextResponse.json(
+            { ok: false, error: "Sheet ID not found" },
+            { status: 404 }
+          );
+          }
         const username = cookies().get("invoicecraft_auth")?.value;
         if (!username) {
             return NextResponse.json({ ok: false, error: "Not logged in" }, { status: 401 });
@@ -39,7 +47,15 @@ export async function GET(req: Request) {
 // POST: Create a new user
 export async function POST(req: Request) {
     try {
+        
         // Security Check: Only admins can create users
+          const SHEET_ID = await getTenantSheetId("coducer");
+  if (!SHEET_ID) {
+  return NextResponse.json(
+    { ok: false, error: "Sheet ID not found" },
+    { status: 404 }
+  );
+  }
         const role = cookies().get("invoicecraft_role")?.value;
         if (role !== "admin") {
             return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 403 });
@@ -55,7 +71,7 @@ export async function POST(req: Request) {
 
         // Check if user exists
         const existing = await sheets.spreadsheets.values.get({
-            spreadsheetId: USERS_SHEET_ID,
+            spreadsheetId: SHEET_ID,
             range: "Users!B:B",
         });
 
@@ -70,7 +86,7 @@ export async function POST(req: Request) {
         const createdAt = new Date().toISOString();
         // ID, Username, Password, Role, Email, Mobile, CreatedAt
         await sheets.spreadsheets.values.append({
-            spreadsheetId: USERS_SHEET_ID,
+            spreadsheetId: SHEET_ID,
             range: "Users!A:G",
             valueInputOption: "USER_ENTERED",
             requestBody: {
@@ -92,6 +108,13 @@ export async function POST(req: Request) {
 // PUT: Update current user details
 export async function PUT(req: Request) {
     try {
+          const SHEET_ID = await getTenantSheetId("coducer");
+  if (!SHEET_ID) {
+  return NextResponse.json(
+    { ok: false, error: "Sheet ID not found" },
+    { status: 404 }
+  );
+  }
         const currentUser = cookies().get("invoicecraft_auth")?.value;
         if (!currentUser) {
              return NextResponse.json({ ok: false, error: "Not logged in" }, { status: 401 });
@@ -103,7 +126,7 @@ export async function PUT(req: Request) {
 
         // Fetch all users to check for existence and find current user
         const existing = await sheets.spreadsheets.values.get({
-            spreadsheetId: USERS_SHEET_ID,
+            spreadsheetId: SHEET_ID,
             range: "Users!B:B", // Username column
         });
 
@@ -124,7 +147,7 @@ export async function PUT(req: Request) {
              }
              
              await sheets.spreadsheets.values.update({
-                spreadsheetId: USERS_SHEET_ID,
+                spreadsheetId: SHEET_ID,
                 range: `Users!B${rowNum}`,
                 valueInputOption: "USER_ENTERED",
                 requestBody: { values: [[newUsername]] }
@@ -140,7 +163,7 @@ export async function PUT(req: Request) {
         // 1. Update Password if provided (Column C)
         if (password) {
              await sheets.spreadsheets.values.update({
-                spreadsheetId: USERS_SHEET_ID,
+                spreadsheetId: SHEET_ID,
                 range: `Users!C${rowNum}`,
                 valueInputOption: "USER_ENTERED",
                 requestBody: { values: [[password]] }
@@ -151,7 +174,7 @@ export async function PUT(req: Request) {
         if (email !== undefined || mobile !== undefined) {
              if (email !== undefined && mobile !== undefined) {
                 await sheets.spreadsheets.values.update({
-                    spreadsheetId: USERS_SHEET_ID,
+                    spreadsheetId: SHEET_ID,
                     range: `Users!E${rowNum}:F${rowNum}`,
                     valueInputOption: "USER_ENTERED",
                     requestBody: {
@@ -185,6 +208,13 @@ export async function PUT(req: Request) {
 // DELETE: Delete a user
 export async function DELETE(req: Request) {
     try {
+          const SHEET_ID = await getTenantSheetId("coducer");
+  if (!SHEET_ID) {
+  return NextResponse.json(
+    { ok: false, error: "Sheet ID not found" },
+    { status: 404 }
+  );
+  }
         // Security Check: Only admins can delete users
         const role = cookies().get("invoicecraft_role")?.value;
         if (role !== "admin") {
@@ -201,7 +231,7 @@ export async function DELETE(req: Request) {
 
         // Find user row index by ID (Column A)
         const existing = await sheets.spreadsheets.values.get({
-            spreadsheetId: USERS_SHEET_ID,
+            spreadsheetId: SHEET_ID,
             range: "Users!A:A", // ID column
         });
 
@@ -216,7 +246,7 @@ export async function DELETE(req: Request) {
         // We need to fetch the row to check username or check against current session if we had ID in session.
         // Currently session has username. Let's fetch the username for this row to check.
         const userRowRes = await sheets.spreadsheets.values.get({
-            spreadsheetId: USERS_SHEET_ID,
+            spreadsheetId: SHEET_ID,
             range: `Users!A${rowIndex + 1}:B${rowIndex + 1}`
         });
         const usernameToDelete = userRowRes.data.values?.[0]?.[1]; // Column B is username
@@ -227,7 +257,7 @@ export async function DELETE(req: Request) {
         }
 
         const spreadsheet = await sheets.spreadsheets.get({
-            spreadsheetId: USERS_SHEET_ID
+            spreadsheetId: SHEET_ID
         });
 
         const sheet = spreadsheet.data.sheets?.find(s => s.properties?.title === "Users");
@@ -237,7 +267,7 @@ export async function DELETE(req: Request) {
         const userSheetId = sheet.properties.sheetId!;
 
         await sheets.spreadsheets.batchUpdate({
-            spreadsheetId: USERS_SHEET_ID,
+            spreadsheetId: SHEET_ID,
             requestBody: {
                 requests: [
                     {

@@ -1,3 +1,5 @@
+
+import { getTenantSheetId } from "@/lib/user.id";
 import { getSheetsClient } from "./sheets";
 
 export interface User {
@@ -9,16 +11,21 @@ export interface User {
   createdAt?: string;
 }
 
-const USERS_SHEET_ID = "1oo7G79VtN-zIQzlpKzVHGKGDObWik7MUPdVA2ZrEayQ"; // Same sheet ID
 
 export async function verifyUser(username: string, password: string): Promise<User | null> {
   console.log(`[Auth] Verifying user: ${username}`);
   try {
+    
+      const SHEET_ID = await getTenantSheetId("coducer");
+      if (!SHEET_ID) {
+      console.log("[Auth] Sheet ID not found");
+      return null;
+      }
     const sheets = getSheetsClient();
-    console.log(`[Auth] Client initialized. Fetching from ${USERS_SHEET_ID}...`);
+    console.log(`[Auth] Client initialized. Fetching from ${SHEET_ID}...`);
     
     const res = await sheets.spreadsheets.values.get({
-      spreadsheetId: USERS_SHEET_ID,
+      spreadsheetId: SHEET_ID,
       range: "Users!A2:G", 
     });
 
@@ -60,9 +67,13 @@ export async function verifyUser(username: string, password: string): Promise<Us
 
 export async function getUser(username: string): Promise<User | null> {
     try {
+        const SHEET_ID = await getTenantSheetId("coducer");
+        if (!SHEET_ID) {
+            return null;
+        }
         const sheets = getSheetsClient();
         const res = await sheets.spreadsheets.values.get({
-            spreadsheetId: USERS_SHEET_ID,
+            spreadsheetId: SHEET_ID,
             range: "Users!A2:G",
         });
         const rows = res.data.values || [];

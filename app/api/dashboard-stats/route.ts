@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getSheetsClient } from "@/app/lib/sheets";
+import { getTenantSheetId } from "@/lib/user.id";
 
 export const dynamic = 'force-dynamic';
 export const runtime = "nodejs";
@@ -45,12 +46,18 @@ export async function GET(req: Request) {
         const yearParam = searchParams.get("year");
         const monthParam = searchParams.get("month");
 
-        const sheetId = "1oo7G79VtN-zIQzlpKzVHGKGDObWik7MUPdVA2ZrEayQ";
-         if (!sheetId) throw new Error("Missing GOOGLE_SHEET_ID");
+         const SHEET_ID = await getTenantSheetId("coducer");
+                   if (!SHEET_ID) {
+                     return NextResponse.json(
+                       { ok: false, error: "Sheet ID not found" },
+                       { status: 404 }
+                     );
+                   }
+                 
 
         const sheets = getSheetsClient();
         const res = await sheets.spreadsheets.values.get({
-            spreadsheetId: sheetId,
+            spreadsheetId: SHEET_ID,
             range: "Invoices!A:L",
         });
 
