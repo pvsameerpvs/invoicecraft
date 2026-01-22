@@ -1,4 +1,40 @@
 import { getSheetsClient } from "@/app/lib/sheets";
+import type { NextRequest } from "next/server";
+
+/**
+ * Extracts the subdomain from a NextRequest object.
+ * Uses the same logic as defined in middleware.ts.
+ * @param req The NextRequest object
+ * @returns The extracted subdomain (defaults to "global" if no subdomain is found)
+ */
+export function getSubdomainFromRequest(req: NextRequest | Request): string {
+    // Extract hostname from the request headers
+    const hostname = req.headers.get("host") || "";
+    let subdomain = "global";
+
+    // Remove port number if present
+    const hostNoPort = hostname.split(":")[0];
+    const parts = hostNoPort.split(".");
+
+    if (hostname.includes("localhost")) {
+        // Localhost: tenant.localhost -> ["tenant", "localhost"]
+        if (parts.length >= 2) {
+            subdomain = parts[0];
+        }
+    } else {
+        // Production: tenant.domain.com -> ["tenant", "domain", "com"]
+        if (parts.length > 2) {
+            subdomain = parts[0];
+        }
+    }
+
+    // Normalize common main-site subdomains
+    if (subdomain === "www" || subdomain === "app") {
+        subdomain = "global";
+    }
+
+    return subdomain;
+}
 
 /**
  * Resolves a tenant's specific Google Sheet ID from the master registry.

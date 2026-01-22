@@ -3,11 +3,13 @@ import { cookies } from "next/headers";
 import { logActivity } from "../../lib/sheets";
 import { verifyUser } from "@/app/lib/auth";
 import { getTenantSheetId } from "@/lib/user.id";
+import { getSubdomainFromRequest } from "@/lib/user.id";
 
 export async function POST(req: Request) {
   try {
     const { username, password } = await req.json();
-    const sheetId = await getTenantSheetId("coducer");
+    const subdomain = getSubdomainFromRequest(req);
+    const sheetId = await getTenantSheetId(subdomain);
     console.log("sheetId", sheetId);
 
     const user = await verifyUser(username, password);
