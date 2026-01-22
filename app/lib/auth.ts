@@ -12,55 +12,81 @@ export interface User {
 
 
 export async function verifyUser(SHEET_ID: string, username: string, password: string): Promise<User | null> {
-  console.log(`[Auth] Verifying user: ${username}`);
+  console.log(`[Auth] Verifying user: ${username} in sheet ${SHEET_ID}`);
   try {
     const sheets = getSheetsClient();
-    console.log(`[Auth] Client initialized. Fetching from ${SHEET_ID}...`);
     
+    // Fetch row 1 to discovery headers and up to row 100 for data
     const res = await sheets.spreadsheets.values.get({
       spreadsheetId: SHEET_ID,
-      range: "Users!A2:G", 
+      range: "Users!A1:Z100", 
     });
 
-    console.log(`[Auth] Fetch complete. Status: ${res.status}`);
     const rows = res.data.values || [];
-    console.log(`[Auth] Found ${rows.length} users.`);
-
-    // Row: [ID, Username, Password, Role, Email, Mobile, CreatedAt]
-    // Find user by username first
-    const userRow = rows.find((row) => row[1] === username);
-
-    if (!userRow) {
-      console.log(`[Auth] No user found with username: ${username}`);
+    if (rows.length < 2) {
+      console.error(`[Auth] No data found in 'Users' tab of sheet ${SHEET_ID}`);
       return null;
     }
 
-    // Compare password using bcrypt
-    const passwordHash = userRow[2];
-    const passwordMatch = await comparePassword(password, passwordHash);
+    // discovery headers (case-insensitive, trimmed)
+    const headers = rows[0].map((h: any) => (h || "").toString().toLowerCase().trim());
+    const usernameIdx = headers.findIndex(h => h === "username" || h === "user");
+    const passwordIdx = headers.findIndex(h => h === "password" || h === "pass");
+    const roleIdx = headers.findIndex(h => h === "role");
+    const idIdx = headers.findIndex(h => h === "id");
+    const emailIdx = headers.findIndex(h => h === "email");
+    const mobileIdx = headers.findIndex(h => h === "mobile" || h === "phone");
+    const dateIdx = headers.findIndex(h => h === "createdat" || h === "date");
+
+    if (usernameIdx === -1 || passwordIdx === -1) {
+      console.error(`[Auth] Schema Mismatch! Could not find 'Username' or 'Password' columns. Headers found:`, headers);
+      return null;
+    }
+
+    // Find the user row
+    const userRow = rows.slice(1).find((row) => 
+      (row[usernameIdx] || "").toString().toLowerCase().trim() === username.toLowerCase().trim()
+    );
+
+    if (!userRow) {
+      console.log(`[Auth] User '${username}' not found in any row.`);
+      return null;
+    }
+
+    // Get the stored password/hash and TRIM it
+    const storedPassword = (userRow[passwordIdx] || "").toString().trim();
+    
+    // Check if it's a bcrypt hash (starts with $2 and has salt rounds)
+    const isHash = storedPassword.startsWith("$2a$") || storedPassword.startsWith("$2b$") || storedPassword.startsWith("$2y$");
+    
+    let passwordMatch = false;
+    if (isHash) {
+      console.log(`[Auth] Comparing bcrypt hash for user: ${username}`);
+      passwordMatch = await comparePassword(password, storedPassword);
+    } else {
+      console.log(`[Auth] Comparing plain text for user: ${username} (Migration Mode)`);
+      passwordMatch = password === storedPassword;
+    }
 
     if (!passwordMatch) {
       console.log(`[Auth] Password mismatch for user: ${username}`);
       return null;
     }
 
-    console.log(`[Auth] User verified: ${userRow[1]} (${userRow[3]})`);
+    console.log(`[Auth] Login successful: ${userRow[usernameIdx]}`);
 
     return {
-      id: userRow[0] || "",
-      username: userRow[1] || "",
-      role: (userRow[3] as "admin" | "user") || "user",
-      email: userRow[4] || "",
-      mobile: userRow[5] || "",
-      createdAt: userRow[6] || "",
+      id: idIdx !== -1 ? userRow[idIdx] || "" : "",
+      username: userRow[usernameIdx] || "",
+      role: roleIdx !== -1 ? (userRow[roleIdx] as "admin" | "user") || "user" : "user",
+      email: emailIdx !== -1 ? userRow[emailIdx] || "" : "",
+      mobile: mobileIdx !== -1 ? userRow[mobileIdx] || "" : "",
+      createdAt: dateIdx !== -1 ? userRow[dateIdx] || "" : "",
     };
   } catch (error: any) {
-    console.error("[Auth] Verification Error:", error.message);
+    console.error("[Auth] Google Sheets Error:", error.message);
     if (error.message.includes("403")) {
-        console.error("PERMISSION DENIED: Did you share the sheet with the service account?");
-    }
-    if (error.message.includes("404") || error.message.includes("NOT_FOUND")) {
-        console.error("SHEET NOT FOUND: Did you create the 'Users' tab or use a new Sheet ID?");
+      console.error("CRITICAL: Permission Denied. Share the sheet with: justsearch-tax-invoice@just-search-scrapper.iam.gserviceaccount.com");
     }
     return null;
   }
@@ -68,26 +94,39 @@ export async function verifyUser(SHEET_ID: string, username: string, password: s
 
 export async function getUser(SHEET_ID: string, username: string): Promise<User | null> {
     try {
-        if (!SHEET_ID) {
-            return null;
-        }
+        if (!SHEET_ID) return null;
         const sheets = getSheetsClient();
         const res = await sheets.spreadsheets.values.get({
             spreadsheetId: SHEET_ID,
-            range: "Users!A2:G",
+            range: "Users!A1:Z100",
         });
         const rows = res.data.values || [];
-        const userRow = rows.find((row) => row[1] === username);
+        if (rows.length < 2) return null;
+
+        const headers = rows[0].map((h: any) => (h || "").toString().toLowerCase().trim());
+        const usernameIdx = headers.findIndex(h => h === "username" || h === "user");
+        
+        if (usernameIdx === -1) return null;
+
+        const userRow = rows.slice(1).find((row) => 
+            (row[usernameIdx] || "").toString().toLowerCase().trim() === username.toLowerCase().trim()
+        );
 
         if (!userRow) return null;
 
+        const roleIdx = headers.findIndex(h => h === "role");
+        const idIdx = headers.findIndex(h => h === "id");
+        const emailIdx = headers.findIndex(h => h === "email");
+        const mobileIdx = headers.findIndex(h => h === "mobile" || h === "phone");
+        const dateIdx = headers.findIndex(h => h === "createdat" || h === "date");
+
         return {
-            id: userRow[0] || "",
-            username: userRow[1] || "",
-            role: (userRow[3] as "admin" | "user") || "user",
-            email: userRow[4] || "",
-            mobile: userRow[5] || "",
-            createdAt: userRow[6] || "",
+            id: idIdx !== -1 ? userRow[idIdx] || "" : "",
+            username: userRow[usernameIdx] || "",
+            role: roleIdx !== -1 ? (userRow[roleIdx] as "admin" | "user") || "user" : "user",
+            email: emailIdx !== -1 ? userRow[emailIdx] || "" : "",
+            mobile: mobileIdx !== -1 ? userRow[mobileIdx] || "" : "",
+            createdAt: dateIdx !== -1 ? userRow[dateIdx] || "" : "",
         };
     } catch (error) {
         console.error("Failed to get user:", error);
