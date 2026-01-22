@@ -3,6 +3,7 @@ import { getSheetsClient, logActivity } from "../../lib/sheets";
 import { verifyUser, getUser } from "@/app/lib/auth";
 import { cookies } from "next/headers";
 import { getSubdomainFromRequest, getTenantSheetId } from "@/lib/user.id";
+import { hashPassword } from "@/lib/password";
 
 
 
@@ -83,6 +84,9 @@ export async function POST(req: Request) {
         }
 
         // Add User
+        // Hash the password before storing
+        const passwordHash = await hashPassword(password);
+        
         // ID, Username, Password, Role, Email, Mobile
         const id = Date.now().toString(); 
         const createdAt = new Date().toISOString();
@@ -92,7 +96,7 @@ export async function POST(req: Request) {
             range: "Users!A:G",
             valueInputOption: "USER_ENTERED",
             requestBody: {
-                values: [[id, username, password, newRole, email || "", mobile || "", createdAt]] 
+                values: [[id, username, passwordHash, newRole, email || "", mobile || "", createdAt]] 
             }
         });
 
@@ -165,11 +169,13 @@ export async function PUT(req: Request) {
         
         // 1. Update Password if provided (Column C)
         if (password) {
+             // Hash the new password before storing
+             const passwordHash = await hashPassword(password);
              await sheets.spreadsheets.values.update({
                 spreadsheetId: SHEET_ID,
                 range: `Users!C${rowNum}`,
                 valueInputOption: "USER_ENTERED",
-                requestBody: { values: [[password]] }
+                requestBody: { values: [[passwordHash]] }
            });
         }
 

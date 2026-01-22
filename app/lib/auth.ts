@@ -1,4 +1,5 @@
 import { getSheetsClient } from "./sheets";
+import { comparePassword } from "@/lib/password";
 
 export interface User {
   id: string;
@@ -26,12 +27,20 @@ export async function verifyUser(SHEET_ID: string, username: string, password: s
     console.log(`[Auth] Found ${rows.length} users.`);
 
     // Row: [ID, Username, Password, Role, Email, Mobile, CreatedAt]
-    const userRow = rows.find(
-      (row) => row[1] === username && row[2] === password
-    );
+    // Find user by username first
+    const userRow = rows.find((row) => row[1] === username);
 
     if (!userRow) {
-      console.log(`[Auth] No matching user found for ${username}`);
+      console.log(`[Auth] No user found with username: ${username}`);
+      return null;
+    }
+
+    // Compare password using bcrypt
+    const passwordHash = userRow[2];
+    const passwordMatch = await comparePassword(password, passwordHash);
+
+    if (!passwordMatch) {
+      console.log(`[Auth] Password mismatch for user: ${username}`);
       return null;
     }
 
