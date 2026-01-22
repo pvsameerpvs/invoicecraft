@@ -2,14 +2,15 @@ import { NextResponse } from "next/server";
 import { getSheetsClient, logActivity } from "../../lib/sheets";
 import { verifyUser, getUser } from "@/app/lib/auth";
 import { cookies } from "next/headers";
-import { getTenantSheetId } from "@/lib/user.id";
+import { getSubdomainFromRequest, getTenantSheetId } from "@/lib/user.id";
 
 
 
 // GET: Get current user details
 export async function GET(req: Request) {
     try {
-          const SHEET_ID = await getTenantSheetId("coducer");
+             const subdomain = getSubdomainFromRequest(req);
+          const SHEET_ID = await getTenantSheetId(subdomain);
           if (!SHEET_ID) {
           return NextResponse.json(
             { ok: false, error: "Sheet ID not found" },
@@ -21,7 +22,7 @@ export async function GET(req: Request) {
             return NextResponse.json({ ok: false, error: "Not logged in" }, { status: 401 });
         }
         
-        const user = await getUser(username);
+        const user = await getUser(SHEET_ID, username);
         
         if (!user) {
              return NextResponse.json({ ok: false, error: "User not found" }, { status: 404 });
@@ -49,7 +50,8 @@ export async function POST(req: Request) {
     try {
         
         // Security Check: Only admins can create users
-          const SHEET_ID = await getTenantSheetId("coducer");
+             const subdomain = getSubdomainFromRequest(req);
+          const SHEET_ID = await getTenantSheetId(subdomain);
   if (!SHEET_ID) {
   return NextResponse.json(
     { ok: false, error: "Sheet ID not found" },
@@ -108,7 +110,8 @@ export async function POST(req: Request) {
 // PUT: Update current user details
 export async function PUT(req: Request) {
     try {
-          const SHEET_ID = await getTenantSheetId("coducer");
+             const subdomain = getSubdomainFromRequest(req);
+          const SHEET_ID = await getTenantSheetId(subdomain);
   if (!SHEET_ID) {
   return NextResponse.json(
     { ok: false, error: "Sheet ID not found" },
@@ -208,7 +211,8 @@ export async function PUT(req: Request) {
 // DELETE: Delete a user
 export async function DELETE(req: Request) {
     try {
-          const SHEET_ID = await getTenantSheetId("coducer");
+             const subdomain = getSubdomainFromRequest(req);
+          const SHEET_ID = await getTenantSheetId(subdomain);
   if (!SHEET_ID) {
   return NextResponse.json(
     { ok: false, error: "Sheet ID not found" },

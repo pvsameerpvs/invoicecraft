@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getSheetsClient } from "@/app/lib/sheets";
-import { getTenantSheetId } from "@/lib/user.id";
+import { getSubdomainFromRequest, getTenantSheetId } from "@/lib/user.id";
 
 export const dynamic = 'force-dynamic';
 export const runtime = "nodejs";
@@ -46,7 +46,8 @@ export async function GET(req: Request) {
         const yearParam = searchParams.get("year");
         const monthParam = searchParams.get("month");
 
-         const SHEET_ID = await getTenantSheetId("coducer");
+        const subdomain = getSubdomainFromRequest(req);
+         const SHEET_ID = await getTenantSheetId(subdomain);
                    if (!SHEET_ID) {
                      return NextResponse.json(
                        { ok: false, error: "Sheet ID not found" },

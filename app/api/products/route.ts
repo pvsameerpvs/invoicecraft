@@ -1,14 +1,15 @@
 import { NextResponse } from "next/server";
 import { getSheetsClient } from "@/app/lib/sheets";
-import { getTenantSheetId } from "@/lib/user.id";
+import { getSubdomainFromRequest, getTenantSheetId } from "@/lib/user.id";
 
 export const dynamic = 'force-dynamic';
 
 
 
-export async function GET() {
+export async function GET(req: Request) {
   try {
-    const SHEET_ID = await getTenantSheetId("coducer");
+         const subdomain = getSubdomainFromRequest(req);
+    const SHEET_ID = await getTenantSheetId(subdomain);
     if (!SHEET_ID) {
     return NextResponse.json(
       { ok: false, error: "Sheet ID not found" },
@@ -40,7 +41,8 @@ export async function POST(req: Request) {
     try {
         const { label, amount } = await req.json();
         if (!label) return NextResponse.json({ error: "Label required" }, { status: 400 });
-  const SHEET_ID = await getTenantSheetId("coducer");
+             const subdomain = getSubdomainFromRequest(req);
+  const SHEET_ID = await getTenantSheetId(subdomain);
   if (!SHEET_ID) {
   return NextResponse.json(
     { ok: false, error: "Sheet ID not found" },
@@ -67,7 +69,8 @@ export async function DELETE(req: Request) {
     try {
         const { label } = await req.json();
         if (!label) return NextResponse.json({ error: "Label required" }, { status: 400 });
-  const SHEET_ID = await getTenantSheetId("coducer");
+             const subdomain = getSubdomainFromRequest(req);
+  const SHEET_ID = await getTenantSheetId(subdomain);
   if (!SHEET_ID) {
   return NextResponse.json(
     { ok: false, error: "Sheet ID not found" },
@@ -115,7 +118,8 @@ export async function PUT(req: Request) {
         console.log("PUT /api/products", { originalLabel, newLabel, newAmount });
 
         if (!originalLabel || !newLabel) return NextResponse.json({ error: "Label required" }, { status: 400 });
-  const SHEET_ID = await getTenantSheetId("coducer");
+             const subdomain = getSubdomainFromRequest(req);
+  const SHEET_ID = await getTenantSheetId(subdomain);
   if (!SHEET_ID) {
   return NextResponse.json(
     { ok: false, error: "Sheet ID not found" },

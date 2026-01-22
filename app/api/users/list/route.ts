@@ -2,12 +2,13 @@
 import { NextResponse } from "next/server";
 import { getSheetsClient } from "@/app/lib/sheets";
 import { cookies } from "next/headers";
-import { getTenantSheetId } from "@/lib/user.id";
+import { getSubdomainFromRequest, getTenantSheetId } from "@/lib/user.id";
 
 
 export async function GET(req: Request) {
     try {
-          const SHEET_ID = await getTenantSheetId("coducer");
+             const subdomain = getSubdomainFromRequest(req);
+          const SHEET_ID = await getTenantSheetId(subdomain);
           if (!SHEET_ID) {
           return NextResponse.json(
             { ok: false, error: "Sheet ID not found" },

@@ -1,16 +1,17 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { getSheetsClient, logActivity } from "@/app/lib/sheets";
-import { getTenantSheetId } from "@/lib/user.id";
+import { getSubdomainFromRequest, getTenantSheetId } from "@/lib/user.id";
 
 export const dynamic = 'force-dynamic';
 
 // Same Sheet ID as used in other routes
 
-export async function GET() {
+export async function GET(req: Request) {
   try {
     const sheets = getSheetsClient();
-      const SHEET_ID = await getTenantSheetId("coducer");
+    const subdomain = getSubdomainFromRequest(req);
+      const SHEET_ID = await getTenantSheetId(subdomain);
       if (!SHEET_ID) {
       return NextResponse.json(
         { ok: false, error: "Sheet ID not found" },
@@ -48,7 +49,8 @@ export async function GET() {
 
 export async function POST(req: Request) {
     try {
-        const SHEET_ID = await getTenantSheetId("coducer");
+        const subdomain = getSubdomainFromRequest(req);
+        const SHEET_ID = await getTenantSheetId(subdomain);
   if (!SHEET_ID) {
   return NextResponse.json(
     { ok: false, error: "Sheet ID not found" },

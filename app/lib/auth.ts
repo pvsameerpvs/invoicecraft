@@ -1,5 +1,3 @@
-
-import { getTenantSheetId } from "@/lib/user.id";
 import { getSheetsClient } from "./sheets";
 
 export interface User {
@@ -59,9 +57,8 @@ export async function verifyUser(SHEET_ID: string, username: string, password: s
   }
 }
 
-export async function getUser(username: string): Promise<User | null> {
+export async function getUser(SHEET_ID: string, username: string): Promise<User | null> {
     try {
-        const SHEET_ID = await getTenantSheetId("coducer");
         if (!SHEET_ID) {
             return null;
         }
