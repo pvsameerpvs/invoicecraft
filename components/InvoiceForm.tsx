@@ -47,11 +47,18 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({
   const handleLineItemChange = (
     id: string,
     field: keyof LineItem,
-    newValue: string
+    newValue: string | number
   ) => {
-    const lineItems = value.lineItems.map((item) =>
-      item.id === id ? { ...item, [field]: newValue } : item
-    );
+    const lineItems = value.lineItems.map((item) => {
+      if (item.id === id) {
+        let val = newValue;
+        if (field === "quantity" && typeof newValue === "string") {
+          val = parseInt(newValue) || 1;
+        }
+        return { ...item, [field]: val };
+      }
+      return item;
+    });
     onChange({ ...value, lineItems });
   };
 
@@ -59,7 +66,8 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({
     const newItem: LineItem = {
       id: crypto.randomUUID(),
       description: "",
-      amount: "",
+      unitPrice: "",
+      quantity: 1,
     };
     onChange({ ...value, lineItems: [...value.lineItems, newItem] });
   };
@@ -68,7 +76,8 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({
     const newItem: LineItem = {
       id: crypto.randomUUID(),
       description: preset.label,
-      amount: preset.amount,
+      unitPrice: preset.amount,
+      quantity: 1,
     };
     onChange({ ...value, lineItems: [...value.lineItems, newItem] });
   };
@@ -90,8 +99,9 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({
   };
 
   const computedTotal = value.lineItems.reduce((sum, item) => {
-    const n = parseFloat(item.amount);
-    if (!isNaN(n)) return sum + n;
+    const price = parseFloat(item.unitPrice);
+    const qty = item.quantity || 1;
+    if (!isNaN(price)) return sum + (price * qty);
     return sum;
   }, 0);
 
@@ -303,12 +313,18 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({
           Choose…
         </option>
 
-        {presets.map((p) => (
-          <option key={p.label} value={p.label}>
-            {p.label}
-            {p.amount && p.amount.trim().length > 0 ? ` - ${p.amount}` : ""}
-          </option>
-        ))}
+        {presets.map((p) => {
+          const isAtLeastOneAlreadyAdded = value.lineItems.some(
+            (item) => item.description === p.label
+          );
+          return (
+            <option key={p.label} value={p.label} disabled={isAtLeastOneAlreadyAdded}>
+              {p.label}
+              {p.amount && p.amount.trim().length > 0 ? ` - ${p.amount}` : ""}
+              {isAtLeastOneAlreadyAdded ? " (Already added)" : ""}
+            </option>
+          );
+        })}
 
         <option value="__custom__">Custom item…</option>
       </select>
@@ -358,16 +374,61 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({
             />
           </div>
 
-          <div>
-            <Label>Amount</Label>
-            <Input
-              type="number"
-              step="0.01"
-              value={item.amount}
-              onChange={(e) =>
-                handleLineItemChange(item.id, "amount", e.target.value)
-              }
-            />
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <Label>Quantity</Label>
+              <div className="flex items-center gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  className="h-10 w-10 shrink-0"
+                  onClick={() => {
+                    const newQty = Math.max(1, (item.quantity || 1) - 1);
+                    handleLineItemChange(item.id, "quantity", newQty.toString());
+                  }}
+                >
+                  -
+                </Button>
+                <Input
+                  type="number"
+                  value={item.quantity}
+                  onChange={(e) => {
+                    const val = parseInt(e.target.value);
+                    handleLineItemChange(item.id, "quantity", (isNaN(val) ? 1 : val).toString());
+                  }}
+                  className="text-center"
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  className="h-10 w-10 shrink-0"
+                  onClick={() => {
+                    const newQty = (item.quantity || 1) + 1;
+                    handleLineItemChange(item.id, "quantity", newQty.toString());
+                  }}
+                >
+                  +
+                </Button>
+              </div>
+            </div>
+
+            <div>
+              <Label>Unit Price</Label>
+              <Input
+                type="number"
+                step="0.01"
+                value={item.unitPrice}
+                onChange={(e) =>
+                  handleLineItemChange(item.id, "unitPrice", e.target.value)
+                }
+              />
+            </div>
+          </div>
+          
+          <div className="text-right text-xs font-semibold text-slate-500">
+            Line Total: {value.currency} {(parseFloat(item.unitPrice || "0") * (item.quantity || 1)).toFixed(2)}
           </div>
         </div>
       </div>

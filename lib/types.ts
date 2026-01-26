@@ -1,7 +1,8 @@
 export interface LineItem {
   id: string;
   description: string;
-  amount: string; // keep as string for easy editing
+  quantity: number;
+  unitPrice: string; // was amount
 }
 
 export interface BankDetails {

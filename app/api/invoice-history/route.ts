@@ -37,8 +37,9 @@ export async function POST(req: Request) {
     const createdAt = new Date().toISOString();
 
     const subtotal = (invoice.lineItems || []).reduce((sum: number, it: any) => {
-      const v = parseFloat(it.amount);
-      return sum + (Number.isFinite(v) ? v : 0);
+      const price = parseFloat(it.unitPrice);
+      const qty = parseInt(it.quantity) || 1;
+      return sum + (Number.isFinite(price) ? price * qty : 0);
     }, 0);
 
     const vat = subtotal * 0.05;
@@ -102,13 +103,15 @@ export async function POST(req: Request) {
       invoiceNumber,
       it.id || "",
       it.description || "",
-      it.amount || "",
+      it.quantity || 1,
+      it.unitPrice || "",
+      money((parseFloat(it.unitPrice) || 0) * (parseInt(it.quantity) || 1)),
     ]);
 
     if (lineRows.length > 0) {
       await sheets.spreadsheets.values.append({
         spreadsheetId: SHEET_ID,
-        range: "LineItems!A:D",
+        range: "LineItems!A:F",
         valueInputOption: "USER_ENTERED",
         requestBody: { values: lineRows },
       });
@@ -247,8 +250,9 @@ export async function PUT(req: Request) {
 
     // Recalculate totals
     const subtotal = (invoice.lineItems || []).reduce((sum: number, it: any) => {
-      const v = parseFloat(it.amount);
-      return sum + (Number.isFinite(v) ? v : 0);
+      const price = parseFloat(it.unitPrice);
+      const qty = parseInt(it.quantity) || 1;
+      return sum + (Number.isFinite(price) ? price * qty : 0);
     }, 0);
 
     const vat = subtotal * 0.05;
@@ -291,13 +295,15 @@ export async function PUT(req: Request) {
       invoice.invoiceNumber,
       it.id || "",
       it.description || "",
-      it.amount || "",
+      it.quantity || 1,
+      it.unitPrice || "",
+      money((parseFloat(it.unitPrice) || 0) * (parseInt(it.quantity) || 1)),
     ]);
 
     if (lineRows.length > 0) {
       await sheets.spreadsheets.values.append({
         spreadsheetId: SHEET_ID,
-        range: "LineItems!A:D",
+        range: "LineItems!A:F",
         valueInputOption: "USER_ENTERED",
         requestBody: { values: lineRows },
       });

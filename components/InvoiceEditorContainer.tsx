@@ -134,6 +134,14 @@ export function InvoiceEditorContainer({ initialInvoiceId }: Props) {
                     if (found) {
                         try {
                            const parsed = JSON.parse(found.payloadJson);
+                           // Migrate old line items structure
+                           if (parsed.lineItems && Array.isArray(parsed.lineItems)) {
+                               parsed.lineItems = parsed.lineItems.map((item: any) => ({
+                                   ...item,
+                                   unitPrice: item.unitPrice ?? item.amount ?? "0",
+                                   quantity: item.quantity ?? 1
+                               }));
+                           }
                            setInvoice({ ...initialInvoiceData, ...parsed });
                            setOriginalInvoiceNumber(found.invoiceNumber);
                            toast.success(`Editing ${found.invoiceNumber}`);
