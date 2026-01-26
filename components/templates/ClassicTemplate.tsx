@@ -37,8 +37,9 @@ export const ClassicTemplate: React.FC<ClassicTemplateProps> = ({ value }) => {
   const { logoUrl } = useTheme();
 
   const computedTotal = value.lineItems.reduce((sum, item) => {
-    const n = parseFloat(item.amount);
-    if (!isNaN(n)) return sum + n;
+    const price = parseFloat(item.unitPrice);
+    const qty = item.quantity || 1;
+    if (!isNaN(price)) return sum + (price * qty);
     return sum;
   }, 0);
 
@@ -148,8 +149,14 @@ export const ClassicTemplate: React.FC<ClassicTemplateProps> = ({ value }) => {
                     <th className="bg-brand-primary px-2 py-2 text-left text-[11px] font-semibold uppercase text-white">
                       Item &amp; Description
                     </th>
+                    <th className="w-16 bg-brand-primary px-2 py-2 text-center text-[11px] font-semibold uppercase text-white">
+                      Qty
+                    </th>
+                    <th className="w-24 bg-brand-primary px-2 py-2 text-right text-[11px] font-semibold uppercase text-white">
+                      Unit Price
+                    </th>
                     <th className="w-32 bg-gradient-to-r from-brand-primary to-brand-end px-2 py-2 text-right text-[11px] font-semibold uppercase text-white">
-                      Amount
+                      Total Amount
                     </th>
                   </tr>
                 </thead>
@@ -167,11 +174,20 @@ export const ClassicTemplate: React.FC<ClassicTemplateProps> = ({ value }) => {
                             {item.description || " "}
                           </div>
                         </td>
+                        <td className="px-2 py-2 text-center tabular-nums">
+                          {item.quantity || 1}
+                        </td>
+                        <td className="px-2 py-2 text-right tabular-nums">
+                          {item.unitPrice
+                            ? parseFloat(item.unitPrice).toFixed(2)
+                            : "0.00"}
+                        </td>
                         <td className="px-2 py-2 text-right tabular-nums whitespace-nowrap">
-                          {item.amount
-                            ? `${currency} ${parseFloat(item.amount).toFixed(
-                                2
-                              )}`
+                          {item.unitPrice
+                            ? `${currency} ${(
+                                parseFloat(item.unitPrice) *
+                                (item.quantity || 1)
+                              ).toFixed(2)}`
                             : " "}
                         </td>
                       </tr>

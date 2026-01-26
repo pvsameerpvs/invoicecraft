@@ -31,8 +31,9 @@ export const ModernTemplate: React.FC<ModernTemplateProps> = ({ value }) => {
   const { logoUrl } = useTheme();
 
   const computedTotal = value.lineItems.reduce((sum, item) => {
-    const n = parseFloat(item.amount);
-    if (!isNaN(n)) return sum + n;
+    const price = parseFloat(item.unitPrice);
+    const qty = item.quantity || 1;
+    if (!isNaN(price)) return sum + (price * qty);
     return sum;
   }, 0);
 
@@ -120,7 +121,9 @@ export const ModernTemplate: React.FC<ModernTemplateProps> = ({ value }) => {
                         <tr className="border-b-2 border-slate-100">
                             <th className="w-12 py-3 text-left text-[10px] font-bold uppercase text-slate-400 tracking-wider">#</th>
                             <th className="py-3 text-left text-[10px] font-bold uppercase text-slate-400 tracking-wider">Description</th>
-                            <th className="w-32 py-3 text-right text-[10px] font-bold uppercase text-slate-400 tracking-wider">Amount</th>
+                            <th className="w-16 py-3 text-center text-[10px] font-bold uppercase text-slate-400 tracking-wider">Qty</th>
+                            <th className="w-24 py-3 text-right text-[10px] font-bold uppercase text-slate-400 tracking-wider">Unit Price</th>
+                            <th className="w-32 py-3 text-right text-[10px] font-bold uppercase text-slate-400 tracking-wider">Total Amount</th>
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-50">
@@ -130,8 +133,12 @@ export const ModernTemplate: React.FC<ModernTemplateProps> = ({ value }) => {
                                 <tr key={item.id}>
                                     <td className="py-4 align-top text-slate-400 font-medium">{globalIndex + 1}</td>
                                     <td className="py-4 align-top text-slate-700 whitespace-pre-line leading-relaxed">{item.description}</td>
+                                    <td className="py-4 align-top text-center text-slate-700 font-medium tabular-nums">{item.quantity || 1}</td>
+                                    <td className="py-4 align-top text-right text-slate-700 font-medium tabular-nums">
+                                        {item.unitPrice ? parseFloat(item.unitPrice).toFixed(2) : "0.00"}
+                                    </td>
                                     <td className="py-4 align-top text-right font-bold text-slate-900 tabular-nums">
-                                        {item.amount ? `${parseFloat(item.amount).toFixed(2)}` : "-"}
+                                        {item.unitPrice ? (parseFloat(item.unitPrice) * (item.quantity || 1)).toFixed(2) : "-"}
                                     </td>
                                 </tr>
                              );

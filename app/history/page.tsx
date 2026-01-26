@@ -427,6 +427,7 @@ function HistoryContent() {
              <table className="min-w-[1200px] w-full border-collapse text-left text-sm">
               <thead className="sticky top-0 z-20">
                 <tr className="border-b border-brand-100 bg-brand-50 text-xs font-semibold uppercase tracking-wider text-slate-500">
+                  <th className="w-10 px-6 py-4"></th>
                   <th className="px-6 py-4">Created Date</th>
                   <th className="px-6 py-4">User</th>
                   <th className="px-6 py-4">Invoice #</th>
@@ -468,6 +469,7 @@ function HistoryContent() {
             <table className="min-w-[1200px] w-full border-collapse text-left text-sm">
               <thead className="sticky top-0 z-20">
                 <tr className="border-b border-brand-100 bg-brand-50 text-xs font-semibold uppercase tracking-wider text-slate-500">
+                  <th className="w-10 px-6 py-4"></th>
                   <th className="px-6 py-4">Created Date</th>
                   <th className="px-6 py-4">User</th>
                   <th className="px-6 py-4">Invoice #</th>
@@ -486,7 +488,7 @@ function HistoryContent() {
               <tbody className="divide-y divide-brand-100 bg-white">
                 {rows.length === 0 ? (
                   <tr>
-                    <td colSpan={12} className="px-6 py-12 text-center text-slate-500">
+                    <td colSpan={13} className="px-6 py-12 text-center text-slate-500">
                        <div className="flex flex-col items-center gap-2">
                           <Filter className="h-10 w-10 text-slate-300" />
                           <p className="text-base font-medium text-slate-900">No invoices found</p>
@@ -627,6 +629,7 @@ function InvoiceRow({
   const isAdmin = currentRole === "admin";
   const canEdit = isAdmin || isOwner;
   const [menuOpen, setMenuOpen] = React.useState(false);
+  const [isExpanded, setIsExpanded] = React.useState(false);
   const menuRef = React.useRef<HTMLDivElement>(null);
 
   // Close menu when clicking outside
@@ -640,113 +643,191 @@ function InvoiceRow({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  const lineItems: any[] = React.useMemo(() => {
+    try {
+      if (!row.payloadJson) return [];
+      const parsed = JSON.parse(row.payloadJson);
+      return (parsed.lineItems || []).map((item: any) => ({
+        ...item,
+        unitPrice: item.unitPrice ?? item.amount ?? "0",
+        quantity: item.quantity ?? 1
+      }));
+    } catch {
+      return [];
+    }
+  }, [row.payloadJson]);
+
   return (
-    <tr className="group transition-colors hover:bg-brand-50 relative">
-      <td className="px-6 py-4 whitespace-nowrap text-xs text-slate-500">
-        {formatDate(row.createdAt)}
-      </td>
-      <td className="px-6 py-4 whitespace-nowrap">
-        <span className="inline-flex items-center rounded-md bg-slate-100 px-2 py-1 text-xs font-medium text-slate-600 ring-1 ring-inset ring-slate-500/10">
-          <Users className="w-3 h-3 mr-1" />
-          {row.createdBy || "Unk"}
-        </span>
-      </td>
-
-      <td className="px-6 py-4 whitespace-nowrap">
-        <button
-          onClick={() => onPreview(row)}
-          className="flex items-center gap-1 font-semibold text-brand-primary hover:underline"
-        >
-          <FileText className="w-3 h-3" />
-          {row.invoiceNumber}
-        </button>
-      </td>
-
-      <td className="px-6 py-4 whitespace-nowrap text-slate-600">{row.date}</td>
-
-      <td className="px-6 py-4 font-medium text-slate-900">{row.clientName}</td>
-
-      <td className="px-6 py-4 text-slate-600 max-w-[200px] truncate" title={row.subject}>
-        {row.subject}
-      </td>
-
-      {/* Status Column */}
-      <td className="px-6 py-4 whitespace-nowrap">
-        {row.status === "Paid" ? (
-          <span className="inline-flex items-center rounded-full bg-green-50 px-2 py-1 text-xs font-medium text-green-700 ring-1 ring-inset ring-green-600/20">
-            Paid
-          </span>
-        ) : (
-          <span className="inline-flex items-center rounded-full bg-red-50 px-2 py-1 text-xs font-medium text-red-700 ring-1 ring-inset ring-red-600/20">
-            Unpaid
-          </span>
-        )}
-      </td>
-
-      <td className="px-6 py-4 text-slate-500">{row.currency}</td>
-
-      <td className="px-6 py-4 text-right tabular-nums text-slate-600">
-        {row.subtotal}
-      </td>
-
-      <td className="px-6 py-4 text-right tabular-nums text-slate-600">
-        {row.vat}
-      </td>
-
-      <td className="px-6 py-4 text-right tabular-nums font-bold text-slate-900">
-        {row.total}
-      </td>
-
-      {/* Actions Dropdown */}
-      <td className="px-6 py-4 text-right relative">
-        <div className="relative inline-block text-left" ref={menuRef}>
+    <>
+      <tr className={`group transition-colors hover:bg-brand-50 relative ${isExpanded ? "bg-brand-50/50" : ""}`}>
+        <td className="px-6 py-4 whitespace-nowrap">
           <button
-            onClick={() => setMenuOpen(!menuOpen)}
-            className="flex items-center justify-center h-8 w-8 rounded-full text-slate-400 hover:text-slate-600 hover:bg-slate-100"
+            onClick={() => setIsExpanded(!isExpanded)}
+            className="flex items-center justify-center h-6 w-6 rounded hover:bg-slate-200 transition-colors"
           >
-            <span className="sr-only">Open options</span>
-            <MoreVertical className="h-4 w-4" />
+            <ChevronDown className={`w-4 h-4 text-slate-500 transition-transform ${isExpanded ? "rotate-180" : ""}`} />
           </button>
+        </td>
+        <td className="px-6 py-4 whitespace-nowrap text-xs text-slate-500">
+          {formatDate(row.createdAt)}
+        </td>
+        <td className="px-6 py-4 whitespace-nowrap">
+          <span className="inline-flex items-center rounded-md bg-slate-100 px-2 py-1 text-xs font-medium text-slate-600 ring-1 ring-inset ring-slate-500/10">
+            <Users className="w-3 h-3 mr-1" />
+            {row.createdBy || "Unk"}
+          </span>
+        </td>
 
-          {menuOpen && (
-            <div className="absolute right-0 z-[100] mt-2 w-32 origin-top-right rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
-              <div className="py-1">
-                <button
-                  onClick={() => {
-                    setMenuOpen(false);
-                    onPreview(row);
-                  }}
-                  className="block w-full px-4 py-2 text-left text-sm text-slate-700 hover:bg-brand-50 hover:text-brand-600"
-                >
-                 Preview
-                </button>
-                {canEdit && (
+        <td className="px-6 py-4 whitespace-nowrap">
+          <button
+            onClick={() => onPreview(row)}
+            className="flex items-center gap-1 font-semibold text-brand-primary hover:underline"
+          >
+            <FileText className="w-3 h-3" />
+            {row.invoiceNumber}
+          </button>
+        </td>
+
+        <td className="px-6 py-4 whitespace-nowrap text-slate-600">{row.date}</td>
+
+        <td className="px-6 py-4 font-medium text-slate-900">{row.clientName}</td>
+
+        <td className="px-6 py-4 text-slate-600 max-w-[200px] truncate" title={row.subject}>
+          {row.subject}
+        </td>
+
+        {/* Status Column */}
+        <td className="px-6 py-4 whitespace-nowrap">
+          {row.status === "Paid" ? (
+            <span className="inline-flex items-center rounded-full bg-green-50 px-2 py-1 text-xs font-medium text-green-700 ring-1 ring-inset ring-green-600/20">
+              Paid
+            </span>
+          ) : (
+            <span className="inline-flex items-center rounded-full bg-red-50 px-2 py-1 text-xs font-medium text-red-700 ring-1 ring-inset ring-red-600/20">
+              Unpaid
+            </span>
+          )}
+        </td>
+
+        <td className="px-6 py-4 text-slate-500">{row.currency}</td>
+
+        <td className="px-6 py-4 text-right tabular-nums text-slate-600">
+          {row.subtotal}
+        </td>
+
+        <td className="px-6 py-4 text-right tabular-nums text-slate-600">
+          {row.vat}
+        </td>
+
+        <td className="px-6 py-4 text-right tabular-nums font-bold text-slate-900">
+          {row.total}
+        </td>
+
+        {/* Actions Dropdown */}
+        <td className="px-6 py-4 text-right relative">
+          <div className="relative inline-block text-left" ref={menuRef}>
+            <button
+              onClick={() => setMenuOpen(!menuOpen)}
+              className="flex items-center justify-center h-8 w-8 rounded-full text-slate-400 hover:text-slate-600 hover:bg-slate-100"
+            >
+              <span className="sr-only">Open options</span>
+              <MoreVertical className="h-4 w-4" />
+            </button>
+
+            {menuOpen && (
+              <div className="absolute right-0 z-[100] mt-2 w-32 origin-top-right rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
+                <div className="py-1">
                   <button
                     onClick={() => {
                       setMenuOpen(false);
-                      onEdit(row);
+                      onPreview(row);
                     }}
                     className="block w-full px-4 py-2 text-left text-sm text-slate-700 hover:bg-brand-50 hover:text-brand-600"
                   >
-                    Edit Invoice
+                   Preview
                   </button>
-                )}
-                {isAdmin && (
-                  <button
-                    onClick={() => {
-                      setMenuOpen(false);
-                      setDeleteTarget(row);
-                    }}
-                    className="block w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50"
-                  >
-                    Delete
-                  </button>
-                )}
+                  {canEdit && (
+                    <button
+                      onClick={() => {
+                        setMenuOpen(false);
+                        onEdit(row);
+                      }}
+                      className="block w-full px-4 py-2 text-left text-sm text-slate-700 hover:bg-brand-50 hover:text-brand-600"
+                    >
+                      Edit Invoice
+                    </button>
+                  )}
+                  {isAdmin && (
+                    <button
+                      onClick={() => {
+                        setMenuOpen(false);
+                        setDeleteTarget(row);
+                      }}
+                      className="block w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50"
+                    >
+                      Delete
+                    </button>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+        </td>
+      </tr>
+      
+      {/* Expanded Row for Line Items */}
+      {isExpanded && (
+        <tr className="bg-brand-50/30">
+          <td colSpan={13} className="px-6 py-4 border-b border-brand-100">
+            <div className="rounded-xl border border-brand-100 bg-white p-4 shadow-sm">
+              <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-3 flex items-center gap-2">
+                <Briefcase className="w-3 h-3" />
+                Line Items
+              </h4>
+              <div className="overflow-hidden rounded-lg border border-slate-100">
+                <table className="w-full text-xs text-left">
+                  <thead>
+                    <tr className="bg-slate-50 text-slate-500 font-semibold border-b border-slate-100">
+                      <th className="px-4 py-2">#</th>
+                      <th className="px-4 py-2">Product / Description</th>
+                      <th className="px-4 py-2 text-center">Qty</th>
+                      <th className="px-4 py-2 text-right">Unit Price</th>
+                      <th className="px-4 py-2 text-right">Ext. Price</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-50">
+                    {lineItems.length === 0 ? (
+                      <tr>
+                        <td colSpan={5} className="px-4 py-8 text-center text-slate-400 italic">No products recorded for this invoice</td>
+                      </tr>
+                    ) : (
+                      lineItems.map((item, i) => (
+                        <tr key={item.id} className="hover:bg-slate-50/50">
+                          <td className="px-4 py-2 text-slate-400">{i + 1}</td>
+                          <td className="px-4 py-2 font-medium text-slate-900 whitespace-pre-wrap">{item.description}</td>
+                          <td className="px-4 py-2 text-center tabular-nums">{item.quantity}</td>
+                          <td className="px-4 py-2 text-right tabular-nums">{item.unitPrice}</td>
+                          <td className="px-4 py-2 text-right tabular-nums font-semibold text-slate-900">
+                            {(parseFloat(item.unitPrice) * (item.quantity || 1)).toFixed(2)}
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                  {lineItems.length > 0 && (
+                    <tfoot>
+                      <tr className="bg-slate-50/50 font-bold border-t border-slate-100">
+                        <td colSpan={4} className="px-4 py-2 text-right text-slate-500 uppercase">Subtotal</td>
+                        <td className="px-4 py-2 text-right text-slate-900 tabular-nums">{row.subtotal}</td>
+                      </tr>
+                    </tfoot>
+                  )}
+                </table>
               </div>
             </div>
-          )}
-        </div>
-      </td>
-    </tr>
+          </td>
+        </tr>
+      )}
+    </>
   );
 }
