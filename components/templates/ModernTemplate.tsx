@@ -172,7 +172,7 @@ export const ModernTemplate: React.FC<ModernTemplateProps> = ({ value }) => {
                      </div>
 
                      {/* Bank Info & Footer Note */}
-                     <div className="mt-12 grid grid-cols-2 gap-8">
+                     <div className="mt-8 grid grid-cols-2 gap-8">
                         <div>
                              <h3 className="text-[10px] uppercase tracking-wider font-bold text-slate-400 mb-3">Bank Details</h3>
                              <div className="space-y-1.5 text-slate-600 bg-white border border-slate-100 rounded-lg p-4">
@@ -195,10 +195,18 @@ export const ModernTemplate: React.FC<ModernTemplateProps> = ({ value }) => {
             )}
 
              {/* Footer Bar */}
-            <footer className="absolute bottom-0 left-0 right-0 bg-brand-primary/5 border-t border-brand-primary/10 px-12 py-4 flex justify-between items-center text-[10px] text-slate-500">
-                <span>{value.bankDetails.companyName}</span>
-                <span>Thank you for your business</span>
-            </footer>
+            <footer className="absolute bottom-0 left-0 right-0 bg-brand-primary/5 border-t border-brand-primary/10 px-12 py-4 flex flex-col items-center text-[10px] text-slate-500">
+                 {isLastPage && value.footerNote && (
+                    <div className="mb-4 text-center max-w-2xl">
+                        <span className="block text-[8px] uppercase font-bold tracking-widest text-brand-primary/40 mb-1">Terms & Conditions</span>
+                        <p className="text-[9px] text-slate-400 whitespace-pre-line leading-relaxed italic">{value.footerNote}</p>
+                    </div>
+                 )}
+                 <div className="flex justify-between w-full items-center">
+                    <span>{value.bankDetails.companyName}</span>
+                    <span>Thank you for your business</span>
+                 </div>
+             </footer>
           </div>
         );
       })}

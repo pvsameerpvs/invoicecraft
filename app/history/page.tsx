@@ -780,49 +780,75 @@ function InvoiceRow({
         <tr className="bg-brand-50/30">
           <td colSpan={13} className="px-6 py-4 border-b border-brand-100">
             <div className="rounded-xl border border-brand-100 bg-white p-4 shadow-sm">
-              <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-3 flex items-center gap-2">
-                <Briefcase className="w-3 h-3" />
-                Line Items
-              </h4>
-              <div className="overflow-hidden rounded-lg border border-slate-100">
-                <table className="w-full text-xs text-left">
-                  <thead>
-                    <tr className="bg-slate-50 text-slate-500 font-semibold border-b border-slate-100">
-                      <th className="px-4 py-2">#</th>
-                      <th className="px-4 py-2">Product / Description</th>
-                      <th className="px-4 py-2 text-center">Qty</th>
-                      <th className="px-4 py-2 text-right">Unit Price</th>
-                      <th className="px-4 py-2 text-right">Ext. Price</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-50">
-                    {lineItems.length === 0 ? (
-                      <tr>
-                        <td colSpan={5} className="px-4 py-8 text-center text-slate-400 italic">No products recorded for this invoice</td>
-                      </tr>
-                    ) : (
-                      lineItems.map((item, i) => (
-                        <tr key={item.id} className="hover:bg-slate-50/50">
-                          <td className="px-4 py-2 text-slate-400">{i + 1}</td>
-                          <td className="px-4 py-2 font-medium text-slate-900 whitespace-pre-wrap">{item.description}</td>
-                          <td className="px-4 py-2 text-center tabular-nums">{item.quantity}</td>
-                          <td className="px-4 py-2 text-right tabular-nums">{item.unitPrice}</td>
-                          <td className="px-4 py-2 text-right tabular-nums font-semibold text-slate-900">
-                            {(parseFloat(item.unitPrice) * (item.quantity || 1)).toFixed(2)}
-                          </td>
+              <div className="flex flex-col md:flex-row gap-6">
+                {/* Tables / Items */}
+                <div className="flex-1">
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-3 flex items-center gap-2">
+                    <Briefcase className="w-3 h-3" />
+                    Line Items
+                  </h4>
+                  <div className="overflow-hidden rounded-lg border border-slate-100">
+                    <table className="w-full text-xs text-left">
+                      <thead>
+                        <tr className="bg-slate-50 text-slate-500 font-semibold border-b border-slate-100">
+                          <th className="px-4 py-2">#</th>
+                          <th className="px-4 py-2">Product / Description</th>
+                          <th className="px-4 py-2 text-center">Qty</th>
+                          <th className="px-4 py-2 text-right">Unit Price</th>
+                          <th className="px-4 py-2 text-right">Ext. Price</th>
                         </tr>
-                      ))
-                    )}
-                  </tbody>
-                  {lineItems.length > 0 && (
-                    <tfoot>
-                      <tr className="bg-slate-50/50 font-bold border-t border-slate-100">
-                        <td colSpan={4} className="px-4 py-2 text-right text-slate-500 uppercase">Subtotal</td>
-                        <td className="px-4 py-2 text-right text-slate-900 tabular-nums">{row.subtotal}</td>
-                      </tr>
-                    </tfoot>
-                  )}
-                </table>
+                      </thead>
+                      <tbody className="divide-y divide-slate-50">
+                        {lineItems.length === 0 ? (
+                          <tr>
+                            <td colSpan={5} className="px-4 py-8 text-center text-slate-400 italic">No products recorded for this invoice</td>
+                          </tr>
+                        ) : (
+                          lineItems.map((item, i) => (
+                            <tr key={item.id} className="hover:bg-slate-50/50">
+                              <td className="px-4 py-2 text-slate-400">{i + 1}</td>
+                              <td className="px-4 py-2 font-medium text-slate-900 whitespace-pre-wrap">{item.description}</td>
+                              <td className="px-4 py-2 text-center tabular-nums">{item.quantity}</td>
+                              <td className="px-4 py-2 text-right tabular-nums">{item.unitPrice}</td>
+                              <td className="px-4 py-2 text-right tabular-nums font-semibold text-slate-900">
+                                {(parseFloat(item.unitPrice) * (item.quantity || 1)).toFixed(2)}
+                              </td>
+                            </tr>
+                          ))
+                        )}
+                      </tbody>
+                      {lineItems.length > 0 && (
+                        <tfoot>
+                          <tr className="bg-slate-50/50 font-bold border-t border-slate-100">
+                            <td colSpan={4} className="px-4 py-2 text-right text-slate-500 uppercase">Subtotal</td>
+                            <td className="px-4 py-2 text-right text-slate-900 tabular-nums">{row.subtotal}</td>
+                          </tr>
+                        </tfoot>
+                      )}
+                    </table>
+                  </div>
+                </div>
+
+                {/* T&C Section */}
+                {(() => {
+                  try {
+                    const parsed = JSON.parse(row.payloadJson || "{}");
+                    if (!parsed.footerNote) return null;
+                    return (
+                      <div className="md:w-64 shrink-0">
+                        <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-3 flex items-center gap-2">
+                          <FileText className="w-3 h-3" />
+                          Terms & Conditions
+                        </h4>
+                        <div className="rounded-lg border border-slate-100 bg-slate-50/30 p-3">
+                          <p className="text-[11px] text-slate-600 whitespace-pre-line leading-relaxed italic">
+                            {parsed.footerNote}
+                          </p>
+                        </div>
+                      </div>
+                    );
+                  } catch { return null; }
+                })()}
               </div>
             </div>
           </td>

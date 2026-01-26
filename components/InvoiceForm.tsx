@@ -467,10 +467,10 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({
 
         <div className="space-y-3">
           <div>
-            <Label htmlFor="footerNote">Footer note</Label>
+            <Label htmlFor="footerNote">Terms & Conditions</Label>
             <Textarea
               id="footerNote"
-              rows={2}
+              rows={4}
               value={value.footerNote}
               disabled={lockedDisabled}
               className="disabled:opacity-70"

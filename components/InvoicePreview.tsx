@@ -229,7 +229,7 @@ export const InvoicePreview: React.FC<InvoicePreviewProps> = ({
 
               {/* Bottom company + bank info (only on last page so it stays in same area and doesn't push footer) */}
               {isLastPage && (
-                <section className="mt-12 flex-col justify-between text-[11px]">
+                <section className="mt-8 flex-col justify-between text-[11px]">
                   <div className="space-y-1">
                     <div className="font-semibold">{value.fromCompanyName}</div>
                     <div className="whitespace-pre-line">
@@ -268,6 +268,14 @@ export const InvoicePreview: React.FC<InvoicePreviewProps> = ({
 
               {/* Footer (every page, exact place) */}
               <footer className="absolute bottom-16 left-12 right-12 text-[10px]">
+                {isLastPage && value.footerNote && (
+                  <div className="mb-8 text-center max-w-[80%] mx-auto">
+                    <div className="font-bold uppercase text-[8px] text-slate-400 tracking-widest mb-1">Terms & Conditions</div>
+                    <div className="text-[9px] text-slate-500 leading-relaxed whitespace-pre-line text-center">
+                      {value.footerNote}
+                    </div>
+                  </div>
+                )}
                 <div className="flex items-center justify-center gap-4 text-[10px]">
                   <div className="h-px w-40 bg-slate-500" />
                   <span>{value.signatureLabel}</span>
