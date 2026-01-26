@@ -126,7 +126,7 @@ export const ModernTemplate: React.FC<ModernTemplateProps> = ({ value }) => {
             )}
 
             {/* Items Table - Clean & Modern */}
-            {pageItems.length > 0 && (
+            {(pageItems.length > 0 || pageIndex === 0) && (
                 <div className={`px-12 ${pageIndex === 0 ? "mt-8" : "mt-8"}`}>
                     <table className="w-full table-fixed border-collapse">
                         <thead>

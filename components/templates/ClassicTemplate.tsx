@@ -149,7 +149,7 @@ export const ClassicTemplate: React.FC<ClassicTemplateProps> = ({ value }) => {
             )}
 
             {/* Items table */}
-            {pageItems.length > 0 && (
+            {(pageItems.length > 0 || pageIndex === 0) && (
               <section className={pageIndex === 0 ? "mt-4" : "mt-8"}>
                 <table className="invoice-table w-full table-fixed border-collapse">
                   <thead>
