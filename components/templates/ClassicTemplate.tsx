@@ -13,7 +13,6 @@ interface ClassicTemplateProps {
  * - rowsPerPage controls when a new page is created.
  * - If your rows are longer (multi-line descriptions), reduce rowsPerPage (e.g. 10 or 11).
  */
-const rowsPerPage = 12;
 
 function chunkArray<T>(arr: T[], size: number) {
   const out: T[][] = [];
@@ -36,6 +35,7 @@ function formatDate(dateStr?: string) {
 export const ClassicTemplate: React.FC<ClassicTemplateProps> = ({ value }) => {
   const { logoUrl } = useTheme();
 
+  const rowsPerPage = 10;
   const computedTotal = value.lineItems.reduce((sum, item) => {
     const price = parseFloat(item.unitPrice);
     const qty = item.quantity || 1;
@@ -55,12 +55,20 @@ export const ClassicTemplate: React.FC<ClassicTemplateProps> = ({ value }) => {
       : (computedTotal + vatAmount).toFixed(2);
 
   const pages = chunkArray(value.lineItems, rowsPerPage);
-  const pagesSafe = pages.length > 0 ? pages : [[]]; // ✅ always at least 1 page
+  
+  // If more than 4 items, we want to push the footer info (Company/Bank/TC) to a new page
+  const hasSplit = value.lineItems.length > 4;
+  const pagesSafe = hasSplit 
+    ? [...pages, []] 
+    : (pages.length > 0 ? pages : [[]]);
 
   return (
     <>
       {pagesSafe.map((pageItems, pageIndex) => {
         const isLastPage = pageIndex === pagesSafe.length - 1;
+        const isLastItemPage = pageIndex === pages.length - 1;
+        const showSummary = isLastItemPage;
+        const showBankInfo = hasSplit ? isLastPage : isLastPage;
 
         return (
           <div
@@ -139,27 +147,28 @@ export const ClassicTemplate: React.FC<ClassicTemplateProps> = ({ value }) => {
             )}
 
             {/* Items table */}
-            <section className={pageIndex === 0 ? "mt-4" : "mt-8"}>
-              <table className="invoice-table w-full table-fixed border-collapse">
-                <thead>
-                  <tr>
-                    <th className="w-10 bg-gradient-to-r from-brand-start to-brand-primary px-2 py-2 text-left text-[11px] font-semibold uppercase text-white">
-                      #
-                    </th>
-                    <th className="bg-brand-primary px-2 py-2 text-left text-[11px] font-semibold uppercase text-white">
-                      Item &amp; Description
-                    </th>
-                    <th className="w-16 bg-brand-primary px-2 py-2 text-center text-[11px] font-semibold uppercase text-white">
-                      Qty
-                    </th>
-                    <th className="w-24 bg-brand-primary px-2 py-2 text-right text-[11px] font-semibold uppercase text-white">
-                      Unit Price
-                    </th>
-                    <th className="w-32 bg-gradient-to-r from-brand-primary to-brand-end px-2 py-2 text-right text-[11px] font-semibold uppercase text-white">
-                      Total Amount
-                    </th>
-                  </tr>
-                </thead>
+            {pageItems.length > 0 && (
+              <section className={pageIndex === 0 ? "mt-4" : "mt-8"}>
+                <table className="invoice-table w-full table-fixed border-collapse">
+                  <thead>
+                    <tr>
+                      <th className="w-10 bg-gradient-to-r from-brand-start to-brand-primary px-2 py-2 text-left text-[11px] font-semibold uppercase text-white">
+                        #
+                      </th>
+                      <th className="bg-brand-primary px-2 py-2 text-left text-[11px] font-semibold uppercase text-white">
+                        Item &amp; Description
+                      </th>
+                      <th className="w-16 bg-brand-primary px-2 py-2 text-center text-[11px] font-semibold uppercase text-white">
+                        Qty
+                      </th>
+                      <th className="w-24 bg-brand-primary px-2 py-2 text-right text-[11px] font-semibold uppercase text-white">
+                        Unit Price
+                      </th>
+                      <th className="w-32 bg-gradient-to-r from-brand-primary to-brand-end px-2 py-2 text-right text-[11px] font-semibold uppercase text-white">
+                        Total Amount
+                      </th>
+                    </tr>
+                  </thead>
 
                 <tbody>
                   {pageItems.map((item, rowIndex) => {
@@ -193,37 +202,38 @@ export const ClassicTemplate: React.FC<ClassicTemplateProps> = ({ value }) => {
                       </tr>
                     );
                   })}
-                </tbody>
-              </table>
+                  </tbody>
+                </table>
+              </section>
+            )}
 
-              {/* Subtotal / VAT / Total ONLY on last page */}
-              {isLastPage && (
-                <div className="mt-4 flex justify-end">
-                  <div className="w-72 space-y-2 text-right">
-                    <div className="text-xs font-semibold tabular-nums whitespace-nowrap">
-                      Subtotal (Excl. VAT) {currency}{" "}
-                      {Number.isFinite(computedTotal)
-                        ? computedTotal.toFixed(2)
-                        : "0.00"}
-                    </div>
+            {/* Subtotal / VAT / Total ONLY on page with last items */}
+            {showSummary && (
+              <div className="mt-4 flex justify-end">
+                <div className="w-72 space-y-2 text-right">
+                  <div className="text-xs font-semibold tabular-nums whitespace-nowrap">
+                    Subtotal (Excl. VAT) {currency}{" "}
+                    {Number.isFinite(computedTotal)
+                      ? computedTotal.toFixed(2)
+                      : "0.00"}
+                  </div>
 
-                    <div className="text-xs font-semibold tabular-nums whitespace-nowrap">
-                      VAT (5%) {currency} {vatAmount.toFixed(2)}
-                    </div>
+                  <div className="text-xs font-semibold tabular-nums whitespace-nowrap">
+                    VAT (5%) {currency} {vatAmount.toFixed(2)}
+                  </div>
 
-                    <div className="text-xs font-semibold tabular-nums whitespace-nowrap">
-                      Total (Incl. VAT) {currency} {totalText}
-                    </div>
-                     <div className="text-xs font-semibold tabular-nums whitespace-nowrap">
-                     {value.status}
-                    </div>
+                  <div className="text-xs font-semibold tabular-nums whitespace-nowrap">
+                    Total (Incl. VAT) {currency} {totalText}
+                  </div>
+                   <div className="text-xs font-semibold tabular-nums whitespace-nowrap">
+                   {value.status}
                   </div>
                 </div>
-              )}
-            </section>
+              </div>
+            )}
 
-            {/* Bottom company + bank info (only on last page so it stays in same area and doesn't push footer) */}
-            {isLastPage && (
+            {/* Bottom company + bank info */}
+            {showBankInfo && (
               <section className="mt-8 flex-col justify-between text-[11px]">
                 <div className="space-y-1">
                   <div className="font-semibold">{value.fromCompanyName}</div>

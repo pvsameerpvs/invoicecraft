@@ -8,7 +8,6 @@ interface ModernTemplateProps {
     value: InvoiceData;
 }
 
-const rowsPerPage = 12;
 
 function chunkArray<T>(arr: T[], size: number) {
   const out: T[][] = [];
@@ -30,6 +29,8 @@ function formatDate(dateStr?: string) {
 export const ModernTemplate: React.FC<ModernTemplateProps> = ({ value }) => {
   const { logoUrl } = useTheme();
 
+  const rowsPerPage = 10;
+
   const computedTotal = value.lineItems.reduce((sum, item) => {
     const price = parseFloat(item.unitPrice);
     const qty = item.quantity || 1;
@@ -43,12 +44,20 @@ export const ModernTemplate: React.FC<ModernTemplateProps> = ({ value }) => {
   const totalText = value.overrideTotal?.trim() || (computedTotal + vatAmount).toFixed(2);
 
   const pages = chunkArray(value.lineItems, rowsPerPage);
-  const pagesSafe = pages.length > 0 ? pages : [[]];
+  
+  // If more than 4 items, we want to push the footer info (Bank/TC) to a new page
+  const hasSplit = value.lineItems.length > 4;
+  const pagesSafe = hasSplit 
+    ? [...pages, []] 
+    : (pages.length > 0 ? pages : [[]]);
 
   return (
     <>
       {pagesSafe.map((pageItems, pageIndex) => {
         const isLastPage = pageIndex === pagesSafe.length - 1;
+        const isLastItemPage = pageIndex === pages.length - 1;
+        const showSummary = isLastItemPage;
+        const showBankInfo = hasSplit ? isLastPage : false; // Bank info only on extra page if split
 
         return (
           <div
@@ -115,40 +124,42 @@ export const ModernTemplate: React.FC<ModernTemplateProps> = ({ value }) => {
             )}
 
             {/* Items Table - Clean & Modern */}
-            <div className={`px-12 ${pageIndex === 0 ? "mt-8" : "mt-8"}`}>
-                <table className="w-full table-fixed border-collapse">
-                    <thead>
-                        <tr className="border-b-2 border-slate-100">
-                            <th className="w-12 py-3 text-left text-[10px] font-bold uppercase text-slate-400 tracking-wider">#</th>
-                            <th className="py-3 text-left text-[10px] font-bold uppercase text-slate-400 tracking-wider">Description</th>
-                            <th className="w-16 py-3 text-center text-[10px] font-bold uppercase text-slate-400 tracking-wider">Qty</th>
-                            <th className="w-24 py-3 text-right text-[10px] font-bold uppercase text-slate-400 tracking-wider">Unit Price</th>
-                            <th className="w-32 py-3 text-right text-[10px] font-bold uppercase text-slate-400 tracking-wider">Total Amount</th>
-                        </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-50">
-                        {pageItems.map((item, rowIndex) => {
-                             const globalIndex = pageIndex * rowsPerPage + rowIndex;
-                             return (
-                                <tr key={item.id}>
-                                    <td className="py-4 align-top text-slate-400 font-medium">{globalIndex + 1}</td>
-                                    <td className="py-4 align-top text-slate-700 whitespace-pre-line leading-relaxed">{item.description}</td>
-                                    <td className="py-4 align-top text-center text-slate-700 font-medium tabular-nums">{item.quantity || 1}</td>
-                                    <td className="py-4 align-top text-right text-slate-700 font-medium tabular-nums">
-                                        {item.unitPrice ? parseFloat(item.unitPrice).toFixed(2) : "0.00"}
-                                    </td>
-                                    <td className="py-4 align-top text-right font-bold text-slate-900 tabular-nums">
-                                        {item.unitPrice ? (parseFloat(item.unitPrice) * (item.quantity || 1)).toFixed(2) : "-"}
-                                    </td>
-                                </tr>
-                             );
-                        })}
-                    </tbody>
-                </table>
-            </div>
+            {pageItems.length > 0 && (
+                <div className={`px-12 ${pageIndex === 0 ? "mt-8" : "mt-8"}`}>
+                    <table className="w-full table-fixed border-collapse">
+                        <thead>
+                            <tr className="border-b-2 border-slate-100">
+                                <th className="w-12 py-3 text-left text-[10px] font-bold uppercase text-slate-400 tracking-wider">#</th>
+                                <th className="py-3 text-left text-[10px] font-bold uppercase text-slate-400 tracking-wider">Description</th>
+                                <th className="w-16 py-3 text-center text-[10px] font-bold uppercase text-slate-400 tracking-wider">Qty</th>
+                                <th className="w-24 py-3 text-right text-[10px] font-bold uppercase text-slate-400 tracking-wider">Unit Price</th>
+                                <th className="w-32 py-3 text-right text-[10px] font-bold uppercase text-slate-400 tracking-wider">Total Amount</th>
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-50">
+                            {pageItems.map((item, rowIndex) => {
+                                 const globalIndex = pageIndex * rowsPerPage + rowIndex;
+                                 return (
+                                    <tr key={item.id}>
+                                        <td className="py-4 align-top text-slate-400 font-medium">{globalIndex + 1}</td>
+                                        <td className="py-4 align-top text-slate-700 whitespace-pre-line leading-relaxed">{item.description}</td>
+                                        <td className="py-4 align-top text-center text-slate-700 font-medium tabular-nums">{item.quantity || 1}</td>
+                                        <td className="py-4 align-top text-right text-slate-700 font-medium tabular-nums">
+                                            {item.unitPrice ? parseFloat(item.unitPrice).toFixed(2) : "0.00"}
+                                        </td>
+                                        <td className="py-4 align-top text-right font-bold text-slate-900 tabular-nums">
+                                            {item.unitPrice ? (parseFloat(item.unitPrice) * (item.quantity || 1)).toFixed(2) : "-"}
+                                        </td>
+                                    </tr>
+                                 );
+                            })}
+                        </tbody>
+                    </table>
+                </div>
+            )}
 
             {/* Totals & Bank Info */}
-            {isLastPage && (
+            {showSummary && (
                 <div className="px-12 mt-4">
                      {/* Totals Box */}
                      <div className="flex justify-end">
@@ -170,9 +181,13 @@ export const ModernTemplate: React.FC<ModernTemplateProps> = ({ value }) => {
                             </div>
                         </div>
                      </div>
+                </div>
+            )}
 
+            {showBankInfo && (
+                <div className="px-12 mt-4">
                      {/* Bank Info & Footer Note */}
-                     <div className="mt-8 grid grid-cols-2 gap-8">
+                       <div className="mt-8 grid grid-cols-2 gap-8">
                         <div>
                              <h3 className="text-[10px] uppercase tracking-wider font-bold text-slate-400 mb-3">Bank Details</h3>
                              <div className="space-y-1.5 text-slate-600 bg-white border border-slate-100 rounded-lg p-4">
