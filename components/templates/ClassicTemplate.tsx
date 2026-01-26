@@ -56,8 +56,10 @@ export const ClassicTemplate: React.FC<ClassicTemplateProps> = ({ value }) => {
 
   const pages = chunkArray(value.lineItems, rowsPerPage);
   
-  // If more than 4 items, we want to push the footer info (Company/Bank/TC) to a new page
-  const hasSplit = value.lineItems.length > 4;
+  // Refined split logic: only move footer to a new page if the LAST page of items has > 4 items
+  const lastPageItemsCount = pages.length > 0 ? pages[pages.length - 1].length : 0;
+  const hasSplit = lastPageItemsCount > 4;
+  
   const pagesSafe = hasSplit 
     ? [...pages, []] 
     : (pages.length > 0 ? pages : [[]]);
