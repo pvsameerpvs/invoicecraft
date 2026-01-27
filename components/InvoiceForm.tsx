@@ -69,7 +69,7 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({
       unitPrice: "",
       quantity: 1,
     };
-    onChange({ ...value, lineItems: [...value.lineItems, newItem] });
+    onChange({ ...value, lineItems: [newItem, ...value.lineItems] });
   };
 
   const addPresetLineItem = (preset: { label: string; amount: string }) => {
@@ -79,7 +79,7 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({
       unitPrice: preset.amount,
       quantity: 1,
     };
-    onChange({ ...value, lineItems: [...value.lineItems, newItem] });
+    onChange({ ...value, lineItems: [newItem, ...value.lineItems] });
   };
 
   const removeLineItem = (id: string) => {
@@ -342,31 +342,38 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({
     </div>
   )}
 
-  {/* ✅ Each item is a card + inputs in column */}
-  <div className="space-y-3">
+  {/* ✅ Enhanced Line Items UI */}
+  <div className="space-y-4">
     {value.lineItems.map((item, index) => (
       <div
         key={item.id}
-        className="rounded-xl border border-brand-200 bg-white p-3 shadow-md shadow-brand-100"
+        className="group relative rounded-2xl border border-brand-200 bg-white p-5 shadow-sm transition-all hover:shadow-md hover:border-brand-primary/30"
       >
-        <div className="mb-2 flex items-center justify-between">
-          <p className="text-sm font-semibold text-slate-900">
-            Item {index + 1}
-          </p>
+        <div className="absolute -left-2 -top-2 flex h-6 w-10 items-center justify-center rounded-full bg-brand-primary text-[10px] font-bold text-white shadow-sm">
+           #{value.lineItems.length - index}
+        </div>
+
+        <div className="mb-4 flex items-center justify-between">
+          <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400">
+            Invoice Detail
+          </h3>
           <Button
             type="button"
-            className="h-8 px-3 border-brand-200 bg-white text-xs text-red-500 hover:bg-red-50"
+            variant="ghost"
+            className="h-8 px-3 text-[11px] font-semibold text-red-500 hover:text-red-600 hover:bg-red-50 rounded-full transition-colors"
             onClick={() => removeLineItem(item.id)}
           >
-            ✕ Remove
+            ✕ Remove Item
           </Button>
         </div>
 
-        <div className="flex flex-col gap-3">
-          <div>
-            <Label>Description</Label>
+        <div className="space-y-4">
+          <div className="space-y-1.5">
+            <Label className="text-[11px] font-bold uppercase text-slate-500 ml-1">Description</Label>
             <Textarea
-              rows={3}
+              rows={2}
+              placeholder="What are you charging for?"
+              className="resize-none rounded-xl border-slate-200 focus:border-brand-primary focus:ring-brand-primary"
               value={item.description}
               onChange={(e) =>
                 handleLineItemChange(item.id, "description", e.target.value)
@@ -374,15 +381,14 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <Label>Quantity</Label>
-              <div className="flex items-center gap-2">
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-1.5">
+              <Label className="text-[11px] font-bold uppercase text-slate-500 ml-1">Quantity</Label>
+              <div className="flex items-center gap-1 overflow-hidden rounded-xl border border-slate-200 bg-slate-50/30 p-1 focus-within:border-brand-primary focus-within:ring-1 focus-within:ring-brand-primary transition-all">
                 <Button
                   type="button"
-                  variant="outline"
-                  size="icon"
-                  className="h-10 w-10 shrink-0"
+                  variant="ghost"
+                  className="h-8 w-8 rounded-lg text-slate-400 hover:text-brand-primary hover:bg-white"
                   onClick={() => {
                     const newQty = Math.max(1, (item.quantity || 1) - 1);
                     handleLineItemChange(item.id, "quantity", newQty.toString());
@@ -397,13 +403,12 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({
                     const val = parseInt(e.target.value);
                     handleLineItemChange(item.id, "quantity", (isNaN(val) ? 1 : val).toString());
                   }}
-                  className="text-center"
+                  className="h-8 border-none bg-transparent p-0 text-center text-sm font-bold text-slate-700 shadow-none focus:ring-0"
                 />
                 <Button
                   type="button"
-                  variant="outline"
-                  size="icon"
-                  className="h-10 w-10 shrink-0"
+                  variant="ghost"
+                  className="h-8 w-8 rounded-lg text-slate-400 hover:text-brand-primary hover:bg-white"
                   onClick={() => {
                     const newQty = (item.quantity || 1) + 1;
                     handleLineItemChange(item.id, "quantity", newQty.toString());
@@ -414,21 +419,29 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({
               </div>
             </div>
 
-            <div>
-              <Label>Unit Price</Label>
-              <Input
-                type="number"
-                step="0.01"
-                value={item.unitPrice}
-                onChange={(e) =>
-                  handleLineItemChange(item.id, "unitPrice", e.target.value)
-                }
-              />
+            <div className="space-y-1.5">
+              <Label className="text-[11px] font-bold uppercase text-slate-500 ml-1">Unit Price</Label>
+              <div className="relative">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[11px] font-bold text-slate-400 uppercase">{value.currency}</span>
+                <Input
+                  type="number"
+                  step="0.01"
+                  placeholder="0.00"
+                  className="h-10 rounded-xl border-slate-200 pl-10 text-sm font-bold text-slate-700 focus:border-brand-primary focus:ring-brand-primary"
+                  value={item.unitPrice}
+                  onChange={(e) =>
+                    handleLineItemChange(item.id, "unitPrice", e.target.value)
+                  }
+                />
+              </div>
             </div>
           </div>
           
-          <div className="text-right text-xs font-semibold text-slate-500">
-            Line Total: {value.currency} {(parseFloat(item.unitPrice || "0") * (item.quantity || 1)).toFixed(2)}
+          <div className="flex items-center justify-between border-t border-slate-100 pt-3">
+             <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Extended Price</span>
+             <span className="text-sm font-bold text-brand-primary">
+                {value.currency} {(parseFloat(item.unitPrice || "0") * (item.quantity || 1)).toFixed(2)}
+             </span>
           </div>
         </div>
       </div>
