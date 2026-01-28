@@ -317,7 +317,7 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({
             />
           </div>
 
-          {value.documentType === "Quotation" && (
+          {value.documentType === "Quotation" && value.status?.toLowerCase() !== 'accepted' && (
             <div>
               <Label htmlFor="validityDate">Validity Date</Label>
               <Input

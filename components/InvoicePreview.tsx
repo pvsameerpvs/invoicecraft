@@ -186,7 +186,7 @@ export const InvoicePreview: React.FC<InvoicePreviewProps> = ({
                         {isQuotation ? (value.invoiceNumber || " ") : formatDate(value.date)}
                       </span>
                     </div>
-                    {isQuotation && value.validityDate && (
+                    {isQuotation && value.validityDate && value.status?.toLowerCase() !== 'accepted' && (
                       <div>
                         <span className="mr-2 text-[10px] uppercase tracking-wider font-bold text-slate-400">
                           Valid Until:

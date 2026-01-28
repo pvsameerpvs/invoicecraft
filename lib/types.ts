@@ -57,4 +57,5 @@ export interface InvoiceHistoryRow {
   documentType: "Invoice" | "Quotation";
   clientEmail?: string;
   clientPhone?: string;
+  quotationNumber?: string; // Alias for consistency in UI
 }

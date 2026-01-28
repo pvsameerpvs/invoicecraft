@@ -15,6 +15,7 @@ export interface DashboardStats {
     invoices: StatBase;
     vat: StatBase;
     outstanding: StatBase & { count: number };
+    paidInvoices: { count: number; value: number; growth: number };
     overdue: { count: number; value: number };
     quotations: StatBase & { count: number };
     overdueQuotations: { count: number; value: number }; // Added for Overdue Quotations
@@ -33,11 +34,39 @@ function getPreviousPeriod(date: Date, period: 'monthly' | 'yearly'): Date {
 }
 
 function isSameMonth(d1: Date, d2: Date): boolean {
-    return d1.getFullYear() === d2.getFullYear() && d1.getMonth() === d2.getMonth();
+    return d1.getUTCFullYear() === d2.getUTCFullYear() && d1.getUTCMonth() === d2.getUTCMonth();
 }
 
 function isSameYear(d1: Date, d2: Date): boolean {
-    return d1.getFullYear() === d2.getFullYear();
+    return d1.getUTCFullYear() === d2.getUTCFullYear();
+}
+
+/**
+ * Robust date parser for spreadsheet dates
+ */
+function parseSpreadsheetDate(dateStr: string): Date | null {
+    if (!dateStr) return null;
+    
+    // Try standard ISO/Date format first
+    let d = new Date(dateStr);
+    if (!isNaN(d.getTime())) {
+        // Force to UTC midnight to avoid local shifts
+        return new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+    }
+
+    // Try DD-MM-YYYY
+    const dmyt = dateStr.match(/^(\d{1,2})[/-](\d{1,2})[/-](\d{4})$/);
+    if (dmyt) {
+        return new Date(Date.UTC(parseInt(dmyt[3]), parseInt(dmyt[2]) - 1, parseInt(dmyt[1])));
+    }
+
+    // Try YYYY-MM-DD
+    const ymd = dateStr.match(/^(\d{4})[/-](\d{1,2})[/-](\d{1,2})$/);
+    if (ymd) {
+        return new Date(Date.UTC(parseInt(ymd[1]), parseInt(ymd[2]) - 1, parseInt(ymd[3])));
+    }
+
+    return null;
 }
 
 
@@ -64,11 +93,11 @@ export async function GET(req: Request) {
         const [invoiceRes, quotationRes] = await Promise.all([
             sheets.spreadsheets.values.get({
                 spreadsheetId: SHEET_ID,
-                range: "Invoices!A:L",
+                range: "Invoices!A:P", // Widen range
             }),
             sheets.spreadsheets.values.get({
                 spreadsheetId: SHEET_ID,
-                range: "Quotations!A:P", // Expanded to include Validity Date (Column P)
+                range: "Quotations!A:P",
             })
         ]);
 
@@ -77,18 +106,28 @@ export async function GET(req: Request) {
         
         // Determine "Now" (Selected Date) based on params or current date
         const currentDate = new Date();
-        let now = new Date();
+        // Use UTC for "now" reference to match parsed dates
+        let now = new Date(Date.UTC(currentDate.getUTCFullYear(), currentDate.getUTCMonth(), currentDate.getUTCDate()));
         
-        if (yearParam) now.setFullYear(parseInt(yearParam));
-        if (monthParam) now.setMonth(parseInt(monthParam));
+        if (yearParam) {
+            now.setUTCFullYear(parseInt(yearParam));
+        }
+        if (monthParam) {
+            now.setUTCMonth(parseInt(monthParam));
+        }
         
-        if (period === 'yearly') now.setMonth(0);
+        if (period === 'yearly') now.setUTCMonth(0);
 
-        const prevDate = getPreviousPeriod(now, period === 'all' ? 'monthly' : period);
+        const prevDate = new Date(now);
+        if (period === 'monthly' || period === 'all') {
+            prevDate.setUTCMonth(prevDate.getUTCMonth() - 1);
+        } else if (period === 'yearly') {
+            prevDate.setUTCFullYear(prevDate.getUTCFullYear() - 1);
+        }
 
         // Accumulators
-        const currentStats = { revenue: 0, invoices: 0, vat: 0, outstanding: 0, outstandingCount: 0, paid: 0, quotations: 0, quotationValue: 0, overdueQuotations: 0, overdueQuotationValue: 0 };
-        const prevStats = { revenue: 0, invoices: 0, vat: 0, outstanding: 0, outstandingCount: 0, paid: 0, quotations: 0, quotationValue: 0, overdueQuotations: 0, overdueQuotationValue: 0 };
+        const currentStats = { revenue: 0, invoices: 0, vat: 0, outstanding: 0, outstandingCount: 0, paid: 0, paidCount: 0, quotations: 0, quotationValue: 0, overdueQuotations: 0, overdueQuotationValue: 0 };
+        const prevStats = { revenue: 0, invoices: 0, vat: 0, outstanding: 0, outstandingCount: 0, paid: 0, paidCount: 0, quotations: 0, quotationValue: 0, overdueQuotations: 0, overdueQuotationValue: 0 };
         const overdueStats = { count: 0, value: 0 };
         const overdueQuotationGlobal = { count: 0, value: 0 }; // Global (all time) overdue quotations
 
@@ -99,40 +138,51 @@ export async function GET(req: Request) {
         // Process Invoices
         invoiceRows.forEach(row => {
             const dateStr = row[2];
-            const statusRaw = row[11];
-            let status = statusRaw || "Unpaid"; 
-            if (status === 'Pending') status = 'Unpaid'; 
+            const statusRaw = row[11] || "Unpaid";
+            let statusNormalized = statusRaw.trim().toLowerCase();
+            if (statusNormalized === 'pending') statusNormalized = 'unpaid';
+            
+            const isPaid = statusNormalized === 'paid';
+            const isOverdue = statusNormalized === 'overdue';
+            const isUnpaid = statusNormalized === 'unpaid';
 
             const payload = row[9];
             let invoiceTotal = 0;
+            let invoiceSubtotal = 0;
+            
             if (payload) {
                 try {
                     const data = JSON.parse(payload);
                     if (data.overrideTotal) {
                         invoiceTotal = parseFloat(data.overrideTotal) || 0;
+                        invoiceSubtotal = invoiceTotal / 1.05; // Estimate subtotal if only total is overridden
                     } else if (Array.isArray(data.lineItems)) {
-                        invoiceTotal = data.lineItems.reduce((acc: number, line: any) => acc + (parseFloat(line.unitPrice) * (line.quantity || 1)), 0);
+                        invoiceSubtotal = data.lineItems.reduce((acc: number, line: any) => acc + (parseFloat(line.unitPrice) * (line.quantity || 1)), 0);
+                        invoiceTotal = invoiceSubtotal * 1.05;
                     }
                 } catch(e) {}
             }
+
+            // Fallback to columns if payload calculation failed
             if (invoiceTotal === 0) {
-                 const colTotal = parseFloat((row[8] || "0").replace(/[^0-9.-]+/g,""));
-                 invoiceTotal = colTotal || 0;
+                 invoiceTotal = parseFloat((row[8] || "0").replace(/[^0-9.-]+/g,"")) || 0;
+                 invoiceSubtotal = parseFloat((row[7] || "0").replace(/[^0-9.-]+/g,"")) || 0;
+                 if (invoiceSubtotal === 0 && invoiceTotal > 0) invoiceSubtotal = invoiceTotal / 1.05;
             }
 
-            const invoiceDate = new Date(dateStr);
-            if (isNaN(invoiceDate.getTime())) return;
+            const invoiceDate = parseSpreadsheetDate(dateStr);
+            if (!invoiceDate) return;
 
-            // OVERDUE LOGIC
-            if (status !== 'Paid' && status !== 'Overdue') {
+            // OVERDUE LOGIC (Static check for all time overdue count)
+            if (!isPaid && !isOverdue) {
                 const diffTime = now.getTime() - invoiceDate.getTime();
                 const diffDays = diffTime / (1000 * 3600 * 24);
                 if (diffDays > 30) {
                     overdueStats.count++;
                     overdueStats.value += invoiceTotal;
-                    status = 'Overdue';
+                    statusNormalized = 'overdue'; // Treat as overdue for current stats
                 }
-            } else if (status === 'Overdue') {
+            } else if (isOverdue) {
                 overdueStats.count++;
                 overdueStats.value += invoiceTotal;
             }
@@ -152,33 +202,36 @@ export async function GET(req: Request) {
 
             if (isCurrent) {
                 currentStats.invoices++;
-                if (status === 'Paid') {
+                if (isPaid) {
                     currentStats.revenue += invoiceTotal;
                     currentStats.paid += invoiceTotal;
+                    currentStats.paidCount++;
+                    currentStats.vat += (invoiceTotal - invoiceSubtotal);
                     statusMap.Paid += 1;
-                } else if (status === 'Overdue') {
+                    
+                    let key = "";
+                    if (period === 'monthly') key = invoiceDate.getUTCDate().toString(); 
+                    else if (period === 'yearly') key = invoiceDate.toLocaleString('default', { month: 'short', timeZone: 'UTC' }); 
+                    else key = invoiceDate.getUTCFullYear().toString(); 
+                    chartMap[key] = (chartMap[key] || 0) + invoiceTotal;
+                } else if (statusNormalized === 'overdue') {
                     currentStats.outstanding += invoiceTotal;
+                    currentStats.outstandingCount++; 
                     statusMap.Overdue += 1;
                 } else {
                     currentStats.outstanding += invoiceTotal;
                     currentStats.outstandingCount++;
                     statusMap.Pending += 1;
                 }
-
-                if (status === 'Paid') {
-                    let key = "";
-                    if (period === 'monthly') key = invoiceDate.getDate().toString(); 
-                    else if (period === 'yearly') key = invoiceDate.toLocaleString('default', { month: 'short' }); 
-                    else key = invoiceDate.getFullYear().toString(); 
-                    chartMap[key] = (chartMap[key] || 0) + invoiceTotal;
-                }
             }
             
             if (isPrevious) {
                  prevStats.invoices++;
-                 if (status === 'Paid') {
+                 if (isPaid) {
                     prevStats.revenue += invoiceTotal;
                     prevStats.paid += invoiceTotal;
+                    prevStats.paidCount++;
+                    prevStats.vat += (invoiceTotal - invoiceSubtotal);
                 } else {
                     prevStats.outstanding += invoiceTotal;
                     prevStats.outstandingCount++;
@@ -213,7 +266,8 @@ export async function GET(req: Request) {
             if (isNaN(qtnDate.getTime())) return;
 
             // --- OVERDUE QUOTATION LOGIC ---
-            if (statusRaw !== 'Accepted' && validityDateStr) {
+            const isAccepted = statusRaw?.trim().toLowerCase() === 'accepted';
+            if (!isAccepted && validityDateStr) {
                 const validityDate = new Date(validityDateStr);
                 if (!isNaN(validityDate.getTime()) && validityDate < now) {
                     overdueQuotationGlobal.count++;
@@ -244,8 +298,9 @@ export async function GET(req: Request) {
             }
         });
 
-        currentStats.vat = currentStats.paid * 0.05;
-        prevStats.vat = prevStats.paid * 0.05;
+        // VAT is now accumulated during the loop for better accuracy
+        // currentStats.vat = currentStats.paid * 0.05;
+        // prevStats.vat = prevStats.paid * 0.05;
 
         let chartData: { name: string, revenue: number }[] = [];
         if (period === 'monthly') {
@@ -277,6 +332,11 @@ export async function GET(req: Request) {
             invoices: { value: currentStats.invoices, growth: calcGrowth(currentStats.invoices, prevStats.invoices) },
             vat: { value: currentStats.vat, growth: calcGrowth(currentStats.vat, prevStats.vat) },
             outstanding: { value: currentStats.outstanding, count: currentStats.outstandingCount, growth: calcGrowth(currentStats.outstanding, prevStats.outstanding) },
+            paidInvoices: { 
+                count: currentStats.paidCount, 
+                value: currentStats.revenue, 
+                growth: calcGrowth(currentStats.paidCount, prevStats.paidCount) 
+            },
             overdue: overdueStats,
             quotations: { 
                 count: currentStats.quotations, 

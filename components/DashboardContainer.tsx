@@ -73,6 +73,7 @@ export const DashboardContainer = ({ onCreateInvoice, invoiceHistory = [] }: Das
         invoices: { value: 0, growth: 0 },
         vat: { value: 0, growth: 0 },
         outstanding: { value: 0, count: 0, growth: 0 },
+        paidInvoices: { value: 0, count: 0, growth: 0 },
         overdue: { count: 0, value: 0 }, // New Overdue Metrics
         quotations: { count: 0, value: 0, growth: 0 }, // Updated for Quotations
         overdueQuotations: { count: 0, value: 0 }, // Added for Overdue Quotations
@@ -123,9 +124,9 @@ export const DashboardContainer = ({ onCreateInvoice, invoiceHistory = [] }: Das
         );
     };
 
-    // Calculate Paid Count (Client Side Approximation if not provided by API, assuming Total - Unpaid)
-    // Note: This relies on stats.invoices.value being Total and stats.outstanding.count being Unpaid
-    const paidCount = Math.max(0, stats.invoices.value - stats.outstanding.count);
+    // Use Paid Count from API
+    const paidCount = (stats as any).paidInvoices?.count ?? 0;
+    const paidGrowth = (stats as any).paidInvoices?.growth ?? 0;
 
     return (
         <div className="flex-1 bg-slate-50 p-4 md:p-8 overflow-y-auto">
@@ -254,10 +255,8 @@ export const DashboardContainer = ({ onCreateInvoice, invoiceHistory = [] }: Das
                             <h3 className="text-3xl font-extrabold text-slate-900">
                                 {stats.loading ? <Skeleton className="h-9 w-24" /> : paidCount}
                             </h3>
-                             <p className="text-xs font-bold text-green-600 mt-1">
-                                {stats.loading ? <Skeleton className="h-3 w-16" /> : fmtMoney(stats.revenue.value)}
-                            </p>
-                             {!stats.loading ? <GrowthBadge value={stats.invoices.growth} /> : <Skeleton className="h-6 w-24 mt-2 rounded-lg" />}
+                            
+                             {!stats.loading ? <GrowthBadge value={paidGrowth} /> : <Skeleton className="h-6 w-24 mt-2 rounded-lg" />}
                         </div>
                         <div className="p-3 bg-green-50 text-green-600 rounded-xl">
                             <CheckCircle className="w-6 h-6" />
@@ -316,10 +315,10 @@ export const DashboardContainer = ({ onCreateInvoice, invoiceHistory = [] }: Das
                         <div>
                             <p className="text-sm font-medium text-slate-500 mb-1">Total Quotations</p>
                             <h3 className="text-3xl font-extrabold text-slate-900">
-                                {stats.loading ? <Skeleton className="h-9 w-32" /> : fmtMoney(stats.quotations.value)}
+                                {stats.loading ? <Skeleton className="h-9 w-32" /> : stats.quotations.count}
                             </h3>
                             <p className="text-xs font-bold text-slate-400 mt-1">
-                                {stats.loading ? <Skeleton className="h-3 w-20" /> : `${stats.quotations.count} Quotations`}
+                                {stats.loading ? <Skeleton className="h-3 w-20" /> : `Value: ${fmtMoney(stats.quotations.value)}`}
                             </p>
                             {!stats.loading ? <GrowthBadge value={stats.quotations.growth} /> : <Skeleton className="h-6 w-24 mt-2 rounded-lg" />}
                         </div>
@@ -425,7 +424,7 @@ export const DashboardContainer = ({ onCreateInvoice, invoiceHistory = [] }: Das
                                         </div>
                                         <div>
                                             <div className="flex items-center gap-2">
-                                                <p className="font-bold text-slate-900 text-sm whitespace-nowrap">{invoice.invoiceNumber}</p>
+                                                <p className="font-bold text-slate-900 text-sm whitespace-nowrap">Invoice #{invoice.invoiceNumber}</p>
                                                 {(invoice as any).payloadJson && JSON.parse((invoice as any).payloadJson).sourceQuotation && (
                                                     <span className="bg-brand-50 text-brand-primary text-[8px] font-black px-1.5 py-0.5 rounded-md uppercase tracking-tighter" title={`From ${JSON.parse((invoice as any).payloadJson).sourceQuotation}`}>
                                                         LINKED
@@ -485,7 +484,7 @@ export const DashboardContainer = ({ onCreateInvoice, invoiceHistory = [] }: Das
                                             <FileText className="w-5 h-5" />
                                         </div>
                                         <div>
-                                            <p className="font-bold text-slate-900 text-sm whitespace-nowrap">{q.invoiceNumber}</p>
+                                            <p className="font-bold text-slate-900 text-sm whitespace-nowrap">Number #{q.quotationNumber}</p>
                                             <p 
                                                 className="text-[10px] text-slate-400 font-bold uppercase hover:text-brand-primary transition-colors"
                                                 onClick={(e) => {
@@ -495,7 +494,7 @@ export const DashboardContainer = ({ onCreateInvoice, invoiceHistory = [] }: Das
                                             >
                                                 {q.clientName}
                                             </p>
-                                            {q.validityDate && (
+                                            {q.validityDate && q.status?.toLowerCase() !== 'accepted' && (
                                                 <div className="flex items-center gap-1 mt-0.5">
                                                     <span className="text-[8px] font-black text-slate-300 uppercase tracking-tighter">Valid Until:</span>
                                                     <span className="text-[9px] font-bold text-rose-500 whitespace-nowrap">{formatDate(q.validityDate)}</span>

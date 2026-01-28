@@ -503,10 +503,11 @@ export async function GET(req: Request) {
         payloadJson: r[9] || "",
         createdBy: r[10] || "",
         status: r[11] || "Unpaid",
-        documentType: r[12] || "Invoice",
+        documentType: (r[12] || "Invoice") as "Invoice" | "Quotation",
         clientEmail: r[13] || "",
         clientPhone: r[14] || "",
         validityDate: r[15] || "",
+        quotationNumber: (r[12] === "Quotation") ? (r[1] || "") : undefined,
       }))
       .filter((item) => {
         // 1. Search (Invoice # or Client)
