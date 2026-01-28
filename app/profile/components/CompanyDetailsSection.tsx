@@ -21,7 +21,9 @@ export const CompanyDetailsSection = () => {
         AccountIban: "",
         FooterNote: "",
         SignatureLabel: "",
-        Currency: "AED"
+        Currency: "AED",
+        CompanyEmail: "",
+        CompanyPhone: ""
     });
 
     useEffect(() => {
@@ -164,6 +166,30 @@ export const CompanyDetailsSection = () => {
                                     onChange={handleChange}
                                     className="w-full h-10 px-3 rounded-lg border border-slate-200 bg-slate-50 text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/20 focus:border-brand-primary transition-all"
                                     placeholder="e.g. AED"
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-xs font-semibold text-slate-500 mb-1.5 uppercase">Company Email</label>
+                                <input 
+                                    type="email" 
+                                    name="CompanyEmail"
+                                    value={formData.CompanyEmail}
+                                    onChange={handleChange}
+                                    className="w-full h-10 px-3 rounded-lg border border-slate-200 bg-slate-50 text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/20 focus:border-brand-primary transition-all"
+                                    placeholder="e.g. hello@justsearch.ae"
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-xs font-semibold text-slate-500 mb-1.5 uppercase">Company Mobile / Phone</label>
+                                <input 
+                                    type="text" 
+                                    name="CompanyPhone"
+                                    value={formData.CompanyPhone}
+                                    onChange={handleChange}
+                                    className="w-full h-10 px-3 rounded-lg border border-slate-200 bg-slate-50 text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/20 focus:border-brand-primary transition-all"
+                                    placeholder="e.g. +971 50 XXXXXXX"
                                 />
                             </div>
                         </div>

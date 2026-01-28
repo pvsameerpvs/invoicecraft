@@ -22,7 +22,7 @@ export async function GET(req: Request) {
     // Fetch Header (Row 1) and Data (Row 2)
     const res = await sheets.spreadsheets.values.get({
       spreadsheetId: SHEET_ID,
-      range: "Settings!A1:O2", // Expanded to O
+      range: "Settings!A1:Q2", // Expanded to Q
     });
 
     const rows = res.data.values || [];
@@ -61,10 +61,9 @@ export async function POST(req: Request) {
         const sheets = getSheetsClient();
         const username = cookies().get("invoicecraft_auth")?.value || "Unknown";
         
-        // We know the columns: 
         // A: CompanyName, B: CompanyAddress, C: BankCompanyName, D: BankName, E: BankLabel
         // F: AccountNumber, G: AccountIban, H: FooterNote, I: SignatureLabel, J: Currency, K: CompanyTrn
-        // L: Theme, M: LogoUrl, N: ShowCompanyName, O: NavbarTitle 
+        // L: Theme, M: LogoUrl, N: ShowCompanyName, O: NavbarTitle, P: CompanyEmail, Q: CompanyPhone
 
         const values = [
             body.CompanyName || "",
@@ -81,13 +80,15 @@ export async function POST(req: Request) {
             body.Theme || "orange", // Default theme
             body.LogoUrl || "",
             body.ShowCompanyName === true || body.ShowCompanyName === "true" ? "true" : "false",
-            body.NavbarTitle || ""
+            body.NavbarTitle || "",
+            body.CompanyEmail || "",
+            body.CompanyPhone || ""
         ];
 
         await sheets.spreadsheets.values.update({
             spreadsheetId: SHEET_ID,
-            // Expanded to O column
-            range: "Settings!A2:O2", 
+            // Expanded to Q column
+            range: "Settings!A2:Q2", 
             valueInputOption: "USER_ENTERED",
             requestBody: {
                 values: [values]
