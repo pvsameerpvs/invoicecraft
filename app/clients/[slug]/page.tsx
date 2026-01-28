@@ -87,6 +87,31 @@ export default function ClientDetailsPage() {
     };
   }, [history]);
 
+  const contactInfo = React.useMemo(() => {
+    const latestWithEmail = history.find(h => {
+       try {
+         const p = JSON.parse(h.payloadJson);
+         return p.invoiceToEmail;
+       } catch { return false; }
+    });
+    const latestWithPhone = history.find(h => {
+       try {
+         const p = JSON.parse(h.payloadJson);
+         return p.invoiceToPhone;
+       } catch { return false; }
+    });
+
+    let email = "";
+    let phone = "";
+
+    try {
+      if (latestWithEmail) email = JSON.parse(latestWithEmail.payloadJson).invoiceToEmail;
+      if (latestWithPhone) phone = JSON.parse(latestWithPhone.payloadJson).invoiceToPhone;
+    } catch {}
+
+    return { email, phone };
+  }, [history]);
+
   const filteredHistory = history.filter(item => {
     if (activeTab === "all") return true;
     if (activeTab === "invoices") return item.documentType === "Invoice";
@@ -155,15 +180,31 @@ export default function ClientDetailsPage() {
                   </span>
                 </div>
                 <div className="flex flex-wrap items-center gap-4 text-white/80 font-bold text-sm">
-                   <div className="flex items-center gap-2">
-                      <Clock className="w-4 h-4" />
-                      Partner since {history.length > 0 ? new Date(history[history.length-1].createdAt).getFullYear() : '2024'}
-                   </div>
-                   <div className="w-1.5 h-1.5 rounded-full bg-white/40" />
-                   <div className="flex items-center gap-2">
-                      <Briefcase className="w-4 h-4" />
-                      {history.length} Documents
-                   </div>
+                   {contactInfo.phone && (
+                      <div className="flex items-center gap-2">
+                        <Phone className="w-4 h-4" />
+                        {contactInfo.phone}
+                      </div>
+                   )}
+                   {contactInfo.email && (
+                      <div className="flex items-center gap-2">
+                        <Mail className="w-4 h-4" />
+                        {contactInfo.email}
+                      </div>
+                   )}
+                   {(!contactInfo.phone && !contactInfo.email) && (
+                      <>
+                        <div className="flex items-center gap-2">
+                          <Clock className="w-4 h-4" />
+                          Partner since {history.length > 0 ? new Date(history[history.length-1].createdAt).getFullYear() : '2024'}
+                        </div>
+                        <div className="w-1.5 h-1.5 rounded-full bg-white/40" />
+                        <div className="flex items-center gap-2">
+                          <Briefcase className="w-4 h-4" />
+                          {history.length} Documents
+                        </div>
+                      </>
+                   )}
                 </div>
               </div>
             </div>

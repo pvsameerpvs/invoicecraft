@@ -43,45 +43,50 @@ async function ensureSheets(sheets: any, spreadsheetId: string) {
     const existingSheets = meta.data.sheets?.map((s: any) => s.properties?.title) || [];
     const requests: any[] = [];
 
-    if (!existingSheets.includes("Quotations")) {
-        requests.push({
-            addSheet: { properties: { title: "Quotations" } }
-        });
-    }
-    if (!existingSheets.includes("QuotationLineItems")) {
-        requests.push({
-            addSheet: { properties: { title: "QuotationLineItems" } }
-        });
-    }
+    const neededSheets = ["Invoices", "LineItems", "Quotations", "QuotationLineItems"];
+    neededSheets.forEach(s => {
+        if (!existingSheets.includes(s)) {
+            requests.push({ addSheet: { properties: { title: s } } });
+        }
+    });
 
     if (requests.length > 0) {
         await sheets.spreadsheets.batchUpdate({
             spreadsheetId,
             requestBody: { requests }
         });
-
-        // Add headers
-        if (!existingSheets.includes("Quotations")) {
-            await sheets.spreadsheets.values.update({
-                spreadsheetId,
-                range: "Quotations!A1:M1",
-                valueInputOption: "USER_ENTERED",
-                requestBody: {
-                    values: [["Timestamp", "Quotation Number", "Date", "Client", "Subject", "Currency", "Subtotal", "VAT", "Total", "Payload", "Created By", "Status", "Document Type"]]
-                }
-            });
-        }
-        if (!existingSheets.includes("QuotationLineItems")) {
-            await sheets.spreadsheets.values.update({
-                spreadsheetId,
-                range: "QuotationLineItems!A1:F1",
-                valueInputOption: "USER_ENTERED",
-                requestBody: {
-                    values: [["Quotation Number", "ID", "Description", "Quantity", "Unit Price", "Amount"]]
-                }
-            });
-        }
     }
+
+    // Always ensure headers are up to date for main sheets
+    const mainHeader = ["Timestamp", "Number", "Date", "Client", "Subject", "Currency", "Subtotal", "VAT", "Total", "Payload", "Created By", "Status", "Type", "Client Email", "Client Phone"];
+    const lineHeader = ["Number", "ID", "Description", "Quantity", "Unit Price", "Amount"];
+
+    await Promise.all([
+        sheets.spreadsheets.values.update({
+            spreadsheetId,
+            range: "Invoices!A1:O1",
+            valueInputOption: "USER_ENTERED",
+            requestBody: { values: [mainHeader] }
+        }),
+        sheets.spreadsheets.values.update({
+            spreadsheetId,
+            range: "Quotations!A1:O1",
+            valueInputOption: "USER_ENTERED",
+            requestBody: { values: [mainHeader] }
+        }),
+        sheets.spreadsheets.values.update({
+            spreadsheetId,
+            range: "LineItems!A1:F1",
+            valueInputOption: "USER_ENTERED",
+            requestBody: { values: [lineHeader] }
+        }),
+        sheets.spreadsheets.values.update({
+            spreadsheetId,
+            range: "QuotationLineItems!A1:F1",
+            valueInputOption: "USER_ENTERED",
+            requestBody: { values: [lineHeader] }
+        })
+    ]);
 }
 
 /**
@@ -157,7 +162,7 @@ export async function POST(req: Request) {
     // ✅ Save row
     await sheets.spreadsheets.values.append({
       spreadsheetId: SHEET_ID,
-      range: `${mainSheet}!A:M`,
+      range: `${mainSheet}!A:O`,
       valueInputOption: "USER_ENTERED",
       requestBody: {
         values: [
@@ -175,6 +180,8 @@ export async function POST(req: Request) {
             invoice.createdBy || "", 
             invoice.status || (isQuotation ? "Draft" : "Unpaid"),
             invoice.documentType || "Invoice",
+            invoice.invoiceToEmail || "",
+            invoice.invoiceToPhone || "",
           ],
         ],
       },
@@ -357,7 +364,7 @@ export async function PUT(req: Request) {
     const currency = invoice.currency || "AED";
 
     // 2. Update the row
-    const rangeToUpdate = `${mainSheet}!B${sheetRowNumber}:M${sheetRowNumber}`;
+    const rangeToUpdate = `${mainSheet}!B${sheetRowNumber}:O${sheetRowNumber}`;
 
     await sheets.spreadsheets.values.update({
       spreadsheetId: SHEET_ID,
@@ -378,6 +385,8 @@ export async function PUT(req: Request) {
             createdBy, 
             invoice.status || (isQuotation ? "Draft" : "Unpaid"), 
             invoice.documentType || "Invoice", 
+            invoice.invoiceToEmail || "",
+            invoice.invoiceToPhone || "",
           ],
         ],
       },
@@ -458,7 +467,7 @@ export async function GET(req: Request) {
 
     const res = await sheets.spreadsheets.values.get({
       spreadsheetId: SHEET_ID,
-      range: `${mainSheet}!A:M`,
+      range: `${mainSheet}!A:O`,
     });
 
     const rows = res.data.values || [];
@@ -481,6 +490,8 @@ export async function GET(req: Request) {
         createdBy: r[10] || "",
         status: r[11] || "Unpaid",
         documentType: r[12] || "Invoice",
+        clientEmail: r[13] || "",
+        clientPhone: r[14] || "",
       }))
       .filter((item) => {
         // 1. Search (Invoice # or Client)

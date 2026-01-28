@@ -7,11 +7,13 @@ import { Search, User, MapPin } from "lucide-react";
 interface Client {
   name: string;
   address: string;
+  email?: string;
+  phone?: string;
 }
 
 interface ClientSelectProps {
   value: string;
-  onChange: (name: string, address: string) => void;
+  onChange: (name: string, address: string, email: string, phone: string) => void;
   placeholder?: string;
 }
 
@@ -54,7 +56,7 @@ export function ClientSelect({ value, onChange, placeholder }: ClientSelectProps
   );
 
   const handleSelect = (client: Client) => {
-    onChange(client.name, client.address);
+    onChange(client.name, client.address, client.email || "", client.phone || "");
     setSearchTerm(client.name);
     setIsOpen(false);
   };
@@ -62,7 +64,7 @@ export function ClientSelect({ value, onChange, placeholder }: ClientSelectProps
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newVal = e.target.value;
     setSearchTerm(newVal);
-    onChange(newVal, ""); // Clear address if name is changed manually
+    onChange(newVal, "", "", ""); // Clear details if name is changed manually
     setIsOpen(true);
   };
 

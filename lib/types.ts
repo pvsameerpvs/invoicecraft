@@ -18,6 +18,8 @@ export interface InvoiceData {
   invoiceTo: string;
   invoiceToCompany: string;
   invoiceToAddress: string;
+  invoiceToEmail?: string;
+  invoiceToPhone?: string;
   invoiceNumber: string;
   date: string;
   subject: string;
@@ -53,4 +55,6 @@ export interface InvoiceHistoryRow {
   createdBy: string;
   status: string;
   documentType: "Invoice" | "Quotation";
+  clientEmail?: string;
+  clientPhone?: string;
 }

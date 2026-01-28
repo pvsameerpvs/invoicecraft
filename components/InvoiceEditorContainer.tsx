@@ -229,7 +229,9 @@ export function InvoiceEditorContainer({ initialInvoiceId }: Props) {
                             if (client) {
                                 setInvoice(prev => ({
                                     ...prev,
-                                    invoiceToAddress: client.address || ""
+                                    invoiceToAddress: client.address || "",
+                                    invoiceToEmail: client.email || "",
+                                    invoiceToPhone: client.phone || ""
                                 }));
                             }
                         } catch (e) {

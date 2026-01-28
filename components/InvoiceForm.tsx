@@ -254,13 +254,33 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({
             <ClientSelect
               value={value.invoiceToCompany}
               placeholder={value.documentType === "Quotation" ? "Enter potential client name" : "Enter client name"}
-              onChange={(name, address) => {
+              onChange={(name, address, email, phone) => {
                 const next = { ...value, invoiceToCompany: name };
-                if (address) {
-                  next.invoiceToAddress = address;
-                }
+                if (address) next.invoiceToAddress = address;
+                if (email) next.invoiceToEmail = email;
+                if (phone) next.invoiceToPhone = phone;
                 onChange(next);
               }}
+            />
+          </div>
+
+          <div>
+            <Label htmlFor="invoiceToEmail">Client email</Label>
+            <Input
+              id="invoiceToEmail"
+              placeholder="client@example.com"
+              value={value.invoiceToEmail || ""}
+              onChange={(e) => handleFieldChange("invoiceToEmail", e.target.value)}
+            />
+          </div>
+
+          <div>
+            <Label htmlFor="invoiceToPhone">Client phone</Label>
+            <Input
+              id="invoiceToPhone"
+              placeholder="+971 50 000 0000"
+              value={value.invoiceToPhone || ""}
+              onChange={(e) => handleFieldChange("invoiceToPhone", e.target.value)}
             />
           </div>
 

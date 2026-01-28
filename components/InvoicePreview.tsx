@@ -160,6 +160,14 @@ export const InvoicePreview: React.FC<InvoicePreviewProps> = ({
                     <div className="whitespace-pre-line break-words text-slate-500 font-medium">
                       {value.invoiceToAddress}
                     </div>
+                    <div className="text-[10px] space-y-0.5 pt-1">
+                      {value.invoiceToEmail && (
+                        <p className="font-semibold text-brand-primary">{value.invoiceToEmail}</p>
+                      )}
+                      {value.invoiceToPhone && (
+                        <p className="font-semibold text-slate-700">{value.invoiceToPhone}</p>
+                      )}
+                    </div>
                   </div>
                   <div className={`space-y-1 text-right ${isQuotation ? 'pt-8' : ''}`}>
                     <div>

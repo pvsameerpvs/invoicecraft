@@ -33,21 +33,29 @@ export async function GET(req: Request) {
     const allRows = [...invRows.slice(1), ...qtnRows.slice(1)];
     
     // index 3 is clientName, index 9 is payloadJson
-    const clientsMap = new Map<string, { name: string; address: string }>();
+    const clientsMap = new Map<string, { name: string; address: string; email: string; phone: string }>();
 
     allRows.forEach(row => {
       const name = row[3];
       const payloadJson = row[9];
       
-      if (name && !clientsMap.has(name)) {
+      if (name) {
         try {
           const payload = JSON.parse(payloadJson);
-          clientsMap.set(name, {
-            name,
-            address: payload.invoiceToAddress || ""
-          });
+          const existing = clientsMap.get(name);
+          // If not exists or if existing has empty fields, update with newer one
+          if (!existing || (!existing.email && payload.invoiceToEmail) || (!existing.phone && payload.invoiceToPhone)) {
+             clientsMap.set(name, {
+                name,
+                address: payload.invoiceToAddress || (existing?.address || ""),
+                email: payload.invoiceToEmail || (existing?.email || ""),
+                phone: payload.invoiceToPhone || (existing?.phone || "")
+             });
+          }
         } catch (e) {
-          clientsMap.set(name, { name, address: "" });
+          if (!clientsMap.has(name)) {
+            clientsMap.set(name, { name, address: "", email: "", phone: "" });
+          }
         }
       }
     });
