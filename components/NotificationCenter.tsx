@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
-import { Bell, AlertCircle, Clock, ChevronRight, X, FileText } from "lucide-react";
+import { Bell, AlertCircle, Clock, ChevronRight, X, FileText, CheckCircle } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 interface Notification {
@@ -59,6 +59,7 @@ export const NotificationCenter = () => {
             case 'overdue_invoice': return <AlertCircle className="w-4 h-4 text-rose-500" />;
             case 'expiring_quotation': return <Clock className="w-4 h-4 text-amber-500" />;
             case 'expired_quotation': return <X className="w-4 h-4 text-slate-400" />;
+            case 'accepted_quotation': return <CheckCircle className="w-4 h-4 text-emerald-500" />;
             default: return <Bell className="w-4 h-4 text-brand-primary" />;
         }
     };

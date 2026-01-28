@@ -22,13 +22,25 @@ async function syncQuotationStatus(sheets: any, spreadsheetId: string, quotation
         
         if (rowIndex !== -1) {
             const rowNumber = rowIndex + 1;
-            // Column L is Index 11 (Status)
+            const row = rows[rowIndex];
+            let payload = row[9] || "{}"; // Column J
+            
+            try {
+                const parsed = JSON.parse(payload);
+                parsed.status = status;
+                payload = JSON.stringify(parsed);
+            } catch (e) {
+                console.error("Failed to update payload status", e);
+            }
+
+            // Update Column J (Payload) and Column L (Status)
+            // Range J to L: [J, K, L] -> [Index 9, 10, 11]
             await sheets.spreadsheets.values.update({
                 spreadsheetId,
-                range: `Quotations!L${rowNumber}`,
+                range: `Quotations!J${rowNumber}:L${rowNumber}`,
                 valueInputOption: "USER_ENTERED",
                 requestBody: {
-                    values: [[status]]
+                    values: [[payload, row[10] || "", status]]
                 }
             });
             console.log(`Synced Quotation ${quotationNumber} status to ${status}`);
@@ -178,7 +190,7 @@ export async function POST(req: Request) {
             money(total),
             JSON.stringify({ ...invoice, invoiceNumber }),
             invoice.createdBy || "", 
-            invoice.status || (isQuotation ? "Draft" : "Unpaid"),
+            isQuotation ? (invoice.status === "Accepted" ? "Draft" : (invoice.status || "Draft")) : (invoice.status || "Unpaid"),
             invoice.documentType || "Invoice",
             invoice.invoiceToEmail || "",
             invoice.invoiceToPhone || "",
@@ -384,7 +396,7 @@ export async function PUT(req: Request) {
             money(total), 
             JSON.stringify({ ...invoice, invoiceNumber: invoice.invoiceNumber }), 
             createdBy, 
-            invoice.status || (isQuotation ? "Draft" : "Unpaid"), 
+            isQuotation ? (invoice.status === "Accepted" ? "Draft" : (invoice.status || "Draft")) : (invoice.status || "Unpaid"), 
             invoice.documentType || "Invoice", 
             invoice.invoiceToEmail || "",
             invoice.invoiceToPhone || "",

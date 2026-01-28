@@ -44,43 +44,72 @@ export async function GET(req: Request) {
             let status = statusRaw || "Unpaid";
             if (status === 'Pending') status = 'Unpaid';
 
-            if (status !== 'Paid' && status !== 'Overdue') {
+            if (status !== 'Paid') {
                 const invoiceDate = new Date(dateStr);
                 if (!isNaN(invoiceDate.getTime())) {
                     const diffTime = now.getTime() - invoiceDate.getTime();
                     const diffDays = Math.floor(diffTime / (1000 * 3600 * 24));
+                    
                     if (diffDays > 30) {
+                        // OVERDUE Case
                         notifications.push({
                             id: `inv-overdue-${invoiceNumber}`,
                             type: 'overdue_invoice',
-                            title: `Invoice ${invoiceNumber} Overdue`,
-                            message: `${clientName}'s invoice for ${total} is overdue by ${diffDays} days.`,
+                            title: `Invoice ${invoiceNumber} OVERDUE`,
+                            message: `${clientName}'s payment of ${total} is overdue by ${diffDays - 30} days.`,
                             date: dateStr,
                             link: `/invoice/edit/${invoiceNumber}`,
                             priority: 'high'
                         });
+                    } else if (diffDays >= 20 && diffDays <= 30) {
+                        // DUE SOON Case (countdown to 30 days)
+                        const daysLeft = 30 - diffDays;
+                        let msg = `${clientName}'s invoice for ${total} is due in ${daysLeft} days.`;
+                        if (daysLeft === 0) msg = `${clientName}'s invoice for ${total} is due TODAY!`;
+                        if (daysLeft === 1) msg = `${clientName}'s invoice for ${total} is due tomorrow.`;
+
+                        notifications.push({
+                            id: `inv-soon-${invoiceNumber}`,
+                            type: 'expiring_quotation', // Use clock icon
+                            title: `Payment Due Soon: ${invoiceNumber}`,
+                            message: msg,
+                            date: dateStr,
+                            link: `/invoice/edit/${invoiceNumber}`,
+                            priority: daysLeft <= 3 ? 'high' : 'medium'
+                        });
                     }
                 }
-            } else if (status === 'Overdue') {
-                 notifications.push({
-                    id: `inv-overdue-${invoiceNumber}`,
-                    type: 'overdue_invoice',
-                    title: `Invoice ${invoiceNumber} Overdue`,
-                    message: `${clientName}'s invoice for ${total} is marked as overdue.`,
-                    date: dateStr,
-                    link: `/invoice/edit/${invoiceNumber}`,
-                    priority: 'high'
-                });
             }
         });
 
-        // 2. Check Quotations Expiring Soon
+        // 2. Check Quotations (Expiring soon or Recently Accepted)
         quotationRows.forEach(row => {
+            const qtnTimestamp = row[0];
             const qtnNumber = row[1];
             const clientName = row[3];
             const statusRaw = row[11];
             const validityDateStr = row[15]; // Column P
 
+            // Logic A: Recently Accepted (Last 48 hours)
+            if (statusRaw === 'Accepted' && qtnTimestamp) {
+                const createdDate = new Date(qtnTimestamp);
+                if (!isNaN(createdDate.getTime())) {
+                    const diffHours = (now.getTime() - createdDate.getTime()) / (1000 * 3600);
+                    if (diffHours >= 0 && diffHours <= 48) {
+                        notifications.push({
+                            id: `qtn-accepted-${qtnNumber}`,
+                            type: 'accepted_quotation',
+                            title: `Success! Quotation Accepted`,
+                            message: `${clientName} has accepted Quotation ${qtnNumber}.`,
+                            date: qtnTimestamp,
+                            link: `/invoice/edit/${qtnNumber}?type=Quotation`,
+                            priority: 'medium'
+                        });
+                    }
+                }
+            }
+
+            // Logic B: Expiring Soon
             if (statusRaw !== 'Accepted' && validityDateStr) {
                 const validityDate = new Date(validityDateStr);
                 if (!isNaN(validityDate.getTime())) {
