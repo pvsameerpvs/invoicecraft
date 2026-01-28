@@ -3,6 +3,7 @@
 import React from "react";
 import { UserMenu } from "./UserMenu";
 import { useTheme } from "@/components/ThemeProvider";
+import { NotificationCenter } from "./NotificationCenter";
 
 interface NavbarProps {
   label?: string; // e.g. "v1.0 Editor" or "v1.0 History"
@@ -43,8 +44,11 @@ export function Navbar({ label, variant = "white" }: NavbarProps) {
         )}
       </div>
 
-      {/* Right Side: User Menu */}
-      <UserMenu />
+      {/* Right Side: Notification & User Menu */}
+      <div className="flex items-center gap-3">
+        <NotificationCenter />
+        <UserMenu />
+      </div>
     </header>
   );
 }
