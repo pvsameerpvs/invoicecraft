@@ -35,6 +35,7 @@ export interface InvoiceData {
   signatureLabel: string;
   status?: "Paid" | "Unpaid";
   documentType: "Invoice" | "Quotation";
+  validityDate?: string;
   sourceQuotation?: string;
 }
 

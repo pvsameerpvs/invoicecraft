@@ -163,6 +163,8 @@ export function InvoiceEditorContainer({ initialInvoiceId }: Props) {
 
             // 1.5 Handle "Convert from Quotation"
             const convertFromId = searchParams.get("convertFrom");
+            const clientNameFromQuery = searchParams.get("client");
+
             if (!loaded && !initialInvoiceId && convertFromId) {
                 const res = await fetch(`/api/invoice-history?type=Quotation`);
                 const history = await res.json();
@@ -171,16 +173,25 @@ export function InvoiceEditorContainer({ initialInvoiceId }: Props) {
                 if (source) {
                      try {
                         const parsed = JSON.parse(source.payloadJson);
+                        // 1. Fetch Next Invoice Number
+                        const nextNumRes = await fetch(`/api/next-number?type=Invoice`);
+                        const nextNumData = await nextNumRes.json();
+                        const nextInvoiceNum = nextNumData.nextNumber || `INV-${new Date().getFullYear()}-${Date.now().toString().slice(-6)}`;
+
                         setInvoice(prev => ({
                             ...initialInvoiceData,
                             ...settingsDefaults,
                             ...parsed,
+                            invoiceNumber: nextInvoiceNum, 
                             documentType: "Invoice",
                             status: "Unpaid",
                             sourceQuotation: convertFromId,
-                            invoiceNumber: "Loading...", // Will be updated in step 2
+                            invoiceToCompany: clientNameFromQuery || parsed.invoiceToCompany || "", // Prioritize URL param for identity
+                            date: new Date().toISOString().slice(0, 10),
+                            invoiceTo: "INVOICE TO:" // Restore default invoice label
                         }));
                         toast.success(`Converting ${convertFromId} to Invoice`);
+                        loaded = true;
                      } catch (e) {
                          console.error("Failed to parse source quotation", e);
                      }
@@ -191,43 +202,57 @@ export function InvoiceEditorContainer({ initialInvoiceId }: Props) {
              try {
                 if (!loaded && !initialInvoiceId) {
                     const typeFromQuery = searchParams.get("type") as "Invoice" | "Quotation";
+                    const clientNameFromQuery = searchParams.get("client");
+
+                    const defaultValidity = new Date();
+                    defaultValidity.setDate(defaultValidity.getDate() + 30); // 30 days default
 
                     // Apply database defaults + base structure
                     setInvoice(prev => ({
                         ...prev, 
                         ...settingsDefaults,
                         documentType: typeFromQuery || "Invoice",
-                        invoiceNumber: "Loading..."
+                        invoiceNumber: "Loading...",
+                        invoiceToCompany: clientNameFromQuery || "",
+                        validityDate: typeFromQuery === "Quotation" ? defaultValidity.toISOString().slice(0, 10) : undefined
                     }));
                     
                     const res = await fetch(`/api/invoice-history?type=${typeFromQuery || "Invoice"}`);
                     const history = await res.json();
-                    
-                    const currentYear = new Date().getFullYear();
-                    const docType = typeFromQuery || "Invoice";
-                    const prefix = docType === "Quotation" ? "QTN" : "INV";
-                    let nextNum = `${prefix}-${currentYear}-000001`; 
-                    
-                    if (Array.isArray(history) && history.length > 0) {
-                      // Find the latest of the same type
-                      const latestOfType = history.find((h: any) => h.documentType === docType);
-                      
-                      if (latestOfType) {
-                        const regex = new RegExp(`${prefix}-(\\d{4})-(\\d+)`);
-                        const match = (latestOfType.invoiceNumber || "").match(regex);
-                        
-                        if (match) {
-                            const lastYear = parseInt(match[1], 10);
-                            const lastSeq = parseInt(match[2], 10);
-                            
-                            if (lastYear === currentYear) {
-                                const nextSeq = lastSeq + 1;
-                                nextNum = `${prefix}-${currentYear}-${String(nextSeq).padStart(6, "0")}`;
+
+                    // If client name is provided, try to find their last address from clients API
+                    if (clientNameFromQuery) {
+                        try {
+                            const clientsRes = await fetch("/api/clients");
+                            const clients = await clientsRes.json();
+                            const client = clients.find((c: any) => c.name === clientNameFromQuery);
+                            if (client) {
+                                setInvoice(prev => ({
+                                    ...prev,
+                                    invoiceToAddress: client.address || ""
+                                }));
                             }
+                        } catch (e) {
+                            console.error("Failed to fetch client details", e);
                         }
-                      }
                     }
-                    setInvoice(prev => ({...prev, invoiceNumber: nextNum}));
+                    
+                    // 2. Fetch Next Unique Number from Server
+                    const docType = typeFromQuery || "Invoice";
+                    const currentYear = new Date().getFullYear();
+                    try {
+                        const nextNumRes = await fetch(`/api/next-number?type=${docType}`);
+                        const nextNumData = await nextNumRes.json();
+                        if (nextNumData.nextNumber) {
+                            setInvoice(prev => ({...prev, invoiceNumber: nextNumData.nextNumber}));
+                        } else {
+                            // Fallback if API fails
+                            setInvoice(prev => ({...prev, invoiceNumber: `${docType === "Quotation" ? "QTN" : "INV"}-${currentYear}-${Date.now().toString().slice(-6)}`}));
+                        }
+                    } catch (err) {
+                        console.error("Failed to fetch next number", err);
+                        setInvoice(prev => ({...prev, invoiceNumber: `ERROR-RETRY`}));
+                    }
                 } 
 
              } catch (err) {

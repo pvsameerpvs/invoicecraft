@@ -168,7 +168,7 @@ export const HistoryRow = ({
                     <button
                       onClick={() => { 
                         setMenuOpen(false); 
-                        window.location.href = `/invoice?convertFrom=${row.invoiceNumber}`;
+                        window.location.href = `/invoice?convertFrom=${row.invoiceNumber}&client=${encodeURIComponent(row.clientName)}`;
                       }}
                       className="flex w-full items-center gap-3 px-3 py-2.5 text-left text-sm font-bold text-brand-primary rounded-xl hover:bg-brand-50 transition-all"
                     >

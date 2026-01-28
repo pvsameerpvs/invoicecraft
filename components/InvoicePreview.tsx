@@ -178,6 +178,16 @@ export const InvoicePreview: React.FC<InvoicePreviewProps> = ({
                         {isQuotation ? (value.invoiceNumber || " ") : formatDate(value.date)}
                       </span>
                     </div>
+                    {isQuotation && value.validityDate && (
+                      <div>
+                        <span className="mr-2 text-[10px] uppercase tracking-wider font-bold text-slate-400">
+                          Valid Until:
+                        </span>
+                        <span className="font-bold text-rose-600">
+                          {formatDate(value.validityDate)}
+                        </span>
+                      </div>
+                    )}
                     {!isQuotation && value.sourceQuotation && (
                       <div className="mt-1">
                         <span className="mr-2 text-[10px] uppercase tracking-wider font-bold text-slate-400">
@@ -192,10 +202,10 @@ export const InvoicePreview: React.FC<InvoicePreviewProps> = ({
                 </section>
               )}
 
-              {!isQuotation && pageIndex === 0 && (
-                <section className="mt-10 text-[11px]">
-                  <span className="font-semibold">Subject: - </span>
-                  <span className="uppercase">{value.subject}</span>
+              {pageIndex === 0 && value.subject && (
+                <section className={`${isQuotation ? 'mt-6 bg-slate-50 p-4 rounded-xl border border-slate-100' : 'mt-10'} text-[11px]`}>
+                  <span className="font-bold text-slate-400 uppercase tracking-widest text-[9px] block mb-1">Subject / Project:</span>
+                  <span className={`font-black uppercase tracking-tight ${isQuotation ? 'text-sm text-slate-900' : ''}`}>{value.subject}</span>
                 </section>
               )}
 

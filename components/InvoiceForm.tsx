@@ -6,6 +6,9 @@ import { Input } from "./ui/input";
 import { Textarea } from "./ui/textarea";
 import { Label } from "./ui/label";
 import React from "react";
+import { ClientSelect } from "./ClientSelect";
+import { ExternalLink } from "lucide-react";
+import Link from "next/link";
 
 interface InvoiceFormProps {
   value: InvoiceData;
@@ -235,14 +238,29 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({
           )}
 
           <div>
-            <Label htmlFor="invoiceToCompany">Client name</Label>
-            <Input
-              id="invoiceToCompany"
+            <div className="flex items-center justify-between mb-1">
+              <Label htmlFor="invoiceToCompany">Client name</Label>
+              {value.invoiceToCompany && (
+                <Link 
+                  href={`/clients/${encodeURIComponent(value.invoiceToCompany)}`}
+                  className="flex items-center gap-1 text-[10px] font-bold text-brand-primary hover:underline transition-all"
+                  target="_blank"
+                >
+                  View Profile
+                  <ExternalLink className="w-2.5 h-2.5" />
+                </Link>
+              )}
+            </div>
+            <ClientSelect
               value={value.invoiceToCompany}
               placeholder={value.documentType === "Quotation" ? "Enter potential client name" : "Enter client name"}
-              onChange={(e) =>
-                handleFieldChange("invoiceToCompany", e.target.value)
-              }
+              onChange={(name, address) => {
+                const next = { ...value, invoiceToCompany: name };
+                if (address) {
+                  next.invoiceToAddress = address;
+                }
+                onChange(next);
+              }}
             />
           </div>
 
@@ -278,6 +296,18 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({
               onChange={(e) => handleFieldChange("date", e.target.value)}
             />
           </div>
+
+          {value.documentType === "Quotation" && (
+            <div>
+              <Label htmlFor="validityDate">Validity Date</Label>
+              <Input
+                id="validityDate"
+                type="date"
+                value={value.validityDate || ""}
+                onChange={(e) => handleFieldChange("validityDate", e.target.value)}
+              />
+            </div>
+          )}
 
           <div className={value.documentType === "Quotation" ? "col-span-1" : "col-span-2"}>
             <Label htmlFor="subject">{value.documentType === "Quotation" ? "Subject / Project" : "Subject"}</Label>
