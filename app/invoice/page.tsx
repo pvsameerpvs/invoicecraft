@@ -1,8 +1,10 @@
-"use client";
-
-import React from "react";
+import React, { Suspense } from "react";
 import { InvoiceEditorContainer } from "../../components/InvoiceEditorContainer";
 
 export default function InvoicePage() {
-  return <InvoiceEditorContainer />;
+  return (
+    <Suspense fallback={<div>Loading Editor...</div>}>
+      <InvoiceEditorContainer />
+    </Suspense>
+  );
 }

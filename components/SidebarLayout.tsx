@@ -27,7 +27,9 @@ export function SidebarLayout({ children }: { children: React.ReactNode }) {
   } else if (pathname?.startsWith("/invoice")) {
       navLabel = "v1.0 Editor";
   } else if (pathname?.startsWith("/history")) {
-      navLabel = "v1.0 History";
+      navLabel = "Invoice History";
+  } else if (pathname?.startsWith("/quotations")) {
+      navLabel = "Quotation History";
   } else if (pathname?.startsWith("/activity")) {
       navLabel = "Admin Activity Log";
       // navVariant = "transparent"; // Keep white for structural consistency in "proper" layout
@@ -53,7 +55,7 @@ export function SidebarLayout({ children }: { children: React.ReactNode }) {
             )}
             
             {/* Content Area */}
-            <div className="flex-1 flex flex-col h-full overflow-hidden relative">
+            <div className="flex-1 flex flex-col h-full overflow-y-auto relative">
             {children}
             </div>
         </div>

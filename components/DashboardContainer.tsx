@@ -6,7 +6,7 @@ import {
     AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
     PieChart, Pie, Cell, Legend
 } from "recharts";
-import { PlusCircle, FileText, TrendingUp, AlertCircle, CheckCircle, Percent, TrendingDown, RotateCcw, Filter, Calendar } from "lucide-react";
+import { PlusCircle, FileText, TrendingUp, AlertCircle, CheckCircle, Percent, TrendingDown, RotateCcw, Filter, Calendar, ChevronRight } from "lucide-react";
 
 interface DashboardProps {
     onCreateInvoice: () => void;
@@ -197,13 +197,23 @@ export const DashboardContainer = ({ onCreateInvoice, invoiceHistory = [] }: Das
                              </button>
                         </div>
 
-                        <button 
-                            onClick={onCreateInvoice}
-                            className="flex items-center justify-center gap-2 bg-brand-primary text-white px-5 py-2.5 rounded-xl font-bold shadow-lg shadow-brand-primary/20 hover:bg-brand-end active:scale-95 transition-all"
-                        >
-                            <PlusCircle className="w-5 h-5" />
-                            <span className="inline">Create Invoice</span>
-                        </button>
+                        <div className="flex items-center gap-3">
+                            <button 
+                                onClick={() => router.push("/invoice?type=Quotation")}
+                                className="flex items-center justify-center gap-2 bg-white text-slate-900 border border-slate-200 px-5 py-2.5 rounded-xl font-bold shadow-sm hover:bg-slate-50 active:scale-95 transition-all"
+                            >
+                                <PlusCircle className="w-5 h-5 text-brand-primary" />
+                                <span className="inline">Create Quotation</span>
+                            </button>
+
+                            <button 
+                                onClick={onCreateInvoice}
+                                className="flex items-center justify-center gap-2 bg-brand-primary text-white px-5 py-2.5 rounded-xl font-bold shadow-lg shadow-brand-primary/20 hover:bg-brand-end active:scale-95 transition-all"
+                            >
+                                <PlusCircle className="w-5 h-5" />
+                                <span className="inline">Create Invoice</span>
+                            </button>
+                        </div>
                     </div>
                 </div>
 
@@ -342,42 +352,121 @@ export const DashboardContainer = ({ onCreateInvoice, invoiceHistory = [] }: Das
                     </div>
                 </div>
 
-                {/* Recent Activity Mini-Table */}
-                <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
-                    <div className="px-6 py-4 border-b border-slate-50 flex items-center justify-between">
-                        <h3 className="font-bold text-slate-900">Recent Invoices</h3>
-                        <button 
-                            onClick={() => router.push('/history')}
-                            className="text-sm font-bold text-brand-600 hover:text-brand-700"
-                        >
-                            View All
-                        </button>
-                    </div>
-                    <div className="divide-y divide-slate-50">
-                        {invoiceHistory.slice(0, 3).map((invoice, i) => (
-                            <div key={i} className="flex items-center justify-between px-6 py-4 hover:bg-slate-50 transition-colors">
-                                <div className="flex items-center gap-4">
-                                    <div>
-                                        <p className="font-bold text-slate-900 text-sm">Invoice {invoice.invoiceNumber}</p>
-                                        <p className="text-xs text-slate-500">Generated on {invoice.date}</p>
+                {/* Invoices & Quotations Grid */}
+                <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
+                    {/* Recent Invoices */}
+                    <div className="bg-white rounded-3xl shadow-xl shadow-slate-200/50 border border-slate-100 overflow-hidden">
+                        <div className="px-8 py-6 border-b border-slate-50 flex items-center justify-between bg-slate-50/30">
+                            <div>
+                                <h3 className="font-black text-slate-900 tracking-tight">Recent Invoices</h3>
+                                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Standard Billing</p>
+                            </div>
+                            <button 
+                                onClick={() => router.push('/history')}
+                                className="text-xs font-black text-brand-primary hover:text-brand-end flex items-center gap-1 group"
+                            >
+                                VIEW ALL
+                                <ChevronRight className="w-3 h-3 transition-transform group-hover:translate-x-0.5" />
+                            </button>
+                        </div>
+                        <div className="divide-y divide-slate-50">
+                            {invoiceHistory.filter(i => i.documentType !== "Quotation").slice(0, 5).map((invoice, i) => (
+                                <div key={i} className="flex items-center justify-between px-8 py-5 hover:bg-slate-50 transition-colors cursor-pointer group" onClick={() => router.push(`/invoice/edit/${invoice.invoiceNumber}`)}>
+                                    <div className="flex items-center gap-4">
+                                        <div className="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center text-slate-400 group-hover:bg-brand-50 group-hover:text-brand-primary transition-colors">
+                                            <FileText className="w-5 h-5" />
+                                        </div>
+                                        <div>
+                                            <div className="flex items-center gap-2">
+                                                <p className="font-bold text-slate-900 text-sm whitespace-nowrap">{invoice.invoiceNumber}</p>
+                                                {(invoice as any).payloadJson && JSON.parse((invoice as any).payloadJson).sourceQuotation && (
+                                                    <span className="bg-brand-50 text-brand-primary text-[8px] font-black px-1.5 py-0.5 rounded-md uppercase tracking-tighter" title={`From ${JSON.parse((invoice as any).payloadJson).sourceQuotation}`}>
+                                                        LINKED
+                                                    </span>
+                                                )}
+                                            </div>
+                                            <p 
+                                                className="text-[10px] text-slate-400 font-bold uppercase hover:text-brand-primary transition-colors"
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    router.push(`/clients/${encodeURIComponent(invoice.clientName)}`);
+                                                }}
+                                            >
+                                                {invoice.clientName}
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <div className="text-right">
+                                        <p className="font-black text-slate-900 text-sm">{invoice.currency} {invoice.total}</p>
+                                        <span className={`inline-flex items-center gap-1 text-[9px] uppercase font-black px-2 py-0.5 rounded-full mt-1 ${
+                                            invoice.status === 'Paid' ? 'text-emerald-600 bg-emerald-50' : 'text-rose-600 bg-rose-50'
+                                        }`}>
+                                            {invoice.status === 'Paid' ? <CheckCircle className="w-2.5 h-2.5" /> : <AlertCircle className="w-2.5 h-2.5" />}
+                                            {invoice.status || 'Unpaid'}
+                                        </span>
                                     </div>
                                 </div>
-                                <div className="text-right">
-                                     <p className="font-bold text-slate-900 text-sm">{invoice.currency} {invoice.total}</p>
-                                     <span className={`inline-flex items-center gap-1 text-[10px] uppercase font-bold px-2 py-0.5 rounded-full mt-1 ${
-                                         invoice.status === 'Paid' ? 'text-green-600 bg-green-50' : 'text-brand-600 bg-brand-50'
-                                     }`}>
-                                        {invoice.status === 'Paid' ? <CheckCircle className="w-3 h-3" /> : <AlertCircle className="w-3 h-3" />}
-                                        {invoice.status || 'Unpaid'}
-                                     </span>
+                            ))}
+                            {invoiceHistory.filter(i => i.documentType !== "Quotation").length === 0 && (
+                                <div className="px-8 py-16 text-center text-slate-400 font-bold text-sm">
+                                    No recent invoices.
                                 </div>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* Recent Quotations */}
+                    <div className="bg-white rounded-3xl shadow-xl shadow-slate-200/50 border border-slate-100 overflow-hidden">
+                         <div className="px-8 py-6 border-b border-slate-50 flex items-center justify-between bg-slate-50/30">
+                            <div>
+                                <h3 className="font-black text-slate-900 tracking-tight">Recent Quotations</h3>
+                                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Price Proposals</p>
                             </div>
-                        ))}
-                        {invoiceHistory.length === 0 && (
-                             <div className="px-6 py-8 text-center text-slate-500 text-sm">
-                                 No recent invoices found.
-                             </div>
-                        )}
+                            <button 
+                                onClick={() => router.push('/quotations')}
+                                className="text-xs font-black text-brand-primary hover:text-brand-end flex items-center gap-1 group"
+                            >
+                                VIEW ALL
+                                <ChevronRight className="w-3 h-3 transition-transform group-hover:translate-x-0.5" />
+                            </button>
+                        </div>
+                        <div className="divide-y divide-slate-50">
+                            {invoiceHistory.filter(i => i.documentType === "Quotation").slice(0, 5).map((q, i) => (
+                                <div key={i} className="flex items-center justify-between px-8 py-5 hover:bg-slate-50 transition-colors cursor-pointer group" onClick={() => router.push(`/invoice/edit/${q.invoiceNumber}?type=Quotation`)}>
+                                    <div className="flex items-center gap-4">
+                                        <div className="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center text-slate-400 group-hover:bg-brand-50 group-hover:text-amber-600 transition-colors">
+                                            <FileText className="w-5 h-5" />
+                                        </div>
+                                        <div>
+                                            <p className="font-bold text-slate-900 text-sm whitespace-nowrap">{q.invoiceNumber}</p>
+                                            <p 
+                                                className="text-[10px] text-slate-400 font-bold uppercase hover:text-brand-primary transition-colors"
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    router.push(`/clients/${encodeURIComponent(q.clientName)}`);
+                                                }}
+                                            >
+                                                {q.clientName}
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <div className="text-right">
+                                        <p className="font-black text-slate-900 text-sm">{q.currency} {q.total}</p>
+                                        <span className={`inline-flex items-center gap-1 text-[9px] uppercase font-black px-2 py-0.5 rounded-full mt-1 ${
+                                            q.status === 'Accepted' ? 'text-emerald-600 bg-emerald-50' : 'text-amber-600 bg-amber-50'
+                                        }`}>
+                                            {q.status === 'Accepted' ? <CheckCircle className="w-2.5 h-2.5" /> : <AlertCircle className="w-2.5 h-2.5" />}
+                                            {q.status || 'Draft'}
+                                        </span>
+                                    </div>
+                                </div>
+                            ))}
+                             {invoiceHistory.filter(i => i.documentType === "Quotation").length === 0 && (
+                                <div className="px-8 py-16 text-center text-slate-400 font-bold text-sm">
+                                    No recent quotations.
+                                </div>
+                            )}
+                        </div>
                     </div>
                 </div>
 

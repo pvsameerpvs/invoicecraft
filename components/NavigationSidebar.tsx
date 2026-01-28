@@ -12,7 +12,9 @@ import {
   ChevronLeft, 
   ChevronRight,
   Settings,
-  Building2
+  Building2,
+  FileText,
+  Users
 } from "lucide-react";
 import toast from "react-hot-toast";
 import { useUnsavedChanges } from "./providers/UnsavedChangesContext";
@@ -46,6 +48,8 @@ export function NavigationSidebar() {
     { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
     { label: "New Invoice", href: "/invoice", icon: PlusCircle },
     { label: "Invoice History", href: "/history", icon: History },
+    { label: "Quotation History", href: "/quotations", icon: FileText },
+    { label: "Clients", href: "/clients", icon: Users },
     ...(isAdmin ? [{ label: "Activity Logs", href: "/activity", icon: Activity }] : []),
     { label: "Profile", href: "/profile?tab=personal_info", icon: User },
     ...(isAdmin ? [{ label: "Company Details", href: "/profile?tab=company_details", icon: Building2 }] : []),

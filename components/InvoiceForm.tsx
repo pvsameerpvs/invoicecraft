@@ -115,22 +115,31 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
-  {/* <Button
-    type="button"
-    onClick={() => window.location.assign("/history")}
-    className="h-10 rounded-xl bg-white px-4 text-sm font-medium text-brand-primary shadow-sm ring-1 ring-orange-200 hover:bg-orange-50"
-  >
-    History
-  </Button> */}
+        <div className="flex p-1 bg-slate-100 rounded-xl">
+          <button
+            type="button"
+            onClick={() => handleFieldChange("documentType", "Invoice")}
+            className={`px-4 py-1.5 text-xs font-semibold rounded-lg transition-all ${value.documentType === "Invoice" || !value.documentType ? "bg-white text-slate-900 shadow-sm" : "text-slate-500 hover:text-slate-700"}`}
+          >
+            Invoice
+          </button>
+          <button
+            type="button"
+            onClick={() => handleFieldChange("documentType", "Quotation")}
+            className={`px-4 py-1.5 text-xs font-semibold rounded-lg transition-all ${value.documentType === "Quotation" ? "bg-white text-slate-900 shadow-sm" : "text-slate-500 hover:text-slate-700"}`}
+          >
+            Quotation
+          </button>
+        </div>
 
-  <Button
-    type="button"
-    onClick={() => setIsEditingLockedFields((v) => !v)}
-    className="h-10 rounded-xl bg-white px-4 text-sm font-medium text-brand-primary shadow-sm ring-1 ring-brand-200 hover:bg-brand-50"
-  >
-    {isEditingLockedFields ? "Lock fields" : "Edit locked fields"}
-  </Button>
-</div>
+        <Button
+          type="button"
+          onClick={() => setIsEditingLockedFields((v) => !v)}
+          className="h-10 rounded-xl bg-white px-4 text-sm font-medium text-brand-primary shadow-sm ring-1 ring-brand-200 hover:bg-brand-50"
+        >
+          {isEditingLockedFields ? "Lock fields" : "Edit locked fields"}
+        </Button>
+      </div>
 
 
       <section className="space-y-2 rounded-lg border border-brand-200 bg-white p-4 shadow-sm">
@@ -174,38 +183,63 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({
             />
           </div>
 
-          <div>
-             <Label htmlFor="fromCompanyTrn">TRN / Tax ID</Label>
-             <Input
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <Label htmlFor="fromCompanyTrn">TRN / Tax ID</Label>
+              <Input
                 id="fromCompanyTrn"
                 value={value.fromCompanyTrn || ""}
                 disabled={lockedDisabled}
                 className="disabled:opacity-70"
                 onChange={(e) => handleFieldChange("fromCompanyTrn", e.target.value)}
-             />
+              />
+            </div>
+            <div>
+              <Label htmlFor="fromCompanyEmail">Company Email</Label>
+              <Input
+                id="fromCompanyEmail"
+                value={value.fromCompanyEmail || ""}
+                disabled={lockedDisabled}
+                className="disabled:opacity-70"
+                onChange={(e) => handleFieldChange("fromCompanyEmail", e.target.value)}
+              />
+            </div>
+            <div className="col-span-2">
+              <Label htmlFor="fromCompanyPhone">Company Phone</Label>
+              <Input
+                id="fromCompanyPhone"
+                value={value.fromCompanyPhone || ""}
+                disabled={lockedDisabled}
+                className="disabled:opacity-70"
+                onChange={(e) => handleFieldChange("fromCompanyPhone", e.target.value)}
+              />
+            </div>
           </div>
         </div>
       </section>
 
       <section className="space-y-2 rounded-lg border border-brand-200 bg-white p-4 shadow-sm">
-        <h2 className="text-sm font-semibold">Invoice details</h2>
+        <h2 className="text-sm font-semibold text-brand-primary">{value.documentType === "Quotation" ? "Quotation details" : "Invoice details"}</h2>
         <div className="grid grid-cols-2 gap-3">
-          <div>
-            <Label htmlFor="invoiceTo">Invoice to (label)</Label>
-            <Input
-              id="invoiceTo"
-              value={value.invoiceTo}
-              disabled={lockedDisabled}
-              className="disabled:opacity-70"
-              onChange={(e) => handleFieldChange("invoiceTo", e.target.value)}
-            />
-          </div>
+          {value.documentType !== "Quotation" && (
+            <div>
+              <Label htmlFor="invoiceTo">Invoice to (label)</Label>
+              <Input
+                id="invoiceTo"
+                value={value.invoiceTo}
+                disabled={lockedDisabled}
+                className="disabled:opacity-70"
+                onChange={(e) => handleFieldChange("invoiceTo", e.target.value)}
+              />
+            </div>
+          )}
 
           <div>
             <Label htmlFor="invoiceToCompany">Client name</Label>
             <Input
               id="invoiceToCompany"
               value={value.invoiceToCompany}
+              placeholder={value.documentType === "Quotation" ? "Enter potential client name" : "Enter client name"}
               onChange={(e) =>
                 handleFieldChange("invoiceToCompany", e.target.value)
               }
@@ -226,7 +260,7 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({
           </div>
 
           <div>
-            <Label htmlFor="invoiceNumber">Invoice # (Auto)</Label>
+            <Label htmlFor="invoiceNumber">{value.documentType === "Quotation" ? "Quotation # (Auto)" : "Invoice # (Auto)"}</Label>
             <Input
               id="invoiceNumber"
               value={value.invoiceNumber}
@@ -245,27 +279,30 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({
             />
           </div>
 
-          <div className="col-span-2">
-            <Label htmlFor="subject">Subject</Label>
+          <div className={value.documentType === "Quotation" ? "col-span-1" : "col-span-2"}>
+            <Label htmlFor="subject">{value.documentType === "Quotation" ? "Subject / Project" : "Subject"}</Label>
             <Input
               id="subject"
               value={value.subject}
+              placeholder={value.documentType === "Quotation" ? "e.g. Website Development" : ""}
               onChange={(e) => handleFieldChange("subject", e.target.value)}
             />
           </div>
 
-          <div>
-             <Label htmlFor="status">Status</Label>
-             <select
-                id="status"
-                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 border-brand-200"
-                value={value.status || "Unpaid"}
-                onChange={(e) => handleFieldChange("status", e.target.value)}
-             >
-                <option value="Unpaid">Unpaid</option>
-                <option value="Paid">Paid</option>
-             </select>
-          </div>
+          {value.documentType !== "Quotation" && (
+            <div>
+               <Label htmlFor="status">Status</Label>
+               <select
+                  id="status"
+                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 border-brand-200"
+                  value={value.status || "Unpaid"}
+                  onChange={(e) => handleFieldChange("status", e.target.value)}
+               >
+                  <option value="Unpaid">Unpaid</option>
+                  <option value="Paid">Paid</option>
+               </select>
+            </div>
+          )}
         </div>
       </section>
 
@@ -468,6 +505,16 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({
         disabled={lockedDisabled}
         onChange={(e) => handleFieldChange("overrideTotal", e.target.value)}
       />
+    </div>
+
+    <div>
+      <Label htmlFor="discount">Discount (optional)</Label>
+      <Input
+        id="discount"
+        placeholder="0.00"
+        value={value.discount ?? ""}
+        onChange={(e) => handleFieldChange("discount", e.target.value)}
+      />
       <p className="mt-1 text-[10px] text-slate-500">
         Live total: <span className="font-semibold">{liveTotalText}</span>
       </p>
@@ -475,136 +522,163 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({
   </div>
 </section>
 
-      <section className="space-y-2 rounded-lg border border-brand-200 bg-white p-4 shadow-sm">
-        <h2 className="text-sm font-semibold">Payment / signature</h2>
+      {value.documentType !== "Quotation" ? (
+        <section className="space-y-4 rounded-lg border border-brand-200 bg-white p-4 shadow-sm">
+          <h2 className="text-sm font-semibold text-brand-primary">Payment / Signature</h2>
 
-        <div className="space-y-3">
-          <div>
-            <Label htmlFor="footerNote">Terms & Conditions</Label>
-            <Textarea
-              id="footerNote"
-              rows={4}
-              value={value.footerNote}
-              disabled={lockedDisabled}
-              className="disabled:opacity-70"
-              onChange={(e) => handleFieldChange("footerNote", e.target.value)}
-            />
+          <div className="space-y-3">
+            <div>
+              <Label htmlFor="footerNote">Terms & Conditions</Label>
+              <Textarea
+                id="footerNote"
+                rows={4}
+                value={value.footerNote}
+                disabled={lockedDisabled}
+                className="disabled:opacity-70"
+                onChange={(e) => handleFieldChange("footerNote", e.target.value)}
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="signatureLabel">Signature Label</Label>
+              <Input
+                id="signatureLabel"
+                value={value.signatureLabel}
+                disabled={lockedDisabled}
+                className="disabled:opacity-70"
+                onChange={(e) => handleFieldChange("signatureLabel", e.target.value)}
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label htmlFor="bankCompanyName">Bank company name</Label>
+                <Input
+                  id="bankCompanyName"
+                  value={value.bankDetails.companyName}
+                  disabled={lockedDisabled}
+                  className="disabled:opacity-70"
+                  onChange={(e) =>
+                    onChange({
+                      ...value,
+                      bankDetails: {
+                        ...value.bankDetails,
+                        companyName: e.target.value,
+                      },
+                    })
+                  }
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="bankName">Bank name</Label>
+                <Input
+                  id="bankName"
+                  value={value.bankDetails.bankName}
+                  disabled={lockedDisabled}
+                  className="disabled:opacity-70"
+                  onChange={(e) =>
+                    onChange({
+                      ...value,
+                      bankDetails: {
+                        ...value.bankDetails,
+                        bankName: e.target.value,
+                      },
+                    })
+                  }
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="bankLabel">Bank label</Label>
+                <Input
+                  id="bankLabel"
+                  value={value.bankDetails.bankLabel}
+                  disabled={lockedDisabled}
+                  className="disabled:opacity-70"
+                  onChange={(e) =>
+                    onChange({
+                      ...value,
+                      bankDetails: {
+                        ...value.bankDetails,
+                        bankLabel: e.target.value,
+                      },
+                    })
+                  }
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="iban">Account IBAN</Label>
+                <Input
+                  id="iban"
+                  value={value.bankDetails.accountIban}
+                  disabled={lockedDisabled}
+                  className="disabled:opacity-70"
+                  onChange={(e) =>
+                    onChange({
+                      ...value,
+                      bankDetails: {
+                        ...value.bankDetails,
+                        accountIban: e.target.value,
+                      },
+                    })
+                  }
+                />
+              </div>
+
+              <div className="col-span-2">
+                <Label htmlFor="accountNumber">Account number</Label>
+                <Input
+                  id="accountNumber"
+                  value={value.bankDetails.accountNumber}
+                  disabled={lockedDisabled}
+                  className="disabled:opacity-70"
+                  onChange={(e) =>
+                    onChange({
+                      ...value,
+                      bankDetails: {
+                        ...value.bankDetails,
+                        accountNumber: e.target.value,
+                      },
+                    })
+                  }
+                />
+              </div>
+            </div>
           </div>
-
-          <div>
-            <Label htmlFor="signatureLabel">Signature label</Label>
-            <Input
-              id="signatureLabel"
-              value={value.signatureLabel}
-              disabled={lockedDisabled}
-              className="disabled:opacity-70"
-              onChange={(e) =>
-                handleFieldChange("signatureLabel", e.target.value)
-              }
-            />
-          </div>
-
-          <div className="grid grid-cols-2 gap-3">
+        </section>
+      ) : (
+        <section className="space-y-4 rounded-lg border border-brand-200 bg-white p-4 shadow-sm">
+            <h2 className="text-sm font-semibold text-brand-primary">Quotation Footer</h2>
             <div>
-              <Label htmlFor="bankCompanyName">Bank company name</Label>
-              <Input
-                id="bankCompanyName"
-                value={value.bankDetails.companyName}
-                disabled={lockedDisabled}
-                className="disabled:opacity-70"
-                onChange={(e) =>
-                  onChange({
-                    ...value,
-                    bankDetails: {
-                      ...value.bankDetails,
-                      companyName: e.target.value,
-                    },
-                  })
-                }
+              <Label htmlFor="footerNote">Terms & Conditions</Label>
+              <Textarea
+                id="footerNote"
+                rows={6}
+                value={value.footerNote}
+                placeholder="List your quotation validity, payment terms, etc."
+                className="resize-none"
+                onChange={(e) => handleFieldChange("footerNote", e.target.value)}
               />
             </div>
-
             <div>
-              <Label htmlFor="bankName">Bank name</Label>
+              <Label htmlFor="signatureLabel">Authorized Signature Label</Label>
               <Input
-                id="bankName"
-                value={value.bankDetails.bankName}
-                disabled={lockedDisabled}
-                className="disabled:opacity-70"
-                onChange={(e) =>
-                  onChange({
-                    ...value,
-                    bankDetails: {
-                      ...value.bankDetails,
-                      bankName: e.target.value,
-                    },
-                  })
-                }
+                id="signatureLabel"
+                value={value.signatureLabel || "Authorized Signature"}
+                onChange={(e) => handleFieldChange("signatureLabel", e.target.value)}
               />
             </div>
+         </section>
+      )}
 
-            <div>
-              <Label htmlFor="bankLabel">Bank label</Label>
-              <Input
-                id="bankLabel"
-                value={value.bankDetails.bankLabel}
-                disabled={lockedDisabled}
-                className="disabled:opacity-70"
-                onChange={(e) =>
-                  onChange({
-                    ...value,
-                    bankDetails: {
-                      ...value.bankDetails,
-                      bankLabel: e.target.value,
-                    },
-                  })
-                }
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="iban">Account IBAN</Label>
-              <Input
-                id="iban"
-                value={value.bankDetails.accountIban}
-                disabled={lockedDisabled}
-                className="disabled:opacity-70"
-                onChange={(e) =>
-                  onChange({
-                    ...value,
-                    bankDetails: {
-                      ...value.bankDetails,
-                      accountIban: e.target.value,
-                    },
-                  })
-                }
-              />
-            </div>
-
-            <div className="col-span-2">
-              <Label htmlFor="accountNumber">Account number</Label>
-              <Input
-                id="accountNumber"
-                value={value.bankDetails.accountNumber}
-                disabled={lockedDisabled}
-                className="disabled:opacity-70"
-                onChange={(e) =>
-                  onChange({
-                    ...value,
-                    bankDetails: {
-                      ...value.bankDetails,
-                      accountNumber: e.target.value,
-                    },
-                  })
-                }
-              />
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <div className="flex justify-end">
-        <Button type="button" onClick={onDownloadPdf} className="bg-gradient-to-r from-brand-start to-brand-end hover:shadow-lg hover:shadow-brand-primary/30 transition-all">
+      <div className="flex justify-end pt-4">
+        <Button 
+          type="button" 
+          onClick={onDownloadPdf} 
+          className="bg-gradient-to-r from-brand-start to-brand-end hover:shadow-lg hover:shadow-brand-primary/30 transition-all font-bold px-8 py-6 rounded-xl text-lg"
+        >
           {isUpdate ? "Update & Download PDF" : "Save & Download PDF"}
         </Button>
       </div>

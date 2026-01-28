@@ -1,6 +1,4 @@
-"use client";
-
-import React from "react";
+import React, { Suspense } from "react";
 import { InvoiceEditorContainer } from "../../../../components/InvoiceEditorContainer";
 
 interface Props {
@@ -10,8 +8,12 @@ interface Props {
 }
 
 export default function EditInvoicePage({ params }: Props) {
-  // Decode the ID in case it has special chars, though usually not needed for simple IDs
+  // Decode the ID in case it has special chars
   const id = decodeURIComponent(params.id);
   
-  return <InvoiceEditorContainer initialInvoiceId={id} />;
+  return (
+    <Suspense fallback={<div>Loading Editor...</div>}>
+      <InvoiceEditorContainer initialInvoiceId={id} />
+    </Suspense>
+  );
 }

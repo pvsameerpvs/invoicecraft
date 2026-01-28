@@ -10,7 +10,7 @@ import { downloadInvoicePdf } from "../lib/pdf";
 import toast from "react-hot-toast";
 import { History, PlusCircle, ChevronLeft, AlertTriangle } from "lucide-react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { PremiumLoader } from "./ui/premium-loader";
 import { useUnsavedChanges } from "./providers/UnsavedChangesContext";
 
@@ -25,6 +25,8 @@ const initialInvoiceData: InvoiceData = {
   fromCompanyName: "", // Fetched from DB
   fromCompanyAddress: "", // Fetched from DB
   fromCompanyTrn: "", // Fetched from DB
+  fromCompanyEmail: "", // Fetched from DB
+  fromCompanyPhone: "", // Fetched from DB
   lineItems: [],
   currency: "AED",
   overrideTotal: "",
@@ -38,6 +40,7 @@ const initialInvoiceData: InvoiceData = {
   },
   signatureLabel: "", // Fetched from DB
   status: "Unpaid",
+  documentType: "Invoice",
 };
 
 interface Props {
@@ -50,6 +53,7 @@ export function InvoiceEditorContainer({ initialInvoiceId }: Props) {
   const previewRef = useRef<HTMLDivElement | null>(null);
 
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { isDirty, setIsDirty, checkUnsavedChanges } = useUnsavedChanges();
 
   // Reset dirty state on mount/unmount
@@ -121,7 +125,8 @@ export function InvoiceEditorContainer({ initialInvoiceId }: Props) {
 
             // 1. If EDITING existing invoice (ID from Prop)
             if (initialInvoiceId) {
-                const res = await fetch("/api/invoice-history");
+                const typeParam = searchParams.get("type") || "Invoice";
+                const res = await fetch(`/api/invoice-history?type=${typeParam}`);
                 const history = await res.json();
                 
                 if (Array.isArray(history)) {
@@ -156,39 +161,70 @@ export function InvoiceEditorContainer({ initialInvoiceId }: Props) {
                 }
             }
 
+            // 1.5 Handle "Convert from Quotation"
+            const convertFromId = searchParams.get("convertFrom");
+            if (!loaded && !initialInvoiceId && convertFromId) {
+                const res = await fetch(`/api/invoice-history?type=Quotation`);
+                const history = await res.json();
+                const source = history.find((h: any) => h.invoiceNumber === convertFromId);
+                
+                if (source) {
+                     try {
+                        const parsed = JSON.parse(source.payloadJson);
+                        setInvoice(prev => ({
+                            ...initialInvoiceData,
+                            ...settingsDefaults,
+                            ...parsed,
+                            documentType: "Invoice",
+                            status: "Unpaid",
+                            sourceQuotation: convertFromId,
+                            invoiceNumber: "Loading...", // Will be updated in step 2
+                        }));
+                        toast.success(`Converting ${convertFromId} to Invoice`);
+                     } catch (e) {
+                         console.error("Failed to parse source quotation", e);
+                     }
+                }
+            }
+
             // 2. If NEW invoice (only if NOT loaded and NO ID provided)
              try {
                 if (!loaded && !initialInvoiceId) {
+                    const typeFromQuery = searchParams.get("type") as "Invoice" | "Quotation";
+
                     // Apply database defaults + base structure
                     setInvoice(prev => ({
                         ...prev, 
                         ...settingsDefaults,
+                        documentType: typeFromQuery || "Invoice",
                         invoiceNumber: "Loading..."
                     }));
                     
-                    const res = await fetch("/api/invoice-history");
+                    const res = await fetch(`/api/invoice-history?type=${typeFromQuery || "Invoice"}`);
                     const history = await res.json();
                     
                     const currentYear = new Date().getFullYear();
-                    let nextNum = `INV-${currentYear}-000001`; 
+                    const docType = typeFromQuery || "Invoice";
+                    const prefix = docType === "Quotation" ? "QTN" : "INV";
+                    let nextNum = `${prefix}-${currentYear}-000001`; 
                     
                     if (Array.isArray(history) && history.length > 0) {
-                      const latest = history[0]; 
-                      const matchNew = (latest.invoiceNumber || "").match(/INV-(\d{4})-(\d+)/);
+                      // Find the latest of the same type
+                      const latestOfType = history.find((h: any) => h.documentType === docType);
                       
-                      if (matchNew) {
-                          const lastYear = parseInt(matchNew[1], 10);
-                          const lastSeq = parseInt(matchNew[2], 10);
-                          
-                          if (lastYear === currentYear) {
-                              const nextSeq = lastSeq + 1;
-                              nextNum = `INV-${currentYear}-${String(nextSeq).padStart(6, "0")}`;
-                          } else {
-                              nextNum = `INV-${currentYear}-000001`;
-                          }
-                      } else {
-                          // Fallback
-                           nextNum = `INV-${currentYear}-000001`;
+                      if (latestOfType) {
+                        const regex = new RegExp(`${prefix}-(\\d{4})-(\\d+)`);
+                        const match = (latestOfType.invoiceNumber || "").match(regex);
+                        
+                        if (match) {
+                            const lastYear = parseInt(match[1], 10);
+                            const lastSeq = parseInt(match[2], 10);
+                            
+                            if (lastYear === currentYear) {
+                                const nextSeq = lastSeq + 1;
+                                nextNum = `${prefix}-${currentYear}-${String(nextSeq).padStart(6, "0")}`;
+                            }
+                        }
                       }
                     }
                     setInvoice(prev => ({...prev, invoiceNumber: nextNum}));

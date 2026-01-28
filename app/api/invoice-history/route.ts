@@ -11,6 +11,79 @@ function money(n: number) {
   return n.toFixed(2);
 }
 
+async function syncQuotationStatus(sheets: any, spreadsheetId: string, quotationNumber: string, status: string) {
+    try {
+        const res = await sheets.spreadsheets.values.get({
+            spreadsheetId,
+            range: "Quotations!A1:M",
+        });
+        const rows = res.data.values || [];
+        const rowIndex = rows.findIndex((r: any) => (r[1] || "").toString().trim() === quotationNumber);
+        
+        if (rowIndex !== -1) {
+            const rowNumber = rowIndex + 1;
+            // Column L is Index 11 (Status)
+            await sheets.spreadsheets.values.update({
+                spreadsheetId,
+                range: `Quotations!L${rowNumber}`,
+                valueInputOption: "USER_ENTERED",
+                requestBody: {
+                    values: [[status]]
+                }
+            });
+            console.log(`Synced Quotation ${quotationNumber} status to ${status}`);
+        }
+    } catch (err) {
+        console.error("Failed to sync quotation status", err);
+    }
+}
+
+async function ensureSheets(sheets: any, spreadsheetId: string) {
+    const meta = await sheets.spreadsheets.get({ spreadsheetId });
+    const existingSheets = meta.data.sheets?.map((s: any) => s.properties?.title) || [];
+    const requests: any[] = [];
+
+    if (!existingSheets.includes("Quotations")) {
+        requests.push({
+            addSheet: { properties: { title: "Quotations" } }
+        });
+    }
+    if (!existingSheets.includes("QuotationLineItems")) {
+        requests.push({
+            addSheet: { properties: { title: "QuotationLineItems" } }
+        });
+    }
+
+    if (requests.length > 0) {
+        await sheets.spreadsheets.batchUpdate({
+            spreadsheetId,
+            requestBody: { requests }
+        });
+
+        // Add headers
+        if (!existingSheets.includes("Quotations")) {
+            await sheets.spreadsheets.values.update({
+                spreadsheetId,
+                range: "Quotations!A1:M1",
+                valueInputOption: "USER_ENTERED",
+                requestBody: {
+                    values: [["Timestamp", "Quotation Number", "Date", "Client", "Subject", "Currency", "Subtotal", "VAT", "Total", "Payload", "Created By", "Status", "Document Type"]]
+                }
+            });
+        }
+        if (!existingSheets.includes("QuotationLineItems")) {
+            await sheets.spreadsheets.values.update({
+                spreadsheetId,
+                range: "QuotationLineItems!A1:F1",
+                valueInputOption: "USER_ENTERED",
+                requestBody: {
+                    values: [["Quotation Number", "ID", "Description", "Quantity", "Unit Price", "Amount"]]
+                }
+            });
+        }
+    }
+}
+
 /**
  * POST /api/invoice-history
  * Body: InvoiceData (full invoice json)
@@ -54,17 +127,25 @@ export async function POST(req: Request) {
         ? String(invoice.invoiceNumber).trim()
         : `INV-${Date.now()}`;
 
-    // ✅ Check if invoice number already exists
+    const isQuotation = (invoice.documentType || "Invoice") === "Quotation";
+    const mainSheet = isQuotation ? "Quotations" : "Invoices";
+    const lineSheet = isQuotation ? "QuotationLineItems" : "LineItems";
+
+    if (isQuotation) {
+        await ensureSheets(sheets, SHEET_ID);
+    }
+
+    // ✅ Check if number already exists
     const existing = await sheets.spreadsheets.values.get({
       spreadsheetId: SHEET_ID,
-      range: "Invoices!B:B", // invoice numbers column
+      range: `${mainSheet}!B:B`, 
     });
 
     const existingNumbers = (existing.data.values || []).flat();
     if (existingNumbers.includes(invoiceNumber)) {
       return NextResponse.json(
-        { ok: false, error: `Invoice number "${invoiceNumber}" already exists.` },
-        { status: 409 } // Conflict
+        { ok: false, error: `${isQuotation ? "Quotation" : "Invoice"} number "${invoiceNumber}" already exists.` },
+        { status: 409 }
       );
     }
 
@@ -73,10 +154,10 @@ export async function POST(req: Request) {
         ? parseFloat(invoice.overrideTotal)
         : subtotal + vat;
 
-    // ✅ Save invoice row
+    // ✅ Save row
     await sheets.spreadsheets.values.append({
       spreadsheetId: SHEET_ID,
-      range: "Invoices!A:L",
+      range: `${mainSheet}!A:M`,
       valueInputOption: "USER_ENTERED",
       requestBody: {
         values: [
@@ -91,8 +172,9 @@ export async function POST(req: Request) {
             money(vat),
             money(total),
             JSON.stringify({ ...invoice, invoiceNumber }),
-            invoice.createdBy || "", // K: Created By
-            invoice.status || "Unpaid", // L: Status
+            invoice.createdBy || "", 
+            invoice.status || (isQuotation ? "Draft" : "Unpaid"),
+            invoice.documentType || "Invoice",
           ],
         ],
       },
@@ -111,7 +193,7 @@ export async function POST(req: Request) {
     if (lineRows.length > 0) {
       await sheets.spreadsheets.values.append({
         spreadsheetId: SHEET_ID,
-        range: "LineItems!A:F",
+        range: `${lineSheet}!A:F`,
         valueInputOption: "USER_ENTERED",
         requestBody: { values: lineRows },
       });
@@ -120,6 +202,11 @@ export async function POST(req: Request) {
     // ✅ Log Activity
     const userAgent = req.headers.get("user-agent");
     logActivity(invoice.createdBy || "Unknown", `CREATED ${invoiceNumber}`, userAgent).catch(console.error);
+
+    // ✅ Sync Quotation Status
+    if (!isQuotation && invoice.sourceQuotation && invoice.status === "Paid") {
+        syncQuotationStatus(sheets, SHEET_ID, invoice.sourceQuotation, "Accepted").catch(console.error);
+    }
 
     return NextResponse.json({ ok: true, invoiceNumber });
   } catch (e: any) {
@@ -130,17 +217,17 @@ export async function POST(req: Request) {
   }
 }
 
-// Helper to cascade delete line items
-async function deleteLineItems(sheets: any, sheetId: string, invoiceNumber: string) {
+async function deleteLineItems(sheets: any, sheetId: string, invoiceNumber: string, isQuotation: boolean = false) {
     try {
+        const lineSheetName = isQuotation ? "QuotationLineItems" : "LineItems";
         const sheetDetails = await sheets.spreadsheets.get({ spreadsheetId: sheetId });
-        const lineItemsSheet = sheetDetails.data.sheets?.find((s: any) => s.properties?.title === "LineItems");
+        const lineItemsSheet = sheetDetails.data.sheets?.find((s: any) => s.properties?.title === lineSheetName);
         const lineItemsSheetId = lineItemsSheet?.properties?.sheetId;
 
         if (lineItemsSheetId !== undefined) {
              const lineItemsRes = await sheets.spreadsheets.values.get({
                 spreadsheetId: sheetId,
-                range: "LineItems!A:A", // Column A contains Invoice Numbers
+                range: `${lineSheetName}!A:A`, 
             });
 
             const lineRows = lineItemsRes.data.values || [];
@@ -209,12 +296,19 @@ export async function PUT(req: Request) {
       );
     }
 
+    const isQuotation = (invoice.documentType || "Invoice") === "Quotation";
+    const mainSheet = isQuotation ? "Quotations" : "Invoices";
+    const lineSheet = isQuotation ? "QuotationLineItems" : "LineItems";
+
     const sheets = getSheetsClient();
+    if (isQuotation) {
+        await ensureSheets(sheets, SHEET_ID);
+    }
 
     // 1. Find the row index
     const res = await sheets.spreadsheets.values.get({
       spreadsheetId: SHEET_ID,
-      range: "Invoices!A:L", // Read all columns to get CreatedBy and Status
+      range: `${mainSheet}!A:M`, 
     });
 
     const rows = res.data.values || [];
@@ -263,7 +357,7 @@ export async function PUT(req: Request) {
     const currency = invoice.currency || "AED";
 
     // 2. Update the row
-    const rangeToUpdate = `Invoices!B${sheetRowNumber}:L${sheetRowNumber}`;
+    const rangeToUpdate = `${mainSheet}!B${sheetRowNumber}:M${sheetRowNumber}`;
 
     await sheets.spreadsheets.values.update({
       spreadsheetId: SHEET_ID,
@@ -272,24 +366,25 @@ export async function PUT(req: Request) {
       requestBody: {
         values: [
           [
-            invoice.invoiceNumber, // B: New Invoice Number (might be same)
-            invoice.date || "", // C
-            invoice.invoiceToCompany || "", // D
-            invoice.subject || "", // E
-            currency, // F
-            money(subtotal), // G
-            money(vat), // H
-            money(total), // I
-            JSON.stringify({ ...invoice, invoiceNumber: invoice.invoiceNumber }), // J
-            createdBy, // K: Keep original creator (read from sheet earlier)
-            invoice.status || "Unpaid", // L: Status
+            invoice.invoiceNumber, 
+            invoice.date || "", 
+            invoice.invoiceToCompany || "", 
+            invoice.subject || "", 
+            currency, 
+            money(subtotal), 
+            money(vat), 
+            money(total), 
+            JSON.stringify({ ...invoice, invoiceNumber: invoice.invoiceNumber }), 
+            createdBy, 
+            invoice.status || (isQuotation ? "Draft" : "Unpaid"), 
+            invoice.documentType || "Invoice", 
           ],
         ],
       },
     });
 
     // 3. Sync Line Items (Delete Old -> Insert New)
-    await deleteLineItems(sheets, SHEET_ID, originalInvoiceNumber);
+    await deleteLineItems(sheets, SHEET_ID, originalInvoiceNumber, isQuotation);
 
     const lineRows = (invoice.lineItems || []).map((it: any) => [
       invoice.invoiceNumber,
@@ -303,7 +398,7 @@ export async function PUT(req: Request) {
     if (lineRows.length > 0) {
       await sheets.spreadsheets.values.append({
         spreadsheetId: SHEET_ID,
-        range: "LineItems!A:F",
+        range: `${lineSheet}!A:F`,
         valueInputOption: "USER_ENTERED",
         requestBody: { values: lineRows },
       });
@@ -312,6 +407,11 @@ export async function PUT(req: Request) {
     // ✅ Log Activity
     const userAgent = req.headers.get("user-agent");
     logActivity(currentUser || "Unknown", `UPDATED ${invoice.invoiceNumber}`, userAgent).catch(console.error);
+
+    // ✅ Sync Quotation Status
+    if (!isQuotation && invoice.sourceQuotation && invoice.status === "Paid") {
+        syncQuotationStatus(sheets, SHEET_ID, invoice.sourceQuotation, "Accepted").catch(console.error);
+    }
 
     return NextResponse.json({ ok: true });
   } catch (e: any) {
@@ -349,10 +449,16 @@ export async function GET(req: Request) {
                  
 
     const sheets = getSheetsClient();
+    const typeFilter = searchParams.get("type") || "Invoice";
+    const mainSheet = typeFilter === "Quotation" ? "Quotations" : "Invoices";
+
+    if (typeFilter === "Quotation") {
+        await ensureSheets(sheets, SHEET_ID);
+    }
 
     const res = await sheets.spreadsheets.values.get({
       spreadsheetId: SHEET_ID,
-      range: "Invoices!A:L",
+      range: `${mainSheet}!A:M`,
     });
 
     const rows = res.data.values || [];
@@ -374,6 +480,7 @@ export async function GET(req: Request) {
         payloadJson: r[9] || "",
         createdBy: r[10] || "",
         status: r[11] || "Unpaid",
+        documentType: r[12] || "Invoice",
       }))
       .filter((item) => {
         // 1. Search (Invoice # or Client)
@@ -454,7 +561,9 @@ export async function DELETE(req: Request) {
                    }
                  
 
-    const { invoiceNumber, currentUser } = await req.json();
+    const { invoiceNumber, currentUser, documentType } = await req.json();
+    const isQuotation = documentType === "Quotation";
+    const mainSheet = isQuotation ? "Quotations" : "Invoices";
 
     const currentRole = (cookies().get("invoicecraft_role")?.value || "user").toLowerCase().trim();
 
@@ -466,23 +575,26 @@ export async function DELETE(req: Request) {
     }
 
     const sheets = getSheetsClient();
+    if (isQuotation) {
+        await ensureSheets(sheets, SHEET_ID);
+    }
 
     // 1. Find the row index and check permissions
     const res = await sheets.spreadsheets.values.get({
       spreadsheetId: SHEET_ID,
-      range: "Invoices!A:L", // Read all so we can check CreatedBy (col K)
+      range: `${mainSheet}!A:M`, 
     });
 
     const rows = res.data.values || [];
     const rowIndex = rows.findIndex((r) => {
-        const sheetVal = (r[1] || "").toString().trim(); // Invoice Number is B (index 1)
+        const sheetVal = (r[1] || "").toString().trim(); 
         const searchVal = (invoiceNumber || "").toString().trim();
         return sheetVal === searchVal;
     });
 
     if (rowIndex === -1) {
       return NextResponse.json(
-        { ok: false, error: "Invoice not found" },
+        { ok: false, error: `${isQuotation ? "Quotation" : "Invoice"} not found` },
         { status: 404 }
       );
     }
@@ -499,11 +611,11 @@ export async function DELETE(req: Request) {
     }
 
     const sheetDetails = await sheets.spreadsheets.get({ spreadsheetId: SHEET_ID });
-    const sheet = sheetDetails.data.sheets?.find(s => s.properties?.title === "Invoices");
+    const sheet = sheetDetails.data.sheets?.find(s => s.properties?.title === mainSheet);
     const sheetIdNum = sheet?.properties?.sheetId;
 
     if (sheetIdNum === undefined) {
-         throw new Error("Could not find Invoices sheet ID");
+         throw new Error(`Could not find ${mainSheet} sheet ID`);
     }
 
     await sheets.spreadsheets.batchUpdate({
@@ -525,7 +637,7 @@ export async function DELETE(req: Request) {
     });
 
     // 2. Cascade Delete Line Items
-    await deleteLineItems(sheets, SHEET_ID, invoiceNumber);
+    await deleteLineItems(sheets, SHEET_ID, invoiceNumber, isQuotation);
 
     // ✅ Log Activity
     const userAgent = req.headers.get("user-agent");

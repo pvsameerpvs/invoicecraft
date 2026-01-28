@@ -24,11 +24,32 @@ export interface InvoiceData {
   fromCompanyName: string;
   fromCompanyAddress: string;
   fromCompanyTrn?: string;
+  fromCompanyEmail?: string;
+  fromCompanyPhone?: string;
   lineItems: LineItem[];
   currency: string;
   overrideTotal?: string;
+  discount?: string;
   footerNote: string;
   bankDetails: BankDetails;
   signatureLabel: string;
   status?: "Paid" | "Unpaid";
+  documentType: "Invoice" | "Quotation";
+  sourceQuotation?: string;
+}
+
+export interface InvoiceHistoryRow {
+  createdAt: string;
+  invoiceNumber: string;
+  date: string;
+  clientName: string;
+  subject: string;
+  currency: string;
+  subtotal: string;
+  vat: string;
+  total: string;
+  payloadJson: string; 
+  createdBy: string;
+  status: string;
+  documentType: "Invoice" | "Quotation";
 }

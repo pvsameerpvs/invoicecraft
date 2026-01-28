@@ -1,10 +1,10 @@
 import React, { Suspense } from "react";
 import { HistoryContainer } from "../../components/history/HistoryContainer";
 
-export default function HistoryPage() {
+export default function QuotationsPage() {
   return (
-    <Suspense fallback={<div>Loading History...</div>}>
-      <HistoryContainer documentType="Invoice" />
+    <Suspense fallback={<div>Loading Quotations...</div>}>
+      <HistoryContainer documentType="Quotation" />
     </Suspense>
   );
 }
