@@ -27,6 +27,18 @@ const scrollbarHideStyles = `
 const COLORS = ["#f97316", "#ef4444", "#22c55e"]; // Orange, Red, Green
 type FilterType = 'monthly' | 'yearly' | 'all';
 
+// Helper to format date as DD-MM-YYYY
+function formatDate(dateStr?: string) {
+    if (!dateStr) return " ";
+    try {
+       const [y, m, d] = dateStr.split("-");
+       if (y && m && d) return `${d}-${m}-${y}`;
+       return dateStr;
+    } catch {
+       return dateStr;
+    }
+}
+
 import { Skeleton } from "./ui/skeleton";
 import { useTheme } from "./ThemeProvider";
 import { themes } from "../lib/themes";
@@ -62,6 +74,8 @@ export const DashboardContainer = ({ onCreateInvoice, invoiceHistory = [] }: Das
         vat: { value: 0, growth: 0 },
         outstanding: { value: 0, count: 0, growth: 0 },
         overdue: { count: 0, value: 0 }, // New Overdue Metrics
+        quotations: { count: 0, value: 0, growth: 0 }, // Updated for Quotations
+        overdueQuotations: { count: 0, value: 0 }, // Added for Overdue Quotations
         chartData: [] as any[],
         pieData: [] as any[],
         loading: true
@@ -296,6 +310,39 @@ export const DashboardContainer = ({ onCreateInvoice, invoiceHistory = [] }: Das
                             <AlertCircle className="w-6 h-6" />
                         </div>
                     </div>
+
+                    {/* Total Quotations */}
+                    <div className="min-w-[320px] flex-shrink-0 bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex items-start justify-between snap-center">
+                        <div>
+                            <p className="text-sm font-medium text-slate-500 mb-1">Total Quotations</p>
+                            <h3 className="text-3xl font-extrabold text-slate-900">
+                                {stats.loading ? <Skeleton className="h-9 w-32" /> : fmtMoney(stats.quotations.value)}
+                            </h3>
+                            <p className="text-xs font-bold text-slate-400 mt-1">
+                                {stats.loading ? <Skeleton className="h-3 w-20" /> : `${stats.quotations.count} Quotations`}
+                            </p>
+                            {!stats.loading ? <GrowthBadge value={stats.quotations.growth} /> : <Skeleton className="h-6 w-24 mt-2 rounded-lg" />}
+                        </div>
+                        <div className="p-3 bg-slate-100 text-slate-600 rounded-xl">
+                            <FileText className="w-6 h-6" />
+                        </div>
+                    </div>
+
+                    {/* Total Overdue Quotations */}
+                    <div className="min-w-[320px] flex-shrink-0 bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex items-start justify-between snap-center">
+                        <div>
+                            <p className="text-sm font-medium text-slate-500 mb-1">Overdue Quotations</p>
+                            <h3 className="text-3xl font-extrabold text-slate-900">
+                                {stats.loading ? <Skeleton className="h-9 w-32" /> : fmtMoney(stats.overdueQuotations.value)}
+                            </h3>
+                            <p className="text-xs font-bold text-red-500 mt-1">
+                                {stats.loading ? <Skeleton className="h-3 w-20" /> : `${stats.overdueQuotations.count} Expired`}
+                            </p>
+                        </div>
+                        <div className="p-3 bg-red-50 text-rose-600 rounded-xl">
+                            <AlertCircle className="w-6 h-6" />
+                        </div>
+                    </div>
                 </div>
 
                 {/* Charts Area */}
@@ -448,6 +495,12 @@ export const DashboardContainer = ({ onCreateInvoice, invoiceHistory = [] }: Das
                                             >
                                                 {q.clientName}
                                             </p>
+                                            {q.validityDate && (
+                                                <div className="flex items-center gap-1 mt-0.5">
+                                                    <span className="text-[8px] font-black text-slate-300 uppercase tracking-tighter">Valid Until:</span>
+                                                    <span className="text-[9px] font-bold text-rose-500 whitespace-nowrap">{formatDate(q.validityDate)}</span>
+                                                </div>
+                                            )}
                                         </div>
                                     </div>
                                     <div className="text-right">

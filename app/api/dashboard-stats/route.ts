@@ -16,6 +16,8 @@ export interface DashboardStats {
     vat: StatBase;
     outstanding: StatBase & { count: number };
     overdue: { count: number; value: number };
+    quotations: StatBase & { count: number };
+    overdueQuotations: { count: number; value: number }; // Added for Overdue Quotations
 }
 
 // ... existing helpers ...
@@ -57,12 +59,21 @@ export async function GET(req: Request) {
                  
 
         const sheets = getSheetsClient();
-        const res = await sheets.spreadsheets.values.get({
-            spreadsheetId: SHEET_ID,
-            range: "Invoices!A:L",
-        });
+        
+        // Fetch both Invoices and Quotations
+        const [invoiceRes, quotationRes] = await Promise.all([
+            sheets.spreadsheets.values.get({
+                spreadsheetId: SHEET_ID,
+                range: "Invoices!A:L",
+            }),
+            sheets.spreadsheets.values.get({
+                spreadsheetId: SHEET_ID,
+                range: "Quotations!A:P", // Expanded to include Validity Date (Column P)
+            })
+        ]);
 
-        const rows = (res.data.values || []).slice(1); // skip header
+        const invoiceRows = (invoiceRes.data.values || []).slice(1);
+        const quotationRows = (quotationRes.data.values || []).slice(1);
         
         // Determine "Now" (Selected Date) based on params or current date
         const currentDate = new Date();
@@ -71,30 +82,28 @@ export async function GET(req: Request) {
         if (yearParam) now.setFullYear(parseInt(yearParam));
         if (monthParam) now.setMonth(parseInt(monthParam));
         
-        // If yearly, set month to 0 (start of year) for consistency/safety, though isSameYear ignores month
         if (period === 'yearly') now.setMonth(0);
 
         const prevDate = getPreviousPeriod(now, period === 'all' ? 'monthly' : period);
 
         // Accumulators
-        const currentStats = { revenue: 0, invoices: 0, vat: 0, outstanding: 0, outstandingCount: 0, paid: 0 };
-        const prevStats = { revenue: 0, invoices: 0, vat: 0, outstanding: 0, outstandingCount: 0, paid: 0 };
+        const currentStats = { revenue: 0, invoices: 0, vat: 0, outstanding: 0, outstandingCount: 0, paid: 0, quotations: 0, quotationValue: 0, overdueQuotations: 0, overdueQuotationValue: 0 };
+        const prevStats = { revenue: 0, invoices: 0, vat: 0, outstanding: 0, outstandingCount: 0, paid: 0, quotations: 0, quotationValue: 0, overdueQuotations: 0, overdueQuotationValue: 0 };
         const overdueStats = { count: 0, value: 0 };
+        const overdueQuotationGlobal = { count: 0, value: 0 }; // Global (all time) overdue quotations
 
         // Chart Accumulators
         const chartMap: Record<string, number> = {};
         const statusMap = { Paid: 0, Pending: 0, Overdue: 0 };
 
-        rows.forEach(row => {
-            const dateStr = row[2]; // Column C: Date
-            const statusRaw = row[11]; // Column L: Status
+        // Process Invoices
+        invoiceRows.forEach(row => {
+            const dateStr = row[2];
+            const statusRaw = row[11];
             let status = statusRaw || "Unpaid"; 
-            
-            // Normalize status for counting
             if (status === 'Pending') status = 'Unpaid'; 
 
-            const payload = row[9]; // Column J: Payload
-            
+            const payload = row[9];
             let invoiceTotal = 0;
             if (payload) {
                 try {
@@ -102,7 +111,7 @@ export async function GET(req: Request) {
                     if (data.overrideTotal) {
                         invoiceTotal = parseFloat(data.overrideTotal) || 0;
                     } else if (Array.isArray(data.lineItems)) {
-                        invoiceTotal = data.lineItems.reduce((acc: number, line: any) => acc + (parseFloat(line.amount)||0), 0);
+                        invoiceTotal = data.lineItems.reduce((acc: number, line: any) => acc + (parseFloat(line.unitPrice) * (line.quantity || 1)), 0);
                     }
                 } catch(e) {}
             }
@@ -114,21 +123,20 @@ export async function GET(req: Request) {
             const invoiceDate = new Date(dateStr);
             if (isNaN(invoiceDate.getTime())) return;
 
-            // --- OVERDUE LOGIC (Global check) ---
+            // OVERDUE LOGIC
             if (status !== 'Paid' && status !== 'Overdue') {
                 const diffTime = now.getTime() - invoiceDate.getTime();
                 const diffDays = diffTime / (1000 * 3600 * 24);
                 if (diffDays > 30) {
                     overdueStats.count++;
                     overdueStats.value += invoiceTotal;
-                    status = 'Overdue'; // Treat as overdue for chart distribution
+                    status = 'Overdue';
                 }
             } else if (status === 'Overdue') {
                 overdueStats.count++;
                 overdueStats.value += invoiceTotal;
             }
 
-            // --- PERIOD LOGIC ---
             let isCurrent = false;
             let isPrevious = false;
 
@@ -142,10 +150,8 @@ export async function GET(req: Request) {
                 if (isSameYear(invoiceDate, prevDate)) isPrevious = true;
             }
 
-            // --- ACCUMULATE ---
             if (isCurrent) {
                 currentStats.invoices++;
-                
                 if (status === 'Paid') {
                     currentStats.revenue += invoiceTotal;
                     currentStats.paid += invoiceTotal;
@@ -156,19 +162,14 @@ export async function GET(req: Request) {
                 } else {
                     currentStats.outstanding += invoiceTotal;
                     currentStats.outstandingCount++;
-                    statusMap.Pending += 1; // Count as Pending/Unpaid
+                    statusMap.Pending += 1;
                 }
 
-                // --- CHART DATA AGGREGATION ---
                 if (status === 'Paid') {
                     let key = "";
-                    if (period === 'monthly') {
-                        key = invoiceDate.getDate().toString(); 
-                    } else if (period === 'yearly') {
-                        key = invoiceDate.toLocaleString('default', { month: 'short' }); 
-                    } else {
-                        key = invoiceDate.getFullYear().toString(); 
-                    }
+                    if (period === 'monthly') key = invoiceDate.getDate().toString(); 
+                    else if (period === 'yearly') key = invoiceDate.toLocaleString('default', { month: 'short' }); 
+                    else key = invoiceDate.getFullYear().toString(); 
                     chartMap[key] = (chartMap[key] || 0) + invoiceTotal;
                 }
             }
@@ -185,13 +186,68 @@ export async function GET(req: Request) {
             }
         });
 
-        // VAT specific: 5% of PAID amount
+        // Process Quotations
+        quotationRows.forEach(row => {
+            const dateStr = row[2];
+            const payload = row[9];
+            const statusRaw = row[11];
+            const validityDateStr = row[15]; // Column P
+            
+            let qtnTotal = 0;
+            if (payload) {
+                try {
+                    const data = JSON.parse(payload);
+                    if (data.overrideTotal) {
+                        qtnTotal = parseFloat(data.overrideTotal) || 0;
+                    } else if (Array.isArray(data.lineItems)) {
+                        qtnTotal = data.lineItems.reduce((acc: number, line: any) => acc + (parseFloat(line.unitPrice) * (line.quantity || 1)), 0);
+                    }
+                } catch(e) {}
+            }
+            if (qtnTotal === 0) {
+                 const colTotal = parseFloat((row[8] || "0").replace(/[^0-9.-]+/g,""));
+                 qtnTotal = colTotal || 0;
+            }
+
+            const qtnDate = new Date(dateStr);
+            if (isNaN(qtnDate.getTime())) return;
+
+            // --- OVERDUE QUOTATION LOGIC ---
+            if (statusRaw !== 'Accepted' && validityDateStr) {
+                const validityDate = new Date(validityDateStr);
+                if (!isNaN(validityDate.getTime()) && validityDate < now) {
+                    overdueQuotationGlobal.count++;
+                    overdueQuotationGlobal.value += qtnTotal;
+                }
+            }
+
+            let isCurrent = false;
+            let isPrevious = false;
+
+            if (period === 'all') {
+                isCurrent = true; 
+            } else if (period === 'monthly') {
+                if (isSameMonth(qtnDate, now)) isCurrent = true;
+                if (isSameMonth(qtnDate, prevDate)) isPrevious = true;
+            } else if (period === 'yearly') {
+                if (isSameYear(qtnDate, now)) isCurrent = true;
+                if (isSameYear(qtnDate, prevDate)) isPrevious = true;
+            }
+
+            if (isCurrent) {
+                currentStats.quotations++;
+                currentStats.quotationValue += qtnTotal;
+            }
+            if (isPrevious) {
+                prevStats.quotations++;
+                prevStats.quotationValue += qtnTotal;
+            }
+        });
+
         currentStats.vat = currentStats.paid * 0.05;
         prevStats.vat = prevStats.paid * 0.05;
 
-        // --- PREPARE CHART ARRAYS ---
         let chartData: { name: string, revenue: number }[] = [];
-        
         if (period === 'monthly') {
             const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
             for (let i = 1; i <= daysInMonth; i++) {
@@ -199,13 +255,9 @@ export async function GET(req: Request) {
             }
         } else if (period === 'yearly') {
             const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-            months.forEach(m => {
-                 chartData.push({ name: m, revenue: chartMap[m] || 0 });
-            });
+            months.forEach(m => { chartData.push({ name: m, revenue: chartMap[m] || 0 }); });
         } else {
-             Object.keys(chartMap).sort().forEach(k => {
-                 chartData.push({ name: k, revenue: chartMap[k] });
-             });
+             Object.keys(chartMap).sort().forEach(k => { chartData.push({ name: k, revenue: chartMap[k] }); });
         }
 
         const pieData = [
@@ -214,7 +266,6 @@ export async function GET(req: Request) {
             { name: "Overdue", value: statusMap.Overdue, color: "#ef4444" },
         ];
 
-        // --- GROWTH FORMULA ---
         const calcGrowth = (curr: number, prev: number) => {
             if (period === 'all') return 0;
             if (prev === 0) return curr > 0 ? 100 : 0; 
@@ -227,6 +278,12 @@ export async function GET(req: Request) {
             vat: { value: currentStats.vat, growth: calcGrowth(currentStats.vat, prevStats.vat) },
             outstanding: { value: currentStats.outstanding, count: currentStats.outstandingCount, growth: calcGrowth(currentStats.outstanding, prevStats.outstanding) },
             overdue: overdueStats,
+            quotations: { 
+                count: currentStats.quotations, 
+                value: currentStats.quotationValue, 
+                growth: calcGrowth(currentStats.quotations, prevStats.quotations) 
+            },
+            overdueQuotations: overdueQuotationGlobal,
             chartData,
             pieData
         };

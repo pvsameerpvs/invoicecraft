@@ -58,19 +58,19 @@ async function ensureSheets(sheets: any, spreadsheetId: string) {
     }
 
     // Always ensure headers are up to date for main sheets
-    const mainHeader = ["Timestamp", "Number", "Date", "Client", "Subject", "Currency", "Subtotal", "VAT", "Total", "Payload", "Created By", "Status", "Type", "Client Email", "Client Phone"];
+    const mainHeader = ["Timestamp", "Number", "Date", "Client", "Subject", "Currency", "Subtotal", "VAT", "Total", "Payload", "Created By", "Status", "Type", "Client Email", "Client Phone", "Validity Date"];
     const lineHeader = ["Number", "ID", "Description", "Quantity", "Unit Price", "Amount"];
 
     await Promise.all([
         sheets.spreadsheets.values.update({
             spreadsheetId,
-            range: "Invoices!A1:O1",
+            range: "Invoices!A1:P1",
             valueInputOption: "USER_ENTERED",
             requestBody: { values: [mainHeader] }
         }),
         sheets.spreadsheets.values.update({
             spreadsheetId,
-            range: "Quotations!A1:O1",
+            range: "Quotations!A1:P1",
             valueInputOption: "USER_ENTERED",
             requestBody: { values: [mainHeader] }
         }),
@@ -162,7 +162,7 @@ export async function POST(req: Request) {
     // ✅ Save row
     await sheets.spreadsheets.values.append({
       spreadsheetId: SHEET_ID,
-      range: `${mainSheet}!A:O`,
+      range: `${mainSheet}!A:P`,
       valueInputOption: "USER_ENTERED",
       requestBody: {
         values: [
@@ -182,6 +182,7 @@ export async function POST(req: Request) {
             invoice.documentType || "Invoice",
             invoice.invoiceToEmail || "",
             invoice.invoiceToPhone || "",
+            invoice.validityDate || "",
           ],
         ],
       },
@@ -364,7 +365,7 @@ export async function PUT(req: Request) {
     const currency = invoice.currency || "AED";
 
     // 2. Update the row
-    const rangeToUpdate = `${mainSheet}!B${sheetRowNumber}:O${sheetRowNumber}`;
+    const rangeToUpdate = `${mainSheet}!B${sheetRowNumber}:P${sheetRowNumber}`;
 
     await sheets.spreadsheets.values.update({
       spreadsheetId: SHEET_ID,
@@ -387,6 +388,7 @@ export async function PUT(req: Request) {
             invoice.documentType || "Invoice", 
             invoice.invoiceToEmail || "",
             invoice.invoiceToPhone || "",
+            invoice.validityDate || "",
           ],
         ],
       },
@@ -467,7 +469,7 @@ export async function GET(req: Request) {
 
     const res = await sheets.spreadsheets.values.get({
       spreadsheetId: SHEET_ID,
-      range: `${mainSheet}!A:O`,
+      range: `${mainSheet}!A:P`,
     });
 
     const rows = res.data.values || [];
@@ -492,6 +494,7 @@ export async function GET(req: Request) {
         documentType: r[12] || "Invoice",
         clientEmail: r[13] || "",
         clientPhone: r[14] || "",
+        validityDate: r[15] || "",
       }))
       .filter((item) => {
         // 1. Search (Invoice # or Client)
