@@ -1,12 +1,12 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
-import { Bell, AlertCircle, Clock, ChevronRight, X, FileText, CheckCircle } from "lucide-react";
+import { Bell, AlertCircle, Clock, ChevronRight, X, FileText, CheckCircle, FilePlus } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 interface Notification {
     id: string;
-    type: 'overdue_invoice' | 'expiring_quotation' | 'expired_quotation';
+    type: 'overdue_invoice' | 'expiring_quotation' | 'expired_quotation' | 'accepted_quotation' | 'new_document';
     title: string;
     message: string;
     date: string;
@@ -60,6 +60,7 @@ export const NotificationCenter = () => {
             case 'expiring_quotation': return <Clock className="w-4 h-4 text-amber-500" />;
             case 'expired_quotation': return <X className="w-4 h-4 text-slate-400" />;
             case 'accepted_quotation': return <CheckCircle className="w-4 h-4 text-emerald-500" />;
+            case 'new_document': return <FilePlus className="w-4 h-4 text-brand-primary" />;
             default: return <Bell className="w-4 h-4 text-brand-primary" />;
         }
     };
@@ -86,10 +87,12 @@ export const NotificationCenter = () => {
             {isOpen && (
                 <div className="absolute right-0 mt-2 w-80 sm:w-96 bg-white rounded-2xl shadow-2xl border border-slate-100 overflow-hidden z-[100] animate-in fade-in slide-in-from-top-2 duration-200">
                     <div className="p-4 border-b border-slate-50 flex items-center justify-between bg-slate-50/50">
-                        <h3 className="font-black text-slate-900 text-sm tracking-tight uppercase">Notifications</h3>
-                        <span className="text-[10px] font-bold text-slate-400 bg-white px-2 py-0.5 rounded-full border border-slate-100">
-                            {unreadCount} UNREAD
-                        </span>
+                        <div className="flex items-center gap-2">
+                            <h3 className="font-black text-slate-900 text-sm tracking-tight uppercase">Notifications</h3>
+                            <span className="text-[10px] font-bold text-slate-400 bg-white px-2 py-0.5 rounded-full border border-slate-100">
+                                {unreadCount}
+                            </span>
+                        </div>
                     </div>
 
                     <div className="max-h-[400px] overflow-y-auto divide-y divide-slate-50 no-scrollbar">
@@ -106,7 +109,7 @@ export const NotificationCenter = () => {
                                         router.push(n.link);
                                         setIsOpen(false);
                                     }}
-                                    className="p-4 hover:bg-slate-50 transition-colors cursor-pointer group"
+                                    className="p-4 hover:bg-slate-50 transition-colors cursor-pointer group relative"
                                 >
                                     <div className="flex gap-4">
                                         <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${
@@ -141,8 +144,11 @@ export const NotificationCenter = () => {
                     {notifications.length > 0 && (
                         <div className="p-3 bg-slate-50/50 border-t border-slate-50">
                             <button 
-                                onClick={() => router.push('/dashboard')}
-                                className="w-full py-2 text-[10px] font-black text-slate-400 hover:text-brand-primary uppercase tracking-widest transition-colors flex items-center justify-center gap-2"
+                                onClick={() => {
+                                    router.push('/dashboard');
+                                    setIsOpen(false);
+                                }}
+                                className="w-full py-2.5 text-[10px] font-black text-slate-400 hover:text-brand-primary hover:bg-white rounded-xl uppercase tracking-widest transition-all flex items-center justify-center gap-2 active:scale-[0.98] border border-transparent hover:border-slate-100 shadow-sm hover:shadow-md"
                             >
                                 <ChevronRight className="w-3 h-3" />
                                 Go to Financial Overview

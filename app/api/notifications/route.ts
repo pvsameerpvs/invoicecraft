@@ -29,13 +29,15 @@ export async function GET(req: Request) {
         const invoiceRows = (invoiceRes.data.values || []).slice(1);
         const quotationRows = (quotationRes.data.values || []).slice(1);
         
-        const now = new Date();
+        const actualNow = new Date(); // True current time for recent activity
+        const now = new Date();       // 00:00:00 for date-based expiry logic
         now.setHours(0, 0, 0, 0);
 
         const notifications: any[] = [];
 
-        // 1. Check Overdue Invoices
+        // 1. Check Invoices
         invoiceRows.forEach(row => {
+            const timestamp = row[0];
             const invoiceNumber = row[1];
             const dateStr = row[2];
             const clientName = row[3];
@@ -43,6 +45,25 @@ export async function GET(req: Request) {
             const statusRaw = row[11];
             let status = statusRaw || "Unpaid";
             if (status === 'Pending') status = 'Unpaid';
+
+            // Logic: Recently Created (Last 24 hours)
+            if (timestamp) {
+                const createdDate = new Date(timestamp);
+                if (!isNaN(createdDate.getTime())) {
+                    const diffHours = (actualNow.getTime() - createdDate.getTime()) / (1000 * 3600);
+                    if (diffHours >= 0 && diffHours <= 24) {
+                        notifications.push({
+                            id: `inv-new-${invoiceNumber}`,
+                            type: 'new_document',
+                            title: `New Invoice Created`,
+                            message: `Invoice ${invoiceNumber} for ${clientName} has been generated.`,
+                            date: timestamp,
+                            link: `/invoice/edit/${invoiceNumber}`,
+                            priority: 'medium'
+                        });
+                    }
+                }
+            }
 
             if (status !== 'Paid') {
                 const invoiceDate = new Date(dateStr);
@@ -82,7 +103,7 @@ export async function GET(req: Request) {
             }
         });
 
-        // 2. Check Quotations (Expiring soon or Recently Accepted)
+        // 2. Check Quotations (Expiring soon, Recently Accepted, or Recently Created)
         quotationRows.forEach(row => {
             const qtnTimestamp = row[0];
             const qtnNumber = row[1];
@@ -90,12 +111,31 @@ export async function GET(req: Request) {
             const statusRaw = row[11];
             const validityDateStr = row[15]; // Column P
 
+            // Logic: Recently Created (Last 24 hours)
+            if (qtnTimestamp) {
+                const createdDate = new Date(qtnTimestamp);
+                if (!isNaN(createdDate.getTime())) {
+                    const diffHours = (actualNow.getTime() - createdDate.getTime()) / (1000 * 3600);
+                    if (diffHours >= 0 && diffHours <= 24) {
+                        notifications.push({
+                            id: `qtn-new-${qtnNumber}`,
+                            type: 'new_document',
+                            title: `New Quotation Created`,
+                            message: `Quotation ${qtnNumber} for ${clientName} has been generated.`,
+                            date: qtnTimestamp,
+                            link: `/invoice/edit/${qtnNumber}?type=Quotation`,
+                            priority: 'medium'
+                        });
+                    }
+                }
+            }
+
             // Logic A: Recently Accepted (Last 48 hours)
             if (statusRaw === 'Accepted' && qtnTimestamp) {
                 const createdDate = new Date(qtnTimestamp);
                 if (!isNaN(createdDate.getTime())) {
-                    const diffHours = (now.getTime() - createdDate.getTime()) / (1000 * 3600);
-                    if (diffHours >= 0 && diffHours <= 48) {
+                    const diffHours = (actualNow.getTime() - createdDate.getTime()) / (1000 * 3600);
+                    if (diffHours >= 0 && diffHours <= 24) {
                         notifications.push({
                             id: `qtn-accepted-${qtnNumber}`,
                             type: 'accepted_quotation',
