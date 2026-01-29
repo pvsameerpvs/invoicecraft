@@ -63,21 +63,19 @@ export const InvoicePreview: React.FC<InvoicePreviewProps> = ({
 
   const pages = chunkArray(value.lineItems, rowsPerPage);
   
-  const lastPageItemsCount = pages.length > 0 ? pages[pages.length - 1].length : 0;
-  const hasSplit = lastPageItemsCount > 4;
-
-  const pagesSafe = hasSplit 
-    ? [...pages, []] 
-    : (pages.length > 0 ? pages : [[]]);
+  // ALWAYS push an extra page for Terms, Bank Details, and Signature
+  const pagesSafe = [...pages, []]; 
 
   return (
     <div ref={forwardRef} className="a4-mobile-fit">
       <div className="a4-mobile-scale">
         {pagesSafe.map((pageItems, pageIndex) => {
         const isLastPage = pageIndex === pagesSafe.length - 1;
+        const isItemsPage = pageIndex < pages.length;
         const isLastItemPage = pageIndex === pages.length - 1;
+        
         const showSummary = isLastItemPage;
-        const showBankInfo = hasSplit ? isLastPage : isLastPage;
+        const showFooterInfo = isLastPage;
 
         return (
           <div
@@ -360,7 +358,7 @@ export const InvoicePreview: React.FC<InvoicePreviewProps> = ({
                     </section>
                   )}
 
-                  {!isQuotation && showBankInfo && (
+                  {!isQuotation && showFooterInfo && (
                      // ... existing bank info ...
                      <section className="mt-8 flex-col justify-between text-[11px]">
                      <div className="space-y-1">
@@ -412,9 +410,9 @@ export const InvoicePreview: React.FC<InvoicePreviewProps> = ({
               )}
 
               {/* Standard Footer */}
-              {!isQuotation && (
+              {!isQuotation && isLastPage && (
                 <footer className="absolute bottom-16 left-12 right-12 text-[10px]">
-                  {isLastPage && value.footerNote && (
+                  {value.footerNote && (
                     <div className="mb-8 text-center max-w-[80%] mx-auto">
                       <div className="font-bold uppercase text-[8px] text-slate-400 tracking-widest mb-1">Terms & Conditions</div>
                       <div className="text-[9px] text-slate-500 leading-relaxed whitespace-pre-line text-center">
