@@ -278,7 +278,43 @@ export function InvoiceEditorContainer({ initialInvoiceId }: Props) {
     init();
   }, [initialInvoiceId]);
 
-   const handleDownload = async () => {
+  const validateInvoice = (data: InvoiceData) => {
+    const errors: string[] = [];
+    if (!data.invoiceToCompany?.trim()) errors.push("Client Name is required");
+    if (!data.invoiceToAddress?.trim()) errors.push("Client Address is required");
+    if (!data.invoiceToEmail?.trim()) errors.push("Client Email is required");
+    if (!data.invoiceToPhone?.trim()) errors.push("Client Phone is required");
+    if (!data.date) errors.push("Date is required");
+    if (!data.subject?.trim()) errors.push("Subject/Project is required");
+    
+    if (data.documentType === "Quotation") {
+        if (!data.validityDate) errors.push("Validity Date is required for quotations");
+        if (!data.footerNote?.trim()) errors.push("Terms & Conditions (Quotation Footer) are required");
+    }
+
+    if (!data.lineItems || data.lineItems.length === 0) {
+        errors.push("At least one line item is required");
+    } else {
+        data.lineItems.forEach((item, idx) => {
+            const num = data.lineItems.length - idx;
+            if (!item.description?.trim()) errors.push(`Description is required for Item #${num}`);
+            if (!item.unitPrice || parseFloat(item.unitPrice) <= 0) errors.push(`Valid Unit Price is required for Item #${num}`);
+            if (!item.quantity || item.quantity <= 0) errors.push(`Quantity must be at least 1 for Item #${num}`);
+        });
+    }
+
+    return errors;
+  };
+
+  const handleDownload = async () => {
+    // 1. Validate
+    const errors = validateInvoice(invoice);
+    if (errors.length > 0) {
+        // Show the first error or a summary
+        toast.error(errors[0], { duration: 4000 });
+        return;
+    }
+
     const t = toast.loading("Saving & Generating PDF…");
     const isUpdate = !!originalInvoiceNumber; 
 

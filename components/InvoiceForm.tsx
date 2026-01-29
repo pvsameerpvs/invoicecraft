@@ -239,7 +239,7 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({
 
           <div>
             <div className="flex items-center justify-between mb-1">
-              <Label htmlFor="invoiceToCompany">Client name</Label>
+              <Label htmlFor="invoiceToCompany">Client name <span className="text-red-500">*</span></Label>
               {value.invoiceToCompany && (
                 <Link 
                   href={`/clients/${encodeURIComponent(value.invoiceToCompany)}`}
@@ -265,7 +265,7 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({
           </div>
 
           <div>
-            <Label htmlFor="invoiceToEmail">Client email</Label>
+            <Label htmlFor="invoiceToEmail">Client email <span className="text-red-500">*</span></Label>
             <Input
               id="invoiceToEmail"
               placeholder="client@example.com"
@@ -275,7 +275,7 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({
           </div>
 
           <div>
-            <Label htmlFor="invoiceToPhone">Client phone</Label>
+            <Label htmlFor="invoiceToPhone">Client phone <span className="text-red-500">*</span></Label>
             <Input
               id="invoiceToPhone"
               placeholder="+971 50 000 0000"
@@ -285,7 +285,7 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({
           </div>
 
           <div className="col-span-2">
-            <Label htmlFor="invoiceToAddress">Client address</Label>
+            <Label htmlFor="invoiceToAddress">Client address <span className="text-red-500">*</span></Label>
             <Textarea
               id="invoiceToAddress"
               rows={2}
@@ -308,7 +308,7 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({
           </div>
 
           <div>
-            <Label htmlFor="date">Date</Label>
+            <Label htmlFor="date">Date <span className="text-red-500">*</span></Label>
             <Input
               id="date"
               type="date"
@@ -319,7 +319,7 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({
 
           {value.documentType === "Quotation" && value.status?.toLowerCase() !== 'accepted' && (
             <div>
-              <Label htmlFor="validityDate">Validity Date</Label>
+              <Label htmlFor="validityDate">Validity Date <span className="text-red-500">*</span></Label>
               <Input
                 id="validityDate"
                 type="date"
@@ -330,7 +330,7 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({
           )}
 
           <div className={value.documentType === "Quotation" ? "col-span-1" : "col-span-2"}>
-            <Label htmlFor="subject">{value.documentType === "Quotation" ? "Subject / Project" : "Subject"}</Label>
+            <Label htmlFor="subject">{value.documentType === "Quotation" ? "Subject / Project" : "Subject"} <span className="text-red-500">*</span></Label>
             <Input
               id="subject"
               value={value.subject}
@@ -456,7 +456,7 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({
 
         <div className="space-y-4">
           <div className="space-y-1.5">
-            <Label className="text-[11px] font-bold uppercase text-slate-500 ml-1">Description</Label>
+            <Label className="text-[11px] font-bold uppercase text-slate-500 ml-1">Description <span className="text-red-500">*</span></Label>
             <Textarea
               rows={2}
               placeholder="What are you charging for?"
@@ -470,7 +470,7 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1.5">
-              <Label className="text-[11px] font-bold uppercase text-slate-500 ml-1">Quantity</Label>
+              <Label className="text-[11px] font-bold uppercase text-slate-500 ml-1">Quantity <span className="text-red-500">*</span></Label>
               <div className="flex items-center gap-1 overflow-hidden rounded-xl border border-slate-200 bg-slate-50/30 p-1 focus-within:border-brand-primary focus-within:ring-1 focus-within:ring-brand-primary transition-all">
                 <Button
                   type="button"
@@ -507,7 +507,7 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({
             </div>
 
             <div className="space-y-1.5">
-              <Label className="text-[11px] font-bold uppercase text-slate-500 ml-1">Unit Price</Label>
+              <Label className="text-[11px] font-bold uppercase text-slate-500 ml-1">Unit Price <span className="text-red-500">*</span></Label>
               <div className="relative">
                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[11px] font-bold text-slate-400 uppercase">{value.currency}</span>
                 <Input
@@ -702,7 +702,7 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({
         <section className="space-y-4 rounded-lg border border-brand-200 bg-white p-4 shadow-sm">
             <h2 className="text-sm font-semibold text-brand-primary">Quotation Footer</h2>
             <div>
-              <Label htmlFor="footerNote">Terms & Conditions</Label>
+              <Label htmlFor="footerNote">Terms & Conditions <span className="text-red-500">*</span></Label>
               <Textarea
                 id="footerNote"
                 rows={6}
