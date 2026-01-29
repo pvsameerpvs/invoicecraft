@@ -331,20 +331,23 @@ export function InvoiceEditorContainer({ initialInvoiceId }: Props) {
     <div className="flex h-full flex-col bg-transparent text-slate-900 relative">
       {/* 1. Header removed (global) */}
 
-      {/* MOBILE TABS CONTROL (Sticky Top) */}
       <div className="lg:hidden sticky top-0 z-40 bg-white/80 backdrop-blur-md border-b border-slate-200 px-4 py-2">
          <div className="flex p-1 bg-slate-100 rounded-lg">
              <button
                onClick={() => setMobileTab("edit")}
                className={`flex-1 py-1.5 text-sm font-semibold rounded-md transition-all ${mobileTab === "edit" ? "bg-white text-slate-900 shadow-sm" : "text-slate-500 hover:text-slate-700"}`}
              >
-               {isUpdateMode ? "Edit Invoice" : "Create Invoice"}
+               {isUpdateMode 
+                 ? (invoice.documentType === "Quotation" ? "Edit Quotation" : "Edit Invoice") 
+                 : (invoice.documentType === "Quotation" ? "Create Quotation" : "Create Invoice")}
              </button>
              <button
                 onClick={() => setMobileTab("preview")}
                className={`flex-1 py-1.5 text-sm font-semibold rounded-md transition-all ${mobileTab === "preview" ? "bg-white text-slate-900 shadow-sm" : "text-slate-500 hover:text-slate-700"}`}
              >
-               {isUpdateMode ? "Preview & Download" : "Preview & Create"}
+               {isUpdateMode 
+                 ? "Preview & Download" 
+                 : (invoice.documentType === "Quotation" ? "Preview & Save Quotation" : "Preview & Save Invoice")}
              </button>
          </div>
       </div>
@@ -369,7 +372,9 @@ export function InvoiceEditorContainer({ initialInvoiceId }: Props) {
               </button>
               
               <div className="flex items-center justify-between">
-                <h2 className="text-lg font-semibold text-slate-900">Invoice Details</h2>
+                <h2 className="text-lg font-semibold text-slate-900">
+                  {invoice.documentType === "Quotation" ? "Quotation Details" : "Invoice Details"}
+                </h2>
                 <div className="text-xs text-slate-500">Auto-saving...</div>
               </div>
            </div>
@@ -396,7 +401,11 @@ export function InvoiceEditorContainer({ initialInvoiceId }: Props) {
                      onClick={handleDownload}
                      className="flex items-center gap-2 bg-slate-900 text-white px-6 py-3 rounded-full shadow-xl shadow-slate-900/20 font-semibold active:scale-95 transition-all"
                   >
-                    <span>{isUpdateMode ? "Update & Download PDF" : "Save & Download PDF"}</span>
+                    <span>
+                       {isUpdateMode 
+                        ? (invoice.documentType === "Quotation" ? "Update & Download Quotation" : "Update & Download Invoice") 
+                        : (invoice.documentType === "Quotation" ? "Save & Download Quotation" : "Save & Download Invoice")}
+                     </span>
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
                   </button>
                </div>

@@ -442,7 +442,7 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({
 
         <div className="mb-4 flex items-center justify-between">
           <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400">
-            Invoice Detail
+            {value.documentType === "Quotation" ? "Quotation Detail" : "Invoice Detail"}
           </h3>
           <Button
             type="button"
@@ -729,7 +729,9 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({
           onClick={onDownloadPdf} 
           className="bg-gradient-to-r from-brand-start to-brand-end hover:shadow-lg hover:shadow-brand-primary/30 transition-all font-bold px-8 py-6 rounded-xl text-lg"
         >
-          {isUpdate ? "Update & Download PDF" : "Save & Download PDF"}
+          {isUpdate 
+            ? (value.documentType === "Quotation" ? "Update & Download Quotation" : "Update & Download Invoice") 
+            : (value.documentType === "Quotation" ? "Save & Download Quotation" : "Save & Download Invoice")}
         </Button>
       </div>
     </div>
