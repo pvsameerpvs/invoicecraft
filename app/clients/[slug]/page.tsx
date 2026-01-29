@@ -39,6 +39,7 @@ export default function ClientDetailsPage() {
   const previewRef = React.useRef<HTMLDivElement>(null);
   const [currentUser, setCurrentUser] = useState("");
   const [currentRole, setCurrentRole] = useState("");
+  const [deleteTarget, setDeleteTarget] = useState<InvoiceHistoryRow | null>(null);
 
   const fetchClientHistory = useCallback(async () => {
     setLoading(true);
@@ -299,25 +300,29 @@ export default function ClientDetailsPage() {
            <div className="overflow-x-auto no-scrollbar">
               <table className="w-full text-left border-collapse">
                  <thead>
-                    <tr className="bg-slate-50/50">
-                      <th className="w-16 px-8 py-6"></th>
-                      <th className="px-6 py-6 text-[10px] font-black uppercase tracking-widest text-slate-400">Creation Date</th>
-                      <th className="px-6 py-6 text-[10px] font-black uppercase tracking-widest text-slate-400">Doc Type</th>
-                      <th className="px-6 py-6 text-[10px] font-black uppercase tracking-widest text-slate-400">Document No.</th>
-                      <th className="px-6 py-6 text-[10px] font-black uppercase tracking-widest text-slate-400">Subject</th>
-                      <th className="px-6 py-6 text-[10px] font-black uppercase tracking-widest text-slate-400">Status</th>
-                      <th className="px-6 py-6 text-[10px] font-black uppercase tracking-widest text-slate-400 text-right">Amount</th>
-                      <th className="px-8 py-6 text-[10px] font-black uppercase tracking-widest text-slate-400 text-right">Actions</th>
-                    </tr>
+                     <tr className="bg-slate-50/50 border-b border-slate-100">
+                       <th className="w-16 px-6 py-5"></th>
+                       <th className="px-6 py-5 text-[10px] font-black uppercase tracking-widest text-slate-400">Creation</th>
+                       <th className="px-6 py-5 text-[10px] font-black uppercase tracking-widest text-slate-400">User</th>
+                       <th className="px-6 py-5 text-[10px] font-black uppercase tracking-widest text-slate-400">Document No.</th>
+                       <th className="px-6 py-5 text-[10px] font-black uppercase tracking-widest text-slate-400">Doc Date</th>
+                       <th className="px-6 py-5 text-[10px] font-black uppercase tracking-widest text-slate-400">Subject</th>
+                       <th className="px-6 py-5 text-[10px] font-black uppercase tracking-widest text-slate-400">Status</th>
+                       <th className="px-6 py-5 text-[10px] font-black uppercase tracking-widest text-slate-400">Cur</th>
+                       <th className="px-6 py-5 text-[10px] font-black uppercase tracking-widest text-slate-400 text-right">Subtotal</th>
+                       <th className="px-6 py-5 text-[10px] font-black uppercase tracking-widest text-slate-400 text-right">Tax</th>
+                       <th className="px-6 py-5 text-[10px] font-black uppercase tracking-widest text-slate-400 text-right bg-slate-50/10 font-black">Final Amount</th>
+                       <th className="px-6 py-5 text-[10px] font-black uppercase tracking-widest text-slate-400 text-right">Actions</th>
+                     </tr>
                  </thead>
                  <tbody className="divide-y divide-slate-50">
                    {loading ? (
                      [...Array(5)].map((_, i) => (
-                       <tr key={i}><td colSpan={8} className="px-8 py-6"><Skeleton className="h-10 w-full rounded-2xl" /></td></tr>
+                       <tr key={i}><td colSpan={12} className="px-8 py-6"><Skeleton className="h-10 w-full rounded-2xl" /></td></tr>
                      ))
                    ) : filteredHistory.length === 0 ? (
                      <tr>
-                        <td colSpan={8} className="px-6 py-32 text-center">
+                        <td colSpan={12} className="px-6 py-32 text-center">
                            <div className="max-w-xs mx-auto space-y-4">
                               <div className="w-20 h-20 bg-slate-50 rounded-[2rem] flex items-center justify-center mx-auto ring-1 ring-slate-100 text-slate-200">
                                  <FileText className="w-10 h-10" />
@@ -338,7 +343,8 @@ export default function ClientDetailsPage() {
                          currentRole={currentRole}
                          onPreview={() => onPreview(row)}
                          onEdit={(r) => router.push(`/invoice/edit/${r.invoiceNumber}?type=${r.documentType}`)}
-                         onDelete={() => {}} 
+                         onDelete={setDeleteTarget} 
+                         hideClient={true}
                        />
                      ))
                    )}
@@ -357,6 +363,55 @@ export default function ClientDetailsPage() {
            <Plus className="w-8 h-8" />
          </button>
       </div>
+
+      {/* Modal for Deletion Confirmation */}
+      {deleteTarget && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md animate-in fade-in duration-300">
+          <div className="max-w-md w-full bg-white rounded-[2.5rem] p-10 shadow-3xl text-center space-y-6">
+            <div className="w-20 h-20 bg-rose-50 text-rose-600 rounded-3xl mx-auto flex items-center justify-center">
+               <AlertCircle className="w-10 h-10" />
+            </div>
+            <div className="space-y-2">
+              <h3 className="text-2xl font-black text-slate-900">Serious Request!</h3>
+              <p className="text-slate-500 font-medium leading-relaxed">
+                You are about to permanently delete <strong>{deleteTarget.invoiceNumber}</strong> for <strong>{deleteTarget.clientName}</strong>. This is irreversible.
+              </p>
+            </div>
+            <div className="flex gap-4 pt-4">
+              <button 
+                onClick={() => setDeleteTarget(null)}
+                className="flex-1 h-14 rounded-2xl bg-slate-100 text-slate-900 font-black hover:bg-slate-200 transition-all"
+              >
+                Go Back
+              </button>
+              <button 
+                onClick={async () => {
+                   const t = toast.loading("Purging data...");
+                   try {
+                     const res = await fetch("/api/invoice-history", {
+                        method: "DELETE",
+                        body: JSON.stringify({
+                          invoiceNumber: deleteTarget.invoiceNumber,
+                          currentUser,
+                          documentType: deleteTarget.documentType
+                        })
+                     });
+                     if(!res.ok) throw new Error("Delete failed");
+                     toast.success("Successfully Deleted", { id: t });
+                     setDeleteTarget(null);
+                     fetchClientHistory(); // Refresh the list
+                   } catch (e) {
+                     toast.error("Cleanup Failed", { id: t });
+                   }
+                }}
+                className="flex-1 h-14 rounded-2xl bg-rose-600 text-white font-black shadow-xl shadow-rose-200 hover:bg-rose-700 transition-all"
+              >
+                Yes, Purge
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Modern Preview Modal */}
       {previewInvoice && (

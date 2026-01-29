@@ -11,6 +11,7 @@ interface HistoryRowProps {
   onPreview: (row: InvoiceHistoryRow) => void;
   onEdit: (row: InvoiceHistoryRow) => void;
   onDelete: (row: InvoiceHistoryRow) => void;
+  hideClient?: boolean;
 }
 
 export const HistoryRow = ({
@@ -20,6 +21,7 @@ export const HistoryRow = ({
   onPreview,
   onEdit,
   onDelete,
+  hideClient = false,
 }: HistoryRowProps) => {
   const [isExpanded, setIsExpanded] = React.useState(false);
   const [menuOpen, setMenuOpen] = React.useState(false);
@@ -97,11 +99,13 @@ export const HistoryRow = ({
 
         <td className="px-6 py-4 whitespace-nowrap text-slate-600 font-medium">{row.date}</td>
 
-        <td className="px-6 py-4 font-bold text-slate-900 hover:text-brand-primary transition-colors cursor-pointer">
-          <a href={`/clients/${encodeURIComponent(row.clientName)}`}>
-            {row.clientName}
-          </a>
-        </td>
+        {!hideClient && (
+          <td className="px-6 py-4 font-bold text-slate-900 hover:text-brand-primary transition-colors cursor-pointer">
+            <a href={`/clients/${encodeURIComponent(row.clientName)}`}>
+              {row.clientName}
+            </a>
+          </td>
+        )}
 
         <td className="px-6 py-4 text-slate-500 max-w-[200px] truncate" title={row.subject}>
           {row.subject}
@@ -176,7 +180,7 @@ export const HistoryRow = ({
                       Convert to Invoice
                     </button>
                   )}
-                  {isAdmin && (
+                  {canEdit && (
                     <button
                       onClick={() => { setMenuOpen(false); onDelete(row); }}
                       className="flex w-full items-center gap-3 px-3 py-2.5 text-left text-sm font-bold text-rose-600 rounded-xl hover:bg-rose-50 transition-all"
@@ -193,7 +197,7 @@ export const HistoryRow = ({
       
       {isExpanded && (
         <tr>
-          <td colSpan={13} className="px-8 pb-6 pt-0 bg-slate-50/50">
+          <td colSpan={hideClient ? 12 : 13} className="px-8 pb-6 pt-0 bg-slate-50/50">
             <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm ring-1 ring-black/5">
               <div className="flex flex-col lg:flex-row gap-8">
                 <div className="flex-1">

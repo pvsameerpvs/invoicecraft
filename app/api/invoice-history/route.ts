@@ -503,7 +503,7 @@ export async function GET(req: Request) {
         payloadJson: r[9] || "",
         createdBy: r[10] || "",
         status: r[11] || "Unpaid",
-        documentType: (r[12] || "Invoice") as "Invoice" | "Quotation",
+        documentType: (r[12] || typeFilter) as "Invoice" | "Quotation",
         clientEmail: r[13] || "",
         clientPhone: r[14] || "",
         validityDate: r[15] || "",
