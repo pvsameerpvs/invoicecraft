@@ -425,11 +425,19 @@ export const DashboardContainer = ({ onCreateInvoice, invoiceHistory = [] }: Das
                                         <div>
                                             <div className="flex items-center gap-2">
                                                 <p className="font-bold text-slate-900 text-sm whitespace-nowrap">Invoice #{invoice.invoiceNumber}</p>
-                                                {(invoice as any).payloadJson && JSON.parse((invoice as any).payloadJson).sourceQuotation && (
-                                                    <span className="bg-brand-50 text-brand-primary text-[8px] font-black px-1.5 py-0.5 rounded-md uppercase tracking-tighter" title={`From ${JSON.parse((invoice as any).payloadJson).sourceQuotation}`}>
-                                                        LINKED
-                                                    </span>
-                                                )}
+                                                {(() => {
+                                                    try {
+                                                        const p = JSON.parse(invoice.payloadJson || "{}");
+                                                        if (p.sourceQuotation) {
+                                                            return (
+                                                                <span className="bg-brand-50 text-brand-primary text-[8px] font-black px-1.5 py-0.5 rounded-md uppercase tracking-tighter" title={`From ${p.sourceQuotation}`}>
+                                                                    LINKED
+                                                                </span>
+                                                            );
+                                                        }
+                                                    } catch(e) {}
+                                                    return null;
+                                                })()}
                                             </div>
                                             <p 
                                                 className="text-[10px] text-slate-400 font-bold uppercase hover:text-brand-primary transition-colors"
@@ -484,7 +492,22 @@ export const DashboardContainer = ({ onCreateInvoice, invoiceHistory = [] }: Das
                                             <FileText className="w-5 h-5" />
                                         </div>
                                         <div>
-                                            <p className="font-bold text-slate-900 text-sm whitespace-nowrap">Number #{q.quotationNumber}</p>
+                                            <div className="flex items-center gap-2">
+                                                <p className="font-bold text-slate-900 text-sm whitespace-nowrap">Number #{q.quotationNumber}</p>
+                                                {(() => {
+                                                    try {
+                                                        const p = JSON.parse(q.payloadJson || "{}");
+                                                        if (p.convertedToInvoice) {
+                                                            return (
+                                                                <span className="bg-brand-50 text-brand-primary text-[8px] font-black px-1.5 py-0.5 rounded-md uppercase tracking-tighter" title={`Invoiced as ${p.convertedToInvoice}`}>
+                                                                    LINKED
+                                                                </span>
+                                                            );
+                                                        }
+                                                    } catch(e) {}
+                                                    return null;
+                                                })()}
+                                            </div>
                                             <p 
                                                 className="text-[10px] text-slate-400 font-bold uppercase hover:text-brand-primary transition-colors"
                                                 onClick={(e) => {

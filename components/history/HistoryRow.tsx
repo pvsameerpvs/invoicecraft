@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { ChevronDown, MoreVertical, FileText, Users, Briefcase, CheckCircle, AlertCircle, FilePlus2 } from "lucide-react";
+import { ChevronDown, MoreVertical, FileText, Users, Briefcase, CheckCircle, AlertCircle, FilePlus2, FileCheck } from "lucide-react";
 import { InvoiceHistoryRow } from "@/lib/types";
 
 interface HistoryRowProps {
@@ -26,6 +26,13 @@ export const HistoryRow = ({
   const [isExpanded, setIsExpanded] = React.useState(false);
   const [menuOpen, setMenuOpen] = React.useState(false);
   const menuRef = React.useRef<HTMLDivElement>(null);
+
+  const isQuotation = row.documentType === "Quotation";
+  let convertedTo = "";
+  try {
+     const p = JSON.parse(row.payloadJson);
+     convertedTo = p.convertedToInvoice || "";
+  } catch(e) {}
 
   const isOwner = currentUser === row.createdBy;
   const isAdmin = currentRole === "admin";
@@ -64,7 +71,6 @@ export const HistoryRow = ({
     }
   };
 
-  const isQuotation = row.documentType === "Quotation";
 
   return (
     <>
@@ -112,19 +118,26 @@ export const HistoryRow = ({
         </td>
 
         <td className="px-6 py-4 whitespace-nowrap">
-          {row.status === "Paid" || row.status === "Accepted" ? (
-            <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-1 text-[10px] font-black uppercase text-emerald-700 ring-1 ring-inset ring-emerald-600/20">
-              <CheckCircle className="w-3 h-3" />
-              {row.status}
-            </span>
-          ) : (
-            <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[10px] font-black uppercase ring-1 ring-inset ${
-                isQuotation ? "bg-amber-50 text-amber-700 ring-amber-600/20" : "bg-rose-50 text-rose-700 ring-rose-600/20"
-            }`}>
-              <AlertCircle className="w-3 h-3" />
-              {row.status || (isQuotation ? "Draft" : "Unpaid")}
-            </span>
-          )}
+          <div className="flex flex-col gap-1">
+            {row.status === "Paid" || row.status === "Accepted" ? (
+              <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-1 text-[10px] font-black uppercase text-emerald-700 ring-1 ring-inset ring-emerald-600/20">
+                <CheckCircle className="w-3 h-3" />
+                {row.status}
+              </span>
+            ) : (
+              <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[10px] font-black uppercase ring-1 ring-inset ${
+                  isQuotation ? "bg-amber-50 text-amber-700 ring-amber-600/20" : "bg-rose-50 text-rose-700 ring-rose-600/20"
+              }`}>
+                <AlertCircle className="w-3 h-3" />
+                {row.status || (isQuotation ? "Draft" : "Unpaid")}
+              </span>
+            )}
+            {isQuotation && convertedTo && (
+                <span className="inline-flex items-center gap-1 text-[8px] font-black uppercase text-brand-primary tracking-widest">
+                  Linked: {convertedTo}
+                </span>
+            )}
+          </div>
         </td>
 
         <td className="px-6 py-4 text-slate-400 font-bold text-xs">{row.currency}</td>
@@ -168,7 +181,7 @@ export const HistoryRow = ({
                       Edit {isQuotation ? "Quotation" : "Invoice"}
                     </button>
                   )}
-                  {isQuotation && (
+                   {isQuotation && row.status !== "Accepted" && row.status !== "Paid" && (
                     <button
                       onClick={() => { 
                         setMenuOpen(false); 
@@ -178,6 +191,18 @@ export const HistoryRow = ({
                     >
                       <FilePlus2 className="w-4 h-4" />
                       Convert to Invoice
+                    </button>
+                  )}
+                  {isQuotation && convertedTo && (
+                    <button
+                      onClick={() => { 
+                        setMenuOpen(false); 
+                        window.location.href = `/invoice/edit/${convertedTo}?type=Invoice`;
+                      }}
+                      className="flex w-full items-center gap-3 px-3 py-2.5 text-left text-sm font-bold text-emerald-600 rounded-xl hover:bg-emerald-50 transition-all"
+                    >
+                      <FileCheck className="w-4 h-4" />
+                      View Linked Invoice
                     </button>
                   )}
                   {canEdit && (

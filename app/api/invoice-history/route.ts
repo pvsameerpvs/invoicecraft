@@ -11,7 +11,7 @@ function money(n: number) {
   return n.toFixed(2);
 }
 
-async function syncQuotationStatus(sheets: any, spreadsheetId: string, quotationNumber: string, status: string) {
+async function syncQuotationStatus(sheets: any, spreadsheetId: string, quotationNumber: string, status: string, invoiceNumber?: string) {
     try {
         const res = await sheets.spreadsheets.values.get({
             spreadsheetId,
@@ -28,13 +28,15 @@ async function syncQuotationStatus(sheets: any, spreadsheetId: string, quotation
             try {
                 const parsed = JSON.parse(payload);
                 parsed.status = status;
+                if (invoiceNumber) {
+                    parsed.convertedToInvoice = invoiceNumber;
+                }
                 payload = JSON.stringify(parsed);
             } catch (e) {
                 console.error("Failed to update payload status", e);
             }
 
             // Update Column J (Payload) and Column L (Status)
-            // Range J to L: [J, K, L] -> [Index 9, 10, 11]
             await sheets.spreadsheets.values.update({
                 spreadsheetId,
                 range: `Quotations!J${rowNumber}:L${rowNumber}`,
@@ -43,7 +45,7 @@ async function syncQuotationStatus(sheets: any, spreadsheetId: string, quotation
                     values: [[payload, row[10] || "", status]]
                 }
             });
-            console.log(`Synced Quotation ${quotationNumber} status to ${status}`);
+            console.log(`Synced Quotation ${quotationNumber} status to ${status}${invoiceNumber ? ` (Converted to ${invoiceNumber})` : ""}`);
         }
     } catch (err) {
         console.error("Failed to sync quotation status", err);
@@ -224,8 +226,8 @@ export async function POST(req: Request) {
     logActivity(invoice.createdBy || "Unknown", `CREATED ${invoiceNumber}`, userAgent).catch(console.error);
 
     // ✅ Sync Quotation Status
-    if (!isQuotation && invoice.sourceQuotation && invoice.status === "Paid") {
-        syncQuotationStatus(sheets, SHEET_ID, invoice.sourceQuotation, "Accepted").catch(console.error);
+    if (!isQuotation && invoice.sourceQuotation) {
+        syncQuotationStatus(sheets, SHEET_ID, invoice.sourceQuotation, "Accepted", invoiceNumber).catch(console.error);
     }
 
     return NextResponse.json({ ok: true, invoiceNumber });
@@ -432,8 +434,8 @@ export async function PUT(req: Request) {
     logActivity(currentUser || "Unknown", `UPDATED ${invoice.invoiceNumber}`, userAgent).catch(console.error);
 
     // ✅ Sync Quotation Status
-    if (!isQuotation && invoice.sourceQuotation && invoice.status === "Paid") {
-        syncQuotationStatus(sheets, SHEET_ID, invoice.sourceQuotation, "Accepted").catch(console.error);
+    if (!isQuotation && invoice.sourceQuotation) {
+        syncQuotationStatus(sheets, SHEET_ID, invoice.sourceQuotation, "Accepted", invoice.invoiceNumber).catch(console.error);
     }
 
     return NextResponse.json({ ok: true });
@@ -561,6 +563,11 @@ export async function GET(req: Request) {
         return true;
       })
       .reverse(); // newest first
+
+    const limit = parseInt(searchParams.get("limit") || "0");
+    if (limit > 0) {
+      return NextResponse.json(list.slice(0, limit));
+    }
 
     return NextResponse.json(list);
   } catch (e: any) {

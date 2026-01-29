@@ -15,8 +15,8 @@ export default function DashboardContent() {
     const fetchHistory = async () => {
       try {
         const [invRes, qtnRes] = await Promise.all([
-          fetch("/api/invoice-history?type=Invoice"),
-          fetch("/api/invoice-history?type=Quotation")
+          fetch("/api/invoice-history?type=Invoice&limit=5"),
+          fetch("/api/invoice-history?type=Quotation&limit=5")
         ]);
 
         let combined: any[] = [];
