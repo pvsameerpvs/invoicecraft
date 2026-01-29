@@ -75,8 +75,9 @@ export const DashboardContainer = ({ onCreateInvoice, invoiceHistory = [] }: Das
         outstanding: { value: 0, count: 0, growth: 0 },
         paidInvoices: { value: 0, count: 0, growth: 0 },
         overdue: { count: 0, value: 0 }, // New Overdue Metrics
-        quotations: { count: 0, value: 0, growth: 0 }, // Updated for Quotations
-        overdueQuotations: { count: 0, value: 0 }, // Added for Overdue Quotations
+        quotations: { count: 0, value: 0, growth: 0 }, 
+        acceptedQuotations: { count: 0, value: 0, growth: 0 }, // Added
+        overdueQuotations: { count: 0, value: 0 }, 
         chartData: [] as any[],
         pieData: [] as any[],
         loading: true
@@ -324,6 +325,23 @@ export const DashboardContainer = ({ onCreateInvoice, invoiceHistory = [] }: Das
                         </div>
                         <div className="p-3 bg-slate-100 text-slate-600 rounded-xl">
                             <FileText className="w-6 h-6" />
+                        </div>
+                    </div>
+
+                    {/* Accepted Quotations (Conversion) */}
+                    <div className="min-w-[320px] flex-shrink-0 bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex items-start justify-between snap-center">
+                        <div>
+                            <p className="text-sm font-medium text-slate-500 mb-1">Accepted Quotations</p>
+                            <h3 className="text-3xl font-extrabold text-slate-900">
+                                {stats.loading ? <Skeleton className="h-9 w-32" /> : (stats as any).acceptedQuotations?.count || 0}
+                            </h3>
+                            <p className="text-xs font-bold text-emerald-600 mt-1">
+                                {stats.loading ? <Skeleton className="h-3 w-20" /> : `Conversion: ${stats.quotations.count > 0 ? (((stats as any).acceptedQuotations?.count || 0) / stats.quotations.count * 100).toFixed(0) : 0}%`}
+                            </p>
+                            {!stats.loading ? <GrowthBadge value={(stats as any).acceptedQuotations?.growth || 0} /> : <Skeleton className="h-6 w-24 mt-2 rounded-lg" />}
+                        </div>
+                        <div className="p-3 bg-emerald-50 text-emerald-600 rounded-xl">
+                            <CheckCircle className="w-6 h-6" />
                         </div>
                     </div>
 

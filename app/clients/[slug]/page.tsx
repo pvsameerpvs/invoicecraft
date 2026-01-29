@@ -79,11 +79,14 @@ export default function ClientDetailsPage() {
       .reduce((sum, h) => sum + parseFloat(h.total.replace(/,/g, "")), 0);
     const paidInvoices = invoices.filter(h => h.status === "Paid").length;
     
+    const acceptedQuotations = quotations.filter(h => h.status === "Accepted" || h.status === "Paid").length;
+    
     return {
       totalRevenue,
       pendingAmount,
       invoiceCount: invoices.length,
       quotationCount: quotations.length,
+      acceptedQuotations,
       paidRatio: invoices.length ? (paidInvoices / invoices.length) * 100 : 0
     };
   }, [history]);
@@ -232,7 +235,7 @@ export default function ClientDetailsPage() {
 
       {/* Main Content overlay */}
       <main className="max-w-7xl mx-auto px-4 -mt-16 sm:px-8 pb-24 relative z-10">
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 mb-12">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6 mb-12">
            {/* Stat Cards using Theme Colors */}
            <StatCard 
              label="Lifetime Billing" 
@@ -267,9 +270,18 @@ export default function ClientDetailsPage() {
              label="Total Proposals" 
              value={stats.quotationCount.toString()}
              icon={<FileText className="w-6 h-6" />}
-             bgColor="bg-amber-50"
-             textColor="text-amber-600"
-             subValue="Issued Quotations"
+             bgColor="bg-slate-100"
+             textColor="text-slate-600"
+             subValue="Issued Proposals"
+           />
+
+           <StatCard 
+             label="Accepted Proposals" 
+             value={stats.acceptedQuotations.toString()}
+             icon={<Briefcase className="w-6 h-6" />}
+             bgColor="bg-emerald-100"
+             textColor="text-emerald-700"
+             subValue={`${stats.quotationCount > 0 ? (stats.acceptedQuotations / stats.quotationCount * 100).toFixed(0) : 0}% Conversion`}
            />
         </div>
 

@@ -18,6 +18,7 @@ export interface DashboardStats {
     paidInvoices: { count: number; value: number; growth: number };
     overdue: { count: number; value: number };
     quotations: StatBase & { count: number };
+    acceptedQuotations: StatBase & { count: number }; 
     overdueQuotations: { count: number; value: number }; // Added for Overdue Quotations
 }
 
@@ -126,8 +127,8 @@ export async function GET(req: Request) {
         }
 
         // Accumulators
-        const currentStats = { revenue: 0, invoices: 0, vat: 0, outstanding: 0, outstandingCount: 0, paid: 0, paidCount: 0, quotations: 0, quotationValue: 0, overdueQuotations: 0, overdueQuotationValue: 0 };
-        const prevStats = { revenue: 0, invoices: 0, vat: 0, outstanding: 0, outstandingCount: 0, paid: 0, paidCount: 0, quotations: 0, quotationValue: 0, overdueQuotations: 0, overdueQuotationValue: 0 };
+        const currentStats = { revenue: 0, invoices: 0, vat: 0, outstanding: 0, outstandingCount: 0, paid: 0, paidCount: 0, quotations: 0, quotationValue: 0, acceptedQuotations: 0, acceptedQuotationValue: 0, overdueQuotations: 0, overdueQuotationValue: 0 };
+        const prevStats = { revenue: 0, invoices: 0, vat: 0, outstanding: 0, outstandingCount: 0, paid: 0, paidCount: 0, quotations: 0, quotationValue: 0, acceptedQuotations: 0, acceptedQuotationValue: 0, overdueQuotations: 0, overdueQuotationValue: 0 };
         const overdueStats = { count: 0, value: 0 };
         const overdueQuotationGlobal = { count: 0, value: 0 }; // Global (all time) overdue quotations
 
@@ -291,10 +292,18 @@ export async function GET(req: Request) {
             if (isCurrent) {
                 currentStats.quotations++;
                 currentStats.quotationValue += qtnTotal;
+                if (isAccepted) {
+                    currentStats.acceptedQuotations++;
+                    currentStats.acceptedQuotationValue += qtnTotal;
+                }
             }
             if (isPrevious) {
                 prevStats.quotations++;
                 prevStats.quotationValue += qtnTotal;
+                if (isAccepted) {
+                    prevStats.acceptedQuotations++;
+                    prevStats.acceptedQuotationValue += qtnTotal;
+                }
             }
         });
 
@@ -342,6 +351,11 @@ export async function GET(req: Request) {
                 count: currentStats.quotations, 
                 value: currentStats.quotationValue, 
                 growth: calcGrowth(currentStats.quotations, prevStats.quotations) 
+            },
+            acceptedQuotations: {
+                count: currentStats.acceptedQuotations,
+                value: currentStats.acceptedQuotationValue,
+                growth: calcGrowth(currentStats.acceptedQuotations, prevStats.acceptedQuotations)
             },
             overdueQuotations: overdueQuotationGlobal,
             chartData,
