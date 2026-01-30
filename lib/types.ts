@@ -35,7 +35,7 @@ export interface InvoiceData {
   footerNote: string;
   bankDetails: BankDetails;
   signatureLabel: string;
-  status?: "Paid" | "Unpaid";
+  status?: "Paid" | "Unpaid" | "Pending" | "Accepted" | "Declined";
   documentType: "Invoice" | "Quotation";
   validityDate?: string;
   sourceQuotation?: string;

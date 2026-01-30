@@ -411,6 +411,15 @@ export function InvoiceEditorContainer({ initialInvoiceId }: Props) {
                 <h2 className="text-lg font-semibold text-slate-900">
                   {invoice.documentType === "Quotation" ? "Quotation Details" : "Invoice Details"}
                 </h2>
+                {isUpdateMode && invoice.documentType === "Quotation" && (invoice.status === "Accepted" || invoice.status === "Pending") && !invoice.sourceQuotation && (
+                  <button 
+                    onClick={() => router.push(`/invoice?convertFrom=${invoice.invoiceNumber}&client=${encodeURIComponent(invoice.invoiceToCompany || "")}`)}
+                    className="flex items-center gap-1.5 px-3 py-1.5 bg-brand-primary text-white text-[10px] font-bold rounded-lg hover:shadow-lg hover:shadow-brand-primary/30 transition-all active:scale-95"
+                  >
+                    Generate Invoice
+                    <PlusCircle className="w-3 h-3" />
+                  </button>
+                )}
                 <div className="text-xs text-slate-500">Auto-saving...</div>
               </div>
            </div>

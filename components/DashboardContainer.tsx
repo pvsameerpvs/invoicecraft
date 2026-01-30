@@ -6,7 +6,7 @@ import {
     AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
     PieChart, Pie, Cell, Legend
 } from "recharts";
-import { PlusCircle, FileText, TrendingUp, AlertCircle, CheckCircle, Percent, TrendingDown, RotateCcw, Filter, Calendar, ChevronRight } from "lucide-react";
+import { PlusCircle, FileText, TrendingUp, AlertCircle, CheckCircle, Percent, TrendingDown, RotateCcw, Filter, Calendar, ChevronRight, FilePlus2 } from "lucide-react";
 
 interface DashboardProps {
     onCreateInvoice: () => void;
@@ -543,14 +543,36 @@ export const DashboardContainer = ({ onCreateInvoice, invoiceHistory = [] }: Das
                                             )}
                                         </div>
                                     </div>
-                                    <div className="text-right">
+                                    <div className="text-right flex flex-col items-end">
                                         <p className="font-black text-slate-900 text-sm">{q.currency} {q.total}</p>
-                                        <span className={`inline-flex items-center gap-1 text-[9px] uppercase font-black px-2 py-0.5 rounded-full mt-1 ${
-                                            q.status === 'Accepted' ? 'text-emerald-600 bg-emerald-50' : 'text-amber-600 bg-amber-50'
-                                        }`}>
-                                            {q.status === 'Accepted' ? <CheckCircle className="w-2.5 h-2.5" /> : <AlertCircle className="w-2.5 h-2.5" />}
-                                            {q.status || 'Draft'}
-                                        </span>
+                                        <div className="flex items-center gap-2 mt-1">
+                                            {(() => {
+                                                try {
+                                                    const p = JSON.parse(q.payloadJson || "{}");
+                                                    if (!p.convertedToInvoice && (q.status === 'Accepted' || q.status === 'Pending')) {
+                                                        return (
+                                                            <button 
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    router.push(`/invoice?convertFrom=${q.invoiceNumber}&client=${encodeURIComponent(q.clientName)}`);
+                                                                }}
+                                                                className="flex items-center gap-1 px-2 py-0.5 bg-brand-primary text-white text-[8px] font-black rounded uppercase hover:shadow-lg transition-all active:scale-95"
+                                                            >
+                                                                <FilePlus2 className="w-2.5 h-2.5" />
+                                                                Generate Invoice
+                                                            </button>
+                                                        );
+                                                    }
+                                                } catch(e) {}
+                                                return null;
+                                            })()}
+                                            <span className={`inline-flex items-center gap-1 text-[9px] uppercase font-black px-2 py-0.5 rounded-full ${
+                                                q.status === 'Accepted' ? 'text-emerald-600 bg-emerald-50' : 'text-amber-600 bg-amber-50'
+                                            }`}>
+                                                {q.status === 'Accepted' ? <CheckCircle className="w-2.5 h-2.5" /> : <AlertCircle className="w-2.5 h-2.5" />}
+                                                {q.status || 'Draft'}
+                                            </span>
+                                        </div>
                                     </div>
                                 </div>
                             ))}

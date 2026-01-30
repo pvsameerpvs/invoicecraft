@@ -181,7 +181,7 @@ export const HistoryRow = ({
                       Edit {isQuotation ? "Quotation" : "Invoice"}
                     </button>
                   )}
-                   {isQuotation && row.status !== "Accepted" && row.status !== "Paid" && (
+                   {isQuotation && !convertedTo && (row.status === "Accepted" || row.status === "Pending") && (
                     <button
                       onClick={() => { 
                         setMenuOpen(false); 
@@ -190,7 +190,7 @@ export const HistoryRow = ({
                       className="flex w-full items-center gap-3 px-3 py-2.5 text-left text-sm font-bold text-brand-primary rounded-xl hover:bg-brand-50 transition-all"
                     >
                       <FilePlus2 className="w-4 h-4" />
-                      Convert to Invoice
+                      Generate Invoice
                     </button>
                   )}
                   {isQuotation && convertedTo && (
