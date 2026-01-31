@@ -6,7 +6,7 @@ import {
     AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
     PieChart, Pie, Cell, Legend
 } from "recharts";
-import { PlusCircle, FileText, TrendingUp, AlertCircle, CheckCircle, Percent, TrendingDown, RotateCcw, Filter, Calendar, ChevronRight, FilePlus2 } from "lucide-react";
+import { PlusCircle, FileText, TrendingUp, AlertCircle, CheckCircle, Percent, TrendingDown, RotateCcw, Filter, Calendar, ChevronRight, FilePlus2, Users, Activity, Clock, ArrowUpRight, Wallet, Award, Zap } from "lucide-react";
 
 interface DashboardProps {
     onCreateInvoice: () => void;
@@ -128,6 +128,30 @@ export const DashboardContainer = ({ onCreateInvoice, invoiceHistory = [] }: Das
     // Use Paid Count from API
     const paidCount = (stats as any).paidInvoices?.count ?? 0;
     const paidGrowth = (stats as any).paidInvoices?.growth ?? 0;
+
+    // --- CUSTOM BUSINESS INTELLIGENCE ---
+    const businessMetrics = useMemo(() => {
+        const clientsMap: Record<string, { value: number, count: number }> = {};
+        const invs = invoiceHistory.filter(i => i.documentType !== "Quotation");
+        
+        invs.forEach(i => {
+            const val = parseFloat(i.total) || 0;
+            if (!clientsMap[i.clientName]) clientsMap[i.clientName] = { value: 0, count: 0 };
+            clientsMap[i.clientName].value += val;
+            clientsMap[i.clientName].count += 1;
+        });
+        
+        const topClients = Object.entries(clientsMap)
+            .map(([name, data]) => ({ name, value: data.value, count: data.count }))
+            .sort((a, b) => b.value - a.value)
+            .slice(0, 4);
+
+        const avgTicket = invs.length > 0 
+            ? invs.reduce((acc, curr) => acc + (parseFloat(curr.total) || 0), 0) / invs.length 
+            : 0;
+
+        return { topClients, avgTicket, clientCount: Object.keys(clientsMap).length };
+    }, [invoiceHistory]);
 
     return (
         <div className="flex-1 bg-slate-50 p-4 md:p-8 overflow-y-auto">
@@ -362,6 +386,43 @@ export const DashboardContainer = ({ onCreateInvoice, invoiceHistory = [] }: Das
                     </div>
                 </div>
 
+                {/* --- EXECUTIVE INSIGHTS STRIP --- */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div className="bg-slate-900 rounded-2xl p-6 text-white flex items-center justify-between group overflow-hidden relative">
+                         <div className="absolute top-0 right-0 w-32 h-32 bg-brand-primary/10 rounded-full -translate-x-12 -translate-y-12 blur-2xl group-hover:scale-150 transition-transform duration-700" />
+                         <div className="relative z-10">
+                            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 mb-1">Average Ticket</p>
+                            <h4 className="text-2xl font-black tracking-tight">{fmtMoney(businessMetrics.avgTicket)}</h4>
+                         </div>
+                         <div className="p-3 bg-white/10 rounded-xl relative z-10">
+                            <Wallet className="w-5 h-5 text-brand-primary" />
+                         </div>
+                    </div>
+
+                    <div className="bg-white border border-slate-100 rounded-2xl p-6 flex items-center justify-between group">
+                         <div>
+                            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 mb-1">Active Partners</p>
+                            <h4 className="text-2xl font-black text-slate-900 tracking-tight">{businessMetrics.clientCount} <span className="text-xs font-bold text-slate-300">Clients</span></h4>
+                         </div>
+                         <div className="p-3 bg-brand-50 rounded-xl group-hover:bg-brand-primary group-hover:text-white transition-colors">
+                            <Users className="w-5 h-5" />
+                         </div>
+                    </div>
+
+                    <div className="bg-white border border-slate-100 rounded-2xl p-6 flex items-center justify-between group">
+                         <div>
+                            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 mb-1">Quotation Flow</p>
+                            <h4 className="text-2xl font-black text-slate-900 tracking-tight">
+                                {(((stats as any).acceptedQuotations?.count || 0) / (stats.quotations.count || 1) * 100).toFixed(0)}%
+                                <span className="text-xs font-bold text-slate-300 ml-1">Success</span>
+                            </h4>
+                         </div>
+                         <div className="p-3 bg-emerald-50 text-emerald-600 rounded-xl group-hover:bg-emerald-500 group-hover:text-white transition-colors">
+                            <TrendingUp className="w-5 h-5" />
+                         </div>
+                    </div>
+                </div>
+
                 {/* Charts Area */}
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                     {/* Main Chart */}
@@ -582,6 +643,51 @@ export const DashboardContainer = ({ onCreateInvoice, invoiceHistory = [] }: Das
                                 </div>
                             )}
                         </div>
+                    </div>
+                </div>
+
+                {/* --- FOOTER ANALYTICS: TOP CLIENTS --- */}
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 pb-12">
+                    {/* Top Clients (Full Width) */}
+                    <div className="lg:col-span-12 bg-white rounded-[2rem] border border-slate-100 shadow-sm overflow-hidden flex flex-col">
+                         <div className="px-8 py-6 border-b border-slate-50 flex items-center justify-between bg-slate-50/20">
+                            <div className="flex items-center gap-3">
+                                <div className="p-2 bg-amber-500/10 rounded-lg text-amber-600">
+                                    <Award className="w-4 h-4" />
+                                </div>
+                                <h3 className="font-black text-slate-900 uppercase tracking-tight text-sm">Top Performing Clients</h3>
+                            </div>
+                        </div>
+                        <div className="p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 flex-1">
+                            {businessMetrics.topClients.map((client, i) => (
+                                <div key={i} className="flex items-center justify-between group/client p-4 rounded-2xl hover:bg-slate-50 transition-all border border-transparent hover:border-slate-100">
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-[10px] font-black text-slate-400 group-hover/client:bg-brand-primary group-hover/client:text-white transition-all">
+                                            {client.name.substring(0, 2).toUpperCase()}
+                                        </div>
+                                        <div className="min-w-0">
+                                            <p className="text-xs font-black text-slate-900 leading-none truncate max-w-[120px]">{client.name}</p>
+                                            <p className="text-[9px] font-bold text-slate-400 mt-1 uppercase tracking-tighter">{client.count} Transactions</p>
+                                        </div>
+                                    </div>
+                                    <div className="text-right">
+                                        <p className="text-xs font-black text-slate-900">{fmtMoney(client.value)}</p>
+                                        <div className="h-1 w-16 bg-slate-100 rounded-full mt-1.5 overflow-hidden ml-auto">
+                                            <div 
+                                                className="h-full bg-brand-primary rounded-full transition-all duration-1000" 
+                                                style={{ width: `${(client.value / (businessMetrics.topClients[0]?.value || 1) * 100)}%` }}
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                         <button 
+                            onClick={() => router.push('/history')}
+                            className="w-full py-4 text-center border-t border-slate-50 text-[10px] font-black text-slate-400 hover:text-brand-primary hover:bg-slate-50 transition-all uppercase tracking-widest bg-slate-50/10"
+                        >
+                            Explore Detailed Client Analytics
+                        </button>
                     </div>
                 </div>
 
