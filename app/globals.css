@@ -6,6 +6,12 @@ body {
   @apply bg-slate-100 text-slate-900 selection:bg-brand-100 selection:text-brand-900;
 }
 
+/* Hide default browser eye icon for password fields */
+input::-ms-reveal,
+input::-ms-clear {
+  display: none;
+}
+
 :root {
     --color-brand-start: #F09819;
     --color-brand-end: #FF512F;
