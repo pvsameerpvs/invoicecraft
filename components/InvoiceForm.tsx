@@ -9,6 +9,8 @@ import React from "react";
 import { ClientSelect } from "./ClientSelect";
 import { ExternalLink } from "lucide-react";
 import Link from "next/link";
+import { BUSINESS_PROFILES } from "../lib/businessProfiles";
+import { LayoutPanelTop } from "lucide-react";
 
 interface InvoiceFormProps {
   value: InvoiceData;
@@ -32,8 +34,10 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({
 
   const [presets, setPresets] = React.useState<Array<{ label: string; amount: string }>>([]);
 
+  const profileConfig = BUSINESS_PROFILES[value.businessProfile || "Product"] || BUSINESS_PROFILES["Product"];
+
   React.useEffect(() => {
-    fetch("/api/products")
+    fetch(`/api/products?profile=${value.businessProfile || "Product"}`)
       .then((res) => res.json())
       .then((data) => {
         if (Array.isArray(data)) {
@@ -41,7 +45,7 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({
         }
       })
       .catch((err) => console.error("Failed to load products preset", err));
-  }, []);
+  }, [value.businessProfile]);
 
   const handleFieldChange = (field: keyof InvoiceData, newValue: string) => {
     onChange({ ...value, [field]: newValue });
@@ -145,8 +149,26 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({
       </div>
 
 
-      <section className="space-y-2 rounded-lg border border-brand-200 bg-white p-4 shadow-sm">
-        <h2 className="text-sm font-semibold">Branding</h2>
+      <section className="space-y-4 rounded-lg border border-brand-200 bg-white p-4 shadow-sm">
+        <div className="flex items-center justify-between border-b border-brand-50 pb-2 mb-2">
+            <h2 className="text-sm font-semibold flex items-center gap-2">
+                <LayoutPanelTop className="w-4 h-4 text-brand-primary" />
+                Profile & Branding
+            </h2>
+             <div className="flex items-center gap-2">
+                <select 
+                    value={value.businessProfile}
+                    onChange={(e) => handleFieldChange("businessProfile", e.target.value as any)}
+                    className="text-[10px] font-bold text-brand-primary bg-brand-50 border border-brand-100 rounded-md px-2 py-1 focus:outline-none cursor-pointer hover:bg-brand-100 transition-colors"
+                >
+                    <option value="Product">Product-based</option>
+                    <option value="Service">Service-based</option>
+                    <option value="Hourly">Hourly-based</option>
+                    <option value="Project">Project-based</option>
+                    <option value="Recurring">Recurring-based</option>
+                </select>
+            </div>
+        </div>
         <div className="space-y-3">
           <div>
             <Label htmlFor="logo">Logo (PNG/JPEG)</Label>
@@ -366,7 +388,7 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({
 
       <section className="space-y-2 rounded-lg border border-brand-200 bg-white p-4 shadow-sm">
   <div className="flex items-center justify-between">
-    <h2 className="text-sm font-semibold">Line items</h2>
+    <h2 className="text-sm font-semibold">{profileConfig.headers.desc}s</h2>
 
     <div className="flex items-center gap-2">
       <Button
@@ -374,7 +396,7 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({
         onClick={() => setIsAddItemPickerOpen((v) => !v)}
         className="h-7 px-2 text-[11px] bg-brand-primary hover:bg-brand-end text-white"
       >
-        + Add item
+        + Add {profileConfig.headers.desc}
       </Button>
     </div>
   </div>
@@ -421,7 +443,7 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({
           );
         })}
 
-        <option value="__custom__">Custom item…</option>
+        <option value="__custom__">Add new {profileConfig.headers.desc.toLowerCase()}…</option>
       </select>
 
 
@@ -450,7 +472,7 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({
 
         <div className="mb-4 flex items-center justify-between">
           <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400">
-            {value.documentType === "Quotation" ? "Quotation Detail" : "Invoice Detail"}
+            {profileConfig.headers.desc} Details
           </h3>
           <Button
             type="button"
@@ -458,13 +480,13 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({
             className="h-8 px-3 text-[11px] font-semibold text-red-500 hover:text-red-600 hover:bg-red-50 rounded-full transition-colors"
             onClick={() => removeLineItem(item.id)}
           >
-            ✕ Remove Item
+            ✕ Remove {profileConfig.headers.desc}
           </Button>
         </div>
 
         <div className="space-y-4">
           <div className="space-y-1.5">
-            <Label className="text-[11px] font-bold uppercase text-slate-500 ml-1">Description <span className="text-red-500">*</span></Label>
+            <Label className="text-[11px] font-bold uppercase text-slate-500 ml-1">{profileConfig.headers.desc} <span className="text-red-500">*</span></Label>
             <Textarea
               rows={2}
               placeholder="What are you charging for?"
@@ -478,8 +500,8 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1.5">
-              <Label className="text-[11px] font-bold uppercase text-slate-500 ml-1">Quantity <span className="text-red-500">*</span></Label>
-              <div className="flex items-center gap-1 overflow-hidden rounded-xl border border-slate-200 bg-slate-50/30 p-1 focus-within:border-brand-primary focus-within:ring-1 focus-within:ring-brand-primary transition-all">
+               <Label className="text-[11px] font-bold uppercase text-slate-500 ml-1">{profileConfig.headers.qty} <span className="text-red-500">*</span></Label>
+              <div className="flex items-center gap-1 overflow-hidden rounded-xl border border-slate-50/30 p-1 focus-within:border-brand-primary focus-within:ring-1 focus-within:ring-brand-primary transition-all">
                 <Button
                   type="button"
                   variant="ghost"
@@ -515,7 +537,7 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({
             </div>
 
             <div className="space-y-1.5">
-              <Label className="text-[11px] font-bold uppercase text-slate-500 ml-1">Unit Price <span className="text-red-500">*</span></Label>
+               <Label className="text-[11px] font-bold uppercase text-slate-500 ml-1">{profileConfig.headers.price} <span className="text-red-500">*</span></Label>
               <div className="relative">
                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[11px] font-bold text-slate-400 uppercase">{value.currency}</span>
                 <Input

@@ -118,7 +118,8 @@ export function InvoiceEditorContainer({ initialInvoiceId }: Props) {
                             bankLabel: settingsData.BankLabel,
                             accountNumber: settingsData.AccountNumber,
                             accountIban: settingsData.AccountIban,
-                        }
+                        },
+                        businessProfile: settingsData.BusinessProfile || "Product"
                     };
                 }
             } catch (e) {

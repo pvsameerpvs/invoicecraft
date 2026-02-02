@@ -6,6 +6,34 @@ import { getSubdomainFromRequest, getTenantSheetId } from "@/lib/user.id";
 export const dynamic = 'force-dynamic';
 
 // Same Sheet ID as used in other routes
+export const SETTINGS_SCHEMA = [
+    "CompanyName", "CompanyAddress", "BankCompanyName", "BankName", "BankLabel",
+    "AccountNumber", "AccountIban", "FooterNote", "SignatureLabel", "Currency",
+    "CompanyTrn", "Theme", "LogoUrl", "ShowCompanyName", "NavbarTitle",
+    "CompanyEmail", "CompanyPhone", "BusinessProfile"
+];
+
+async function ensureSettingsSheet(sheets: any, spreadsheetId: string) {
+    const meta = await sheets.spreadsheets.get({ spreadsheetId });
+    const existing = meta.data.sheets?.map((s: any) => s.properties?.title) || [];
+    
+    if (!existing.includes("Settings")) {
+        await sheets.spreadsheets.batchUpdate({
+            spreadsheetId,
+            requestBody: {
+                requests: [{ addSheet: { properties: { title: "Settings" } } }]
+            }
+        });
+    }
+
+    // Always ensure headers are correct
+    await sheets.spreadsheets.values.update({
+        spreadsheetId,
+        range: "Settings!A1:R1",
+        valueInputOption: "USER_ENTERED",
+        requestBody: { values: [SETTINGS_SCHEMA] }
+    });
+}
 
 export async function GET(req: Request) {
   try {
@@ -19,10 +47,12 @@ export async function GET(req: Request) {
       );
       }
     
+    await ensureSettingsSheet(sheets, SHEET_ID);
+    
     // Fetch Header (Row 1) and Data (Row 2)
     const res = await sheets.spreadsheets.values.get({
       spreadsheetId: SHEET_ID,
-      range: "Settings!A1:Q2", // Expanded to Q
+      range: "Settings!A1:R2", // Expanded to R for BusinessProfile
     });
 
     const rows = res.data.values || [];
@@ -57,13 +87,14 @@ export async function POST(req: Request) {
     { status: 404 }
   );
   }
-        const body = await req.json();
         const sheets = getSheetsClient();
+        await ensureSettingsSheet(sheets, SHEET_ID);
+        const body = await req.json();
         const username = cookies().get("invoicecraft_auth")?.value || "Unknown";
         
         // A: CompanyName, B: CompanyAddress, C: BankCompanyName, D: BankName, E: BankLabel
         // F: AccountNumber, G: AccountIban, H: FooterNote, I: SignatureLabel, J: Currency, K: CompanyTrn
-        // L: Theme, M: LogoUrl, N: ShowCompanyName, O: NavbarTitle, P: CompanyEmail, Q: CompanyPhone
+        // L: Theme, M: LogoUrl, N: ShowCompanyName, O: NavbarTitle, P: CompanyEmail, Q: CompanyPhone, R: BusinessProfile
 
         const values = [
             body.CompanyName || "",
@@ -82,13 +113,14 @@ export async function POST(req: Request) {
             body.ShowCompanyName === true || body.ShowCompanyName === "true" ? "true" : "false",
             body.NavbarTitle || "",
             body.CompanyEmail || "",
-            body.CompanyPhone || ""
+            body.CompanyPhone || "",
+            body.BusinessProfile || "Product"
         ];
 
         await sheets.spreadsheets.values.update({
             spreadsheetId: SHEET_ID,
-            // Expanded to Q column
-            range: "Settings!A2:Q2", 
+            // Expanded to R column
+            range: "Settings!A2:R2", 
             valueInputOption: "USER_ENTERED",
             requestBody: {
                 values: [values]

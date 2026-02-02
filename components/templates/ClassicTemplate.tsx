@@ -3,6 +3,7 @@
 import React from "react";
 import { InvoiceData } from "@/lib/types";
 import { useTheme } from "@/components/ThemeProvider";
+import { BUSINESS_PROFILES } from "@/lib/businessProfiles";
 
 interface ClassicTemplateProps {
     value: InvoiceData;
@@ -35,7 +36,8 @@ function formatDate(dateStr?: string) {
 export const ClassicTemplate: React.FC<ClassicTemplateProps> = ({ value }) => {
   const { logoUrl } = useTheme();
 
-  const rowsPerPage = 10;
+  const rowsPerPage = 12; // Adjusted for Classic template
+  const profileConfig = BUSINESS_PROFILES[value.businessProfile || "Product"] || BUSINESS_PROFILES["Product"];
   const computedTotal = value.lineItems.reduce((sum, item) => {
     const price = parseFloat(item.unitPrice);
     const qty = item.quantity || 1;
@@ -155,19 +157,19 @@ export const ClassicTemplate: React.FC<ClassicTemplateProps> = ({ value }) => {
                   <thead>
                     <tr>
                       <th className="w-10 bg-gradient-to-r from-brand-start to-brand-primary px-2 py-2 text-left text-[11px] font-semibold uppercase text-white">
-                        #
+                        {profileConfig.headers.no}
                       </th>
                       <th className="bg-brand-primary px-2 py-2 text-left text-[11px] font-semibold uppercase text-white">
-                        Item &amp; Description
+                        {profileConfig.headers.desc}
                       </th>
                       <th className="w-16 bg-brand-primary px-2 py-2 text-center text-[11px] font-semibold uppercase text-white">
-                        Qty
+                        {profileConfig.headers.qty}
                       </th>
                       <th className="w-24 bg-brand-primary px-2 py-2 text-right text-[11px] font-semibold uppercase text-white">
-                        Unit Price
+                        {profileConfig.headers.price}
                       </th>
                       <th className="w-32 bg-gradient-to-r from-brand-primary to-brand-end px-2 py-2 text-right text-[11px] font-semibold uppercase text-white">
-                        Total Amount
+                        {profileConfig.headers.total}
                       </th>
                     </tr>
                   </thead>

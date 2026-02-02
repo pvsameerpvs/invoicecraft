@@ -11,6 +11,35 @@ function money(n: number) {
   return n.toFixed(2);
 }
 
+/**
+ * STANDARDIZED DATABASE SCHEMA
+ * Columns A through R
+ */
+export const INVOICE_MAIN_SCHEMA = [
+    "Timestamp",        // 0: A
+    "Number",           // 1: B
+    "Date",             // 2: C
+    "Client",           // 3: D
+    "Subject",          // 4: E
+    "Currency",         // 5: F
+    "Subtotal",         // 6: G
+    "VAT",              // 7: H
+    "Total",            // 8: I
+    "Payload",          // 9: J
+    "Created By",       // 10: K
+    "Status",           // 11: L
+    "Type",             // 12: M
+    "Client Email",     // 13: N
+    "Client Phone",     // 14: O
+    "Validity Date",    // 15: P
+    "Business Profile", // 16: Q
+    "Source Ref"        // 17: R
+];
+
+export const LINE_ITEM_SCHEMA = [
+    "Number", "ID", "Description", "Quantity", "Unit Price", "Amount"
+];
+
 async function syncQuotationStatus(sheets: any, spreadsheetId: string, quotationNumber: string, status: string, invoiceNumber?: string) {
     try {
         const res = await sheets.spreadsheets.values.get({
@@ -72,19 +101,19 @@ async function ensureSheets(sheets: any, spreadsheetId: string) {
     }
 
     // Always ensure headers are up to date for main sheets
-    const mainHeader = ["Timestamp", "Number", "Date", "Client", "Subject", "Currency", "Subtotal", "VAT", "Total", "Payload", "Created By", "Status", "Type", "Client Email", "Client Phone", "Validity Date"];
-    const lineHeader = ["Number", "ID", "Description", "Quantity", "Unit Price", "Amount"];
+    const mainHeader = INVOICE_MAIN_SCHEMA;
+    const lineHeader = LINE_ITEM_SCHEMA;
 
     await Promise.all([
         sheets.spreadsheets.values.update({
             spreadsheetId,
-            range: "Invoices!A1:P1",
+            range: "Invoices!A1:R1",
             valueInputOption: "USER_ENTERED",
             requestBody: { values: [mainHeader] }
         }),
         sheets.spreadsheets.values.update({
             spreadsheetId,
-            range: "Quotations!A1:P1",
+            range: "Quotations!A1:R1",
             valueInputOption: "USER_ENTERED",
             requestBody: { values: [mainHeader] }
         }),
@@ -176,7 +205,7 @@ export async function POST(req: Request) {
     // ✅ Save row
     await sheets.spreadsheets.values.append({
       spreadsheetId: SHEET_ID,
-      range: `${mainSheet}!A:P`,
+      range: `${mainSheet}!A:R`,
       valueInputOption: "USER_ENTERED",
       requestBody: {
         values: [
@@ -197,6 +226,8 @@ export async function POST(req: Request) {
             invoice.invoiceToEmail || "",
             invoice.invoiceToPhone || "",
             invoice.validityDate || "",
+            invoice.businessProfile || "Product",
+            invoice.sourceQuotation || "",
           ],
         ],
       },
@@ -379,7 +410,7 @@ export async function PUT(req: Request) {
     const currency = invoice.currency || "AED";
 
     // 2. Update the row
-    const rangeToUpdate = `${mainSheet}!B${sheetRowNumber}:P${sheetRowNumber}`;
+    const rangeToUpdate = `${mainSheet}!B${sheetRowNumber}:R${sheetRowNumber}`;
 
     await sheets.spreadsheets.values.update({
       spreadsheetId: SHEET_ID,
@@ -403,6 +434,8 @@ export async function PUT(req: Request) {
             invoice.invoiceToEmail || "",
             invoice.invoiceToPhone || "",
             invoice.validityDate || "",
+            invoice.businessProfile || "Product",
+            invoice.sourceQuotation || "",
           ],
         ],
       },
@@ -459,6 +492,7 @@ export async function GET(req: Request) {
     const qStatus = (searchParams.get("status") || "").toLowerCase().trim();
     const qDate = (searchParams.get("date") || "").trim();
     const qUser = (searchParams.get("user") || "").toLowerCase().trim();
+    const qProfile = (searchParams.get("profile") || "").trim();
 
     const currentUser = cookies().get("invoicecraft_auth")?.value || "";
     const currentRole = (cookies().get("invoicecraft_role")?.value || "user").toLowerCase().trim();
@@ -483,7 +517,7 @@ export async function GET(req: Request) {
 
     const res = await sheets.spreadsheets.values.get({
       spreadsheetId: SHEET_ID,
-      range: `${mainSheet}!A:P`,
+      range: `${mainSheet}!A:R`,
     });
 
     const rows = res.data.values || [];
@@ -509,6 +543,8 @@ export async function GET(req: Request) {
         clientEmail: r[13] || "",
         clientPhone: r[14] || "",
         validityDate: r[15] || "",
+        businessProfile: r[16] || "",
+        sourceQuotation: r[17] || "",
         quotationNumber: (r[12] === "Quotation") ? (r[1] || "") : undefined,
       }))
       .filter((item) => {
@@ -540,7 +576,20 @@ export async function GET(req: Request) {
           return false;
         }
 
-        // 6. Year & Month Filter
+        // 6. Business Profile Filter
+        if (qProfile && qProfile !== "all") {
+             if (item.businessProfile !== qProfile) {
+                // Check payload if column is empty (for old records)
+                try {
+                    const payload = JSON.parse(item.payloadJson || "{}");
+                    if (payload.businessProfile !== qProfile) return false;
+                } catch(e) {
+                    return false;
+                }
+             }
+        }
+
+        // 7. Year & Month Filter
         // 6. Year & Month Filter
         if (searchParams.has('year') || searchParams.has('month')) {
             const d = new Date(item.date); // item.date is YYYY-MM-DD string usually, or ISO

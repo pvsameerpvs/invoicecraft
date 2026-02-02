@@ -21,6 +21,7 @@ import { InvoicePreview } from "../InvoicePreview";
 import { downloadInvoicePdf } from "@/lib/pdf";
 import { InvoiceData, InvoiceHistoryRow } from "@/lib/types";
 import { Skeleton } from "../ui/skeleton";
+import { BUSINESS_PROFILES } from "@/lib/businessProfiles";
 
 interface HistoryContainerProps {
   documentType: "Invoice" | "Quotation";
@@ -216,6 +217,21 @@ const HistoryContent = ({ documentType }: HistoryContainerProps) => {
                           <option value="overdue">Overdue</option>
                         </>
                       )}
+                    </select>
+                    <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+                  </div>
+                  {/* Business Profile Select */}
+                  <div className="relative">
+                    <Briefcase className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4.5 h-4.5 text-slate-400" />
+                    <select 
+                      value={searchParams.get("profile") || ""}
+                      onChange={e => updateFilter("profile", e.target.value)}
+                      className="w-full pl-11 pr-10 py-3 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold text-slate-900 focus:outline-none focus:ring-4 focus:ring-brand-primary/10 transition-all appearance-none cursor-pointer"
+                    >
+                      <option value="">All Profiles</option>
+                      {Object.values(BUSINESS_PROFILES).map(p => (
+                        <option key={p.id} value={p.id}>{p.label}</option>
+                      ))}
                     </select>
                     <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
                   </div>

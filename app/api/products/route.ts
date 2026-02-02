@@ -4,55 +4,104 @@ import { getSubdomainFromRequest, getTenantSheetId } from "@/lib/user.id";
 
 export const dynamic = 'force-dynamic';
 
+import { BUSINESS_PROFILES } from "@/lib/businessProfiles";
 
+const PROFILE_SHEETS: Record<string, { sheet: string; headers: string[] }> = {
+    "Product":   { 
+        sheet: "Catalog_Product",   
+        headers: [BUSINESS_PROFILES["Product"].fields.descLabel, BUSINESS_PROFILES["Product"].fields.priceLabel] 
+    },
+    "Service":   { 
+        sheet: "Catalog_Service",   
+        headers: [BUSINESS_PROFILES["Service"].fields.descLabel, BUSINESS_PROFILES["Service"].fields.priceLabel] 
+    },
+    "Hourly":    { 
+        sheet: "Catalog_Hourly",    
+        headers: [BUSINESS_PROFILES["Hourly"].fields.descLabel, BUSINESS_PROFILES["Hourly"].fields.priceLabel] 
+    },
+    "Project":   { 
+        sheet: "Catalog_Project",   
+        headers: [BUSINESS_PROFILES["Project"].fields.descLabel, BUSINESS_PROFILES["Project"].fields.priceLabel] 
+    },
+    "Recurring": { 
+        sheet: "Catalog_Recurring", 
+        headers: [BUSINESS_PROFILES["Recurring"].fields.descLabel, BUSINESS_PROFILES["Recurring"].fields.priceLabel] 
+    }
+};
+
+async function ensureSheet(sheets: any, spreadsheetId: string, profile: string) {
+    const config = PROFILE_SHEETS[profile] || PROFILE_SHEETS["Product"];
+    const meta = await sheets.spreadsheets.get({ spreadsheetId });
+    const existing = meta.data.sheets?.map((s: any) => s.properties?.title) || [];
+    
+    if (!existing.includes(config.sheet)) {
+        await sheets.spreadsheets.batchUpdate({
+            spreadsheetId,
+            requestBody: {
+                requests: [{ addSheet: { properties: { title: config.sheet } } }]
+            }
+        });
+    }
+
+    // Always ensure headers are correct based on profile
+    await sheets.spreadsheets.values.update({
+        spreadsheetId,
+        range: `${config.sheet}!A1:B1`,
+        valueInputOption: "USER_ENTERED",
+        requestBody: { values: [config.headers] }
+    });
+    
+    return config.sheet;
+}
 
 export async function GET(req: Request) {
   try {
-         const subdomain = getSubdomainFromRequest(req);
+    const { searchParams } = new URL(req.url);
+    const profile = searchParams.get("profile") || "Product";
+    
+    const subdomain = getSubdomainFromRequest(req);
     const SHEET_ID = await getTenantSheetId(subdomain);
-    if (!SHEET_ID) {
-    return NextResponse.json(
-      { ok: false, error: "Sheet ID not found" },
-      { status: 404 }
-    );
-    }
+    if (!SHEET_ID) return NextResponse.json({ error: "Sheet ID not found" }, { status: 404 });
+    
     const sheets = getSheetsClient();
+    const sheetName = await ensureSheet(sheets, SHEET_ID, profile);
+
     const res = await sheets.spreadsheets.values.get({
       spreadsheetId: SHEET_ID,
-      range: "Products!A2:B", // Skip header row
+      range: `${sheetName}!A2:B`, 
     });
 
     const rows = res.data.values || [];
-    
-    // Sort alphabetically by label
     const products = rows
-        .map((r) => ({ label: r[0] || "", amount: r[1] || "" }))
+        .map((r) => ({ 
+            label: r[0] || "", 
+            amount: r[1] || "",
+            profile: profile
+        }))
         .filter(p => p.label)
         .sort((a, b) => a.label.localeCompare(b.label));
 
     return NextResponse.json(products);
   } catch (e: any) {
-    console.error("Failed to fetch products:", e);
     return NextResponse.json({ error: e.message }, { status: 500 });
   }
 }
 
 export async function POST(req: Request) {
     try {
-        const { label, amount } = await req.json();
+        const { label, amount, profile } = await req.json();
         if (!label) return NextResponse.json({ error: "Label required" }, { status: 400 });
-             const subdomain = getSubdomainFromRequest(req);
-  const SHEET_ID = await getTenantSheetId(subdomain);
-  if (!SHEET_ID) {
-  return NextResponse.json(
-    { ok: false, error: "Sheet ID not found" },
-    { status: 404 }
-  );
-  }
+        
+        const subdomain = getSubdomainFromRequest(req);
+        const SHEET_ID = await getTenantSheetId(subdomain);
+        if (!SHEET_ID) return NextResponse.json({ error: "Sheet ID not found" }, { status: 404 });
+        
         const sheets = getSheetsClient();
+        const sheetName = await ensureSheet(sheets, SHEET_ID, profile || "Product");
+        
         await sheets.spreadsheets.values.append({
             spreadsheetId: SHEET_ID,
-            range: "Products!A:B",
+            range: `${sheetName}!A:B`,
             valueInputOption: "USER_ENTERED",
             requestBody: {
                 values: [[label, amount]]
@@ -67,41 +116,33 @@ export async function POST(req: Request) {
 
 export async function DELETE(req: Request) {
     try {
-        const { label } = await req.json();
+        const { label, profile } = await req.json();
         if (!label) return NextResponse.json({ error: "Label required" }, { status: 400 });
-             const subdomain = getSubdomainFromRequest(req);
-  const SHEET_ID = await getTenantSheetId(subdomain);
-  if (!SHEET_ID) {
-  return NextResponse.json(
-    { ok: false, error: "Sheet ID not found" },
-    { status: 404 }
-  );
-  }
+        
+        const subdomain = getSubdomainFromRequest(req);
+        const SHEET_ID = await getTenantSheetId(subdomain);
+        if (!SHEET_ID) return NextResponse.json({ error: "Sheet ID not found" }, { status: 404 });
+        
+        const config = PROFILE_SHEETS[profile] || PROFILE_SHEETS["Product"];
         const sheets = getSheetsClient();
         
-        // 1. Fetch all rows
         const res = await sheets.spreadsheets.values.get({
             spreadsheetId: SHEET_ID,
-            range: "Products!A:B",
+            range: `${config.sheet}!A:B`,
         });
 
         const rows = res.data.values || [];
-        const header = rows[0]; // Preserve header
-        
-        // 2. Filter out the deleted item
-        // Skip header in filter, then add it back
+        const header = rows[0];
         const newRows = [header, ...rows.slice(1).filter(r => r[0] !== label)];
 
-        // 3. Clear Sheet
         await sheets.spreadsheets.values.clear({
             spreadsheetId: SHEET_ID,
-            range: "Products!A:B",
+            range: `${config.sheet}!A:B`,
         });
 
-        // 4. Write back new list
         await sheets.spreadsheets.values.update({
             spreadsheetId: SHEET_ID,
-            range: "Products!A1",
+            range: `${config.sheet}!A1`,
             valueInputOption: "USER_ENTERED",
             requestBody: { values: newRows }
         });
@@ -114,62 +155,36 @@ export async function DELETE(req: Request) {
 
 export async function PUT(req: Request) {
     try {
-        const { originalLabel, newLabel, newAmount } = await req.json();
-        console.log("PUT /api/products", { originalLabel, newLabel, newAmount });
-
+        const { originalLabel, newLabel, newAmount, profile } = await req.json();
         if (!originalLabel || !newLabel) return NextResponse.json({ error: "Label required" }, { status: 400 });
-             const subdomain = getSubdomainFromRequest(req);
-  const SHEET_ID = await getTenantSheetId(subdomain);
-  if (!SHEET_ID) {
-  return NextResponse.json(
-    { ok: false, error: "Sheet ID not found" },
-    { status: 404 }
-  );
-  }
-        const sheets = getSheetsClient();
         
-        // 1. Fetch all rows
+        const subdomain = getSubdomainFromRequest(req);
+        const SHEET_ID = await getTenantSheetId(subdomain);
+        if (!SHEET_ID) return NextResponse.json({ error: "Sheet ID not found" }, { status: 404 });
+        
+        const config = PROFILE_SHEETS[profile] || PROFILE_SHEETS["Product"];
+        const sheets = getSheetsClient();
         const res = await sheets.spreadsheets.values.get({
             spreadsheetId: SHEET_ID,
-            range: "Products!A:B",
+            range: `${config.sheet}!A:B`,
         });
 
         const rows = res.data.values || [];
-        console.log(`Found ${rows.length} rows in sheet`);
+        let rowIndex = rows.findIndex((r) => (r[0] || "").toString().trim() === originalLabel.trim());
 
-        // Find exact match first, then try trim match
-        let rowIndex = rows.findIndex((r) => r[0] === originalLabel);
-        
-        if (rowIndex === -1) {
-            console.log("Exact match not found. Trying trimmed match...");
-            rowIndex = rows.findIndex((r) => (r[0] || "").toString().trim() === originalLabel.trim());
-        }
+        if (rowIndex === -1) return NextResponse.json({ error: "Product not found" }, { status: 404 });
 
-        if (rowIndex === -1) {
-             console.error("Product not found in sheet:", originalLabel);
-             return NextResponse.json({ error: "Product not found" }, { status: 404 });
-        }
-
-        console.log(`Found product at row index ${rowIndex} (Sheet Row ${rowIndex + 1})`);
-
-        // 2. Update the row
-        // rowIndex is 0-based index of the array.
-        // Sheet row number is rowIndex + 1
-        
         await sheets.spreadsheets.values.update({
             spreadsheetId: SHEET_ID,
-            range: `Products!A${rowIndex + 1}:B${rowIndex + 1}`,
+            range: `${config.sheet}!A${rowIndex + 1}:B${rowIndex + 1}`,
             valueInputOption: "USER_ENTERED",
             requestBody: {
                 values: [[newLabel, newAmount]]
             }
         });
         
-        console.log("Product updated successfully");
-
         return NextResponse.json({ ok: true });
     } catch (e: any) {
-        console.error("PUT Error:", e);
         return NextResponse.json({ error: e.message }, { status: 500 });
     }
 }

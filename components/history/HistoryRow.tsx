@@ -3,6 +3,7 @@
 import React from "react";
 import { ChevronDown, MoreVertical, FileText, Users, Briefcase, CheckCircle, AlertCircle, FilePlus2, FileCheck } from "lucide-react";
 import { InvoiceHistoryRow } from "@/lib/types";
+import { BUSINESS_PROFILES, getBusinessProfile } from "@/lib/businessProfiles";
 
 interface HistoryRowProps {
   row: InvoiceHistoryRow;
@@ -48,17 +49,21 @@ export const HistoryRow = ({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const lineItems = React.useMemo(() => {
+  const { lineItems, profileConfig } = React.useMemo(() => {
     try {
-      if (!row.payloadJson) return [];
+      if (!row.payloadJson) return { lineItems: [], profileConfig: getBusinessProfile() };
       const parsed = JSON.parse(row.payloadJson);
-      return (parsed.lineItems || []).map((item: any) => ({
+      const items = (parsed.lineItems || []).map((item: any) => ({
         ...item,
         unitPrice: item.unitPrice ?? item.amount ?? "0",
         quantity: item.quantity ?? 1
       }));
+      return { 
+        lineItems: items, 
+        profileConfig: getBusinessProfile(parsed.businessProfile) 
+      };
     } catch {
-      return [];
+      return { lineItems: [], profileConfig: getBusinessProfile() };
     }
   }, [row.payloadJson]);
 
@@ -114,7 +119,12 @@ export const HistoryRow = ({
         )}
 
         <td className="px-6 py-4 text-slate-500 max-w-[200px] truncate" title={row.subject}>
-          {row.subject}
+          <div className="flex flex-col gap-1">
+             <span className="text-slate-900 font-medium truncate">{row.subject}</span>
+             <span className="text-[9px] font-black uppercase text-slate-300 tracking-tighter">
+                {profileConfig.label}
+             </span>
+          </div>
         </td>
 
         <td className="px-6 py-4 whitespace-nowrap">
@@ -234,11 +244,11 @@ export const HistoryRow = ({
                     <table className="w-full text-xs text-left">
                       <thead>
                         <tr className="bg-slate-100/50 text-slate-500 font-bold uppercase tracking-tight border-b border-slate-100">
-                          <th className="px-4 py-3 w-12 text-center text-[9px]">#</th>
-                          <th className="px-4 py-3">Description</th>
-                          <th className="px-4 py-3 text-center w-24">Qty</th>
-                          <th className="px-4 py-3 text-right w-32">Unit Price</th>
-                          <th className="px-4 py-3 text-right w-32 font-black">Total</th>
+                          <th className="px-4 py-3 w-12 text-center text-[9px]">{profileConfig.headers.no}</th>
+                          <th className="px-4 py-3">{profileConfig.headers.desc}</th>
+                          <th className="px-4 py-3 text-center w-24">{profileConfig.headers.qty}</th>
+                          <th className="px-4 py-3 text-right w-32">{profileConfig.headers.price}</th>
+                          <th className="px-4 py-3 text-right w-32 font-black">{profileConfig.headers.total}</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-slate-100">

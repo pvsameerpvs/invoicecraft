@@ -39,6 +39,7 @@ export interface InvoiceData {
   documentType: "Invoice" | "Quotation";
   validityDate?: string;
   sourceQuotation?: string;
+  businessProfile?: "Product" | "Service" | "Hourly" | "Project" | "Recurring";
 }
 
 export interface InvoiceHistoryRow {

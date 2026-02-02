@@ -23,7 +23,8 @@ export const CompanyDetailsSection = () => {
         SignatureLabel: "",
         Currency: "AED",
         CompanyEmail: "",
-        CompanyPhone: ""
+        CompanyPhone: "",
+        BusinessProfile: "Product"
     });
 
     useEffect(() => {
@@ -38,7 +39,7 @@ export const CompanyDetailsSection = () => {
             .finally(() => setLoading(false));
     }, []);
 
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
         const { name, value } = e.target;
         setFormData(prev => ({ ...prev, [name]: value }));
     };
@@ -191,6 +192,22 @@ export const CompanyDetailsSection = () => {
                                     className="w-full h-10 px-3 rounded-lg border border-slate-200 bg-slate-50 text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/20 focus:border-brand-primary transition-all"
                                     placeholder="e.g. +971 50 XXXXXXX"
                                 />
+                            </div>
+
+                            <div>
+                                <label className="block text-xs font-semibold text-slate-500 mb-1.5 uppercase">Business Profile</label>
+                                <select 
+                                    name="BusinessProfile"
+                                    value={formData.BusinessProfile}
+                                    onChange={handleChange}
+                                    className="w-full h-10 px-3 rounded-lg border border-slate-200 bg-slate-50 text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/20 focus:border-brand-primary transition-all"
+                                >
+                                    <option value="Product">Item / Product-based</option>
+                                    <option value="Service">Service-based</option>
+                                    <option value="Hourly">Hourly / Time-based</option>
+                                    <option value="Project">Project / Lump-sum</option>
+                                    <option value="Recurring">Recurring / Contract-based</option>
+                                </select>
                             </div>
                         </div>
 

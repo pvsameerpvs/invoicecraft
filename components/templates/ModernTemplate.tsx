@@ -3,6 +3,7 @@
 import React from "react";
 import { InvoiceData } from "@/lib/types";
 import { useTheme } from "@/components/ThemeProvider";
+import { BUSINESS_PROFILES } from "@/lib/businessProfiles";
 
 interface ModernTemplateProps {
     value: InvoiceData;
@@ -28,6 +29,7 @@ function formatDate(dateStr?: string) {
 
 export const ModernTemplate: React.FC<ModernTemplateProps> = ({ value }) => {
   const { logoUrl } = useTheme();
+  const profileConfig = BUSINESS_PROFILES[value.businessProfile || "Product"] || BUSINESS_PROFILES["Product"];
 
   const rowsPerPage = 10;
 
@@ -130,12 +132,12 @@ export const ModernTemplate: React.FC<ModernTemplateProps> = ({ value }) => {
                 <div className={`px-12 ${pageIndex === 0 ? "mt-8" : "mt-8"}`}>
                     <table className="w-full table-fixed border-collapse">
                         <thead>
-                            <tr className="border-b-2 border-slate-100">
-                                <th className="w-12 py-3 text-left text-[10px] font-bold uppercase text-slate-400 tracking-wider">#</th>
-                                <th className="py-3 text-left text-[10px] font-bold uppercase text-slate-400 tracking-wider">Description</th>
-                                <th className="w-16 py-3 text-center text-[10px] font-bold uppercase text-slate-400 tracking-wider">Qty</th>
-                                <th className="w-24 py-3 text-right text-[10px] font-bold uppercase text-slate-400 tracking-wider">Unit Price</th>
-                                <th className="w-32 py-3 text-right text-[10px] font-bold uppercase text-slate-400 tracking-wider">Total Amount</th>
+                             <tr className="border-b-2 border-slate-100">
+                                <th className="w-12 py-3 text-left text-[10px] font-bold uppercase text-slate-400 tracking-wider whitespace-nowrap">{profileConfig.headers.no}</th>
+                                <th className="py-3 text-left text-[10px] font-bold uppercase text-slate-400 tracking-wider">{profileConfig.headers.desc}</th>
+                                <th className="w-16 py-3 text-center text-[10px] font-bold uppercase text-slate-400 tracking-wider whitespace-nowrap">{profileConfig.headers.qty}</th>
+                                <th className="w-24 py-3 text-right text-[10px] font-bold uppercase text-slate-400 tracking-wider whitespace-nowrap">{profileConfig.headers.price}</th>
+                                <th className="w-32 py-3 text-right text-[10px] font-bold uppercase text-slate-400 tracking-wider whitespace-nowrap">{profileConfig.headers.total}</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-50">

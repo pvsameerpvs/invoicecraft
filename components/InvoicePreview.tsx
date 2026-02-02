@@ -4,6 +4,8 @@ import React from "react";
 import { InvoiceData } from "../lib/types";
 import { useTheme } from "./ThemeProvider";
 
+import { BUSINESS_PROFILES } from "../lib/businessProfiles";
+
 interface InvoicePreviewProps {
   value: InvoiceData;
   forwardRef?: React.Ref<HTMLDivElement>;
@@ -60,6 +62,8 @@ export const InvoicePreview: React.FC<InvoicePreviewProps> = ({
     value.overrideTotal && value.overrideTotal.trim().length > 0
       ? value.overrideTotal
       : (computedTotal + vatAmount - discountAmount).toFixed(2);
+
+  const profileConfig = BUSINESS_PROFILES[value.businessProfile || "Product"] || BUSINESS_PROFILES["Product"];
 
   const pages = chunkArray(value.lineItems, rowsPerPage);
   
@@ -222,19 +226,19 @@ export const InvoicePreview: React.FC<InvoicePreviewProps> = ({
                     <thead>
                       <tr>
                         <th className={`w-20 px-3 py-3 text-left text-[10px] font-bold uppercase text-white ${isQuotation ? 'bg-brand-primary' : 'bg-brand-primary'} rounded-tl-lg`}>
-                          Item No.
+                          {profileConfig.headers.no}
                         </th>
                         <th className={`px-3 py-3 text-center text-[10px] font-bold uppercase text-white ${isQuotation ? 'bg-brand-primary' : 'bg-brand-primary'}`}>
-                          Description
+                          {profileConfig.headers.desc}
                         </th>
                         <th className={`w-20 px-3 py-3 text-center text-[10px] font-bold uppercase text-white ${isQuotation ? 'bg-brand-primary' : 'bg-brand-primary'}`}>
-                          Qty
+                          {profileConfig.headers.qty}
                         </th>
                         <th className={`w-28 px-3 py-3 text-right text-[10px] font-bold uppercase text-white ${isQuotation ? 'bg-brand-primary' : 'bg-brand-primary'}`}>
-                          Unit Price
+                          {profileConfig.headers.price}
                         </th>
                         <th className={`w-32 px-3 py-3 text-right text-[10px] font-bold uppercase text-white ${isQuotation ? 'bg-brand-primary' : 'bg-brand-primary'} rounded-tr-lg`}>
-                          Total
+                          {profileConfig.headers.total}
                         </th>
                       </tr>
                     </thead>
