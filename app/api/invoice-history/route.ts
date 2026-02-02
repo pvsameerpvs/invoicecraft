@@ -15,7 +15,7 @@ function money(n: number) {
  * STANDARDIZED DATABASE SCHEMA
  * Columns A through R
  */
-export const INVOICE_MAIN_SCHEMA = [
+const INVOICE_MAIN_SCHEMA = [
     "Timestamp",        // 0: A
     "Number",           // 1: B
     "Date",             // 2: C
@@ -36,7 +36,7 @@ export const INVOICE_MAIN_SCHEMA = [
     "Source Ref"        // 17: R
 ];
 
-export const LINE_ITEM_SCHEMA = [
+const LINE_ITEM_SCHEMA = [
     "Number", "ID", "Description", "Quantity", "Unit Price", "Amount"
 ];
 

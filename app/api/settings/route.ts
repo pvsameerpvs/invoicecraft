@@ -6,7 +6,7 @@ import { getSubdomainFromRequest, getTenantSheetId } from "@/lib/user.id";
 export const dynamic = 'force-dynamic';
 
 // Same Sheet ID as used in other routes
-export const SETTINGS_SCHEMA = [
+const SETTINGS_SCHEMA = [
     "CompanyName", "CompanyAddress", "BankCompanyName", "BankName", "BankLabel",
     "AccountNumber", "AccountIban", "FooterNote", "SignatureLabel", "Currency",
     "CompanyTrn", "Theme", "LogoUrl", "ShowCompanyName", "NavbarTitle",
