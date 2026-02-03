@@ -11,7 +11,7 @@ interface NavbarProps {
 }
 
 export function Navbar({ label, variant = "white" }: NavbarProps) {
-  const { logoUrl, companyName, showCompanyName, navbarTitle } = useTheme();
+  const { logoUrl, logoSize, companyName, showCompanyName, navbarTitle } = useTheme();
   // Styles based on variant
   const bgClass = variant === "white" 
     ? "bg-white border-b border-slate-200" 
@@ -21,11 +21,12 @@ export function Navbar({ label, variant = "white" }: NavbarProps) {
     <header className={`sticky top-0 z-50 flex h-16 w-full flex-none items-center justify-between px-4 shadow-sm transition-all sm:px-6 ${bgClass}`}>
       <div className="flex items-center gap-4">
         {/* Logo */}
-        <div className="h-10">
+        <div className="flex items-center">
              <img 
                 src={logoUrl || "/logo-js.png"} 
                 alt="Logo" 
-                className="h-full w-auto object-contain object-left"
+                className="w-auto object-contain object-left transition-all duration-300"
+                style={{ height: `${Math.min(56, Math.max(20, logoSize * 0.6))}px` }}
              />
         </div>
         

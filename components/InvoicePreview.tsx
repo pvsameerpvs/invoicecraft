@@ -39,7 +39,7 @@ export const InvoicePreview: React.FC<InvoicePreviewProps> = ({
   value,
   forwardRef,
 }) => {
-  const { logoUrl } = useTheme();
+  const { logoUrl, logoSize } = useTheme();
 
   const isQuotation = value.documentType === "Quotation";
   const rowsPerPage = 10;
@@ -105,7 +105,8 @@ export const InvoicePreview: React.FC<InvoicePreviewProps> = ({
                             : (logoUrl || "/logo-js.png")
                         }
                         alt="Logo"
-                        className="h-20 w-auto max-w-[200px] object-contain"
+                        className="w-auto object-contain"
+                        style={{ height: `${logoSize}px`, maxWidth: '250px' }}
                       />
                       <div>
                          <h2 className="text-xl font-bold text-brand-primary">{value.fromCompanyName}</h2>
@@ -135,7 +136,8 @@ export const InvoicePreview: React.FC<InvoicePreviewProps> = ({
                         : (logoUrl || "/logo-js.png")
                     }
                     alt="Logo"
-                    className="h-20 w-auto max-w-[250px] object-contain"
+                    className="w-auto object-contain"
+                    style={{ height: `${logoSize}px`, maxWidth: '300px' }}
                   />
 
                                   <h1 className="mt-4 text-3xl font-semibold tracking-wide">

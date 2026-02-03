@@ -159,3 +159,19 @@ input::-ms-clear {
 .invoice-table td {
   @apply text-xs align-top;
 }
+/* =========================
+   React Image Crop Overrides
+   ========================= */
+.ReactCrop__handle {
+  width: 12px !important;
+  height: 12px !important;
+  background-color: #fff !important;
+  border: 2px solid #000 !important;
+  border-radius: 4px !important;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2) !important;
+}
+
+.ReactCrop__crop-selection {
+  border: 2px solid #fff !important;
+  box-shadow: 0 0 0 9999em rgba(0, 0, 0, 0.5) !important;
+}

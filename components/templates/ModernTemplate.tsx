@@ -28,7 +28,7 @@ function formatDate(dateStr?: string) {
 }
 
 export const ModernTemplate: React.FC<ModernTemplateProps> = ({ value }) => {
-  const { logoUrl } = useTheme();
+  const { logoUrl, logoSize } = useTheme();
   const profileConfig = BUSINESS_PROFILES[value.businessProfile || "Product"] || BUSINESS_PROFILES["Product"];
 
   const rowsPerPage = 10;
@@ -80,7 +80,8 @@ export const ModernTemplate: React.FC<ModernTemplateProps> = ({ value }) => {
                     <img
                         src={value.logoDataUrl?.trim() || (logoUrl || "/logo-js.png")}
                         alt="Logo"
-                        className="h-16 w-auto max-w-[200px] object-contain object-left"
+                        className="w-auto object-contain object-left"
+                        style={{ height: `${logoSize}px`, maxWidth: '250px' }}
                     />
                      <div className="space-y-1">
                         <div className="font-bold text-slate-900 text-sm">{value.fromCompanyName}</div>

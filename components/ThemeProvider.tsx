@@ -8,12 +8,14 @@ import { toast } from "react-hot-toast";
 interface ThemeContextType {
     currentTheme: string;
     logoUrl: string | undefined;
+    logoSize: number;
     companyName: string;
     navbarTitle: string;
     invoiceTemplate: string;
     showCompanyName: boolean;
     setTheme: (id: string) => void;
     setLogoUrl: (url: string) => void;
+    setLogoSize: (size: number) => void;
     setCompanyName: (name: string) => void;
     setNavbarTitle: (title: string) => void;
     setInvoiceTemplate: (template: string) => void;
@@ -26,6 +28,7 @@ const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
     const [currentTheme, setCurrentTheme] = useState<string>("orange");
     const [logoUrl, setLogoUrl] = useState<string | undefined>(undefined);
+    const [logoSize, setLogoSize] = useState<number>(80);
     const [companyName, setCompanyName] = useState("");
     const [navbarTitle, setNavbarTitle] = useState("");
     const [invoiceTemplate, setInvoiceTemplate] = useState("classic");
@@ -79,6 +82,9 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
                 if (data.LogoUrl) {
                     setLogoUrl(data.LogoUrl);
                 }
+                if (data.LogoSize) {
+                    setLogoSize(parseInt(data.LogoSize) || 80);
+                }
                 if (data.CompanyName) {
                     setCompanyName(data.CompanyName);
                 }
@@ -107,12 +113,14 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
         <ThemeContext.Provider value={{
             currentTheme,
             logoUrl,
+            logoSize,
             companyName,
             navbarTitle,
             invoiceTemplate,
             showCompanyName,
             setTheme: applyTheme,
             setLogoUrl,
+            setLogoSize,
             setCompanyName,
             setNavbarTitle,
             setInvoiceTemplate,

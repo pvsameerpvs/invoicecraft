@@ -7,10 +7,9 @@ import { Textarea } from "./ui/textarea";
 import { Label } from "./ui/label";
 import React from "react";
 import { ClientSelect } from "./ClientSelect";
-import { ExternalLink } from "lucide-react";
+import { ExternalLink, LayoutPanelTop, Palette } from "lucide-react";
 import Link from "next/link";
 import { BUSINESS_PROFILES } from "../lib/businessProfiles";
-import { LayoutPanelTop } from "lucide-react";
 
 interface InvoiceFormProps {
   value: InvoiceData;
@@ -21,12 +20,15 @@ interface InvoiceFormProps {
 
 
 
+import { useTheme } from "./ThemeProvider";
+
 export const InvoiceForm: React.FC<InvoiceFormProps> = ({
   value,
   onChange,
   onDownloadPdf,
   isUpdate = false,
 }) => {
+  const { logoSize, setLogoSize, logoUrl: globalLogoUrl } = useTheme();
   const [isEditingLockedFields, setIsEditingLockedFields] =
     React.useState(false);
 
@@ -170,15 +172,56 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({
             </div>
         </div>
         <div className="space-y-3">
-          <div>
-            <Label htmlFor="logo">Logo (PNG/JPEG)</Label>
+          <div className="space-y-3 p-3 rounded-xl bg-slate-50 border border-slate-100">
+            <div className="flex items-center justify-between">
+                <Label htmlFor="logo" className="text-[10px] font-black uppercase text-slate-500 tracking-wider">Company Logo</Label>
+                <span className="text-[10px] font-bold text-brand-primary bg-brand-50 px-2 py-0.5 rounded-lg border border-brand-100">{logoSize}px</span>
+            </div>
             <Input
               id="logo"
               type="file"
               accept="image/*"
               onChange={onLogoSelected}
               disabled={lockedDisabled}
+              className="bg-white border-slate-200"
             />
+            
+            {/* Live Size adjustment slider */}
+            <div className="pt-2 px-1 space-y-3">
+                <div className="flex items-center gap-4">
+                    <div className="h-12 w-12 rounded-lg bg-slate-900 border border-slate-200 flex items-center justify-center overflow-hidden shrink-0">
+                         {globalLogoUrl || value.logoDataUrl ? (
+                            <img 
+                                src={globalLogoUrl || value.logoDataUrl} 
+                                alt="Mini Preview" 
+                                className="w-auto object-contain"
+                                style={{ height: `${Math.min(40, logoSize * 0.3)}px` }}
+                            />
+                         ) : (
+                            <Palette className="w-4 h-4 text-slate-700" />
+                         )}
+                    </div>
+                    <div className="flex-1 space-y-1">
+                        <div className="flex items-center gap-2">
+                             <input 
+                                type="range" 
+                                min="10" 
+                                max="100" 
+                                step="1"
+                                value={logoSize}
+                                onChange={(e) => setLogoSize(parseInt(e.target.value))}
+                                className="flex-1 h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-brand-primary"
+                            />
+                        </div>
+                        <div className="flex justify-between text-[8px] font-bold text-slate-400 uppercase tracking-tighter">
+                            <span>10px</span>
+                            <span>Scale Logo Display</span>
+                            <span>100px</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <p className="text-[9px] text-slate-400 font-medium italic">Adjusts logo size live on the document.</p>
           </div>
 
           <div>

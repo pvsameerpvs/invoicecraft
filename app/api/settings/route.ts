@@ -10,7 +10,7 @@ const SETTINGS_SCHEMA = [
     "CompanyName", "CompanyAddress", "BankCompanyName", "BankName", "BankLabel",
     "AccountNumber", "AccountIban", "FooterNote", "SignatureLabel", "Currency",
     "CompanyTrn", "Theme", "LogoUrl", "ShowCompanyName", "NavbarTitle",
-    "CompanyEmail", "CompanyPhone", "BusinessProfile"
+    "CompanyEmail", "CompanyPhone", "BusinessProfile", "LogoSize"
 ];
 
 async function ensureSettingsSheet(sheets: any, spreadsheetId: string) {
@@ -29,7 +29,7 @@ async function ensureSettingsSheet(sheets: any, spreadsheetId: string) {
     // Always ensure headers are correct
     await sheets.spreadsheets.values.update({
         spreadsheetId,
-        range: "Settings!A1:R1",
+        range: "Settings!A1:S1",
         valueInputOption: "USER_ENTERED",
         requestBody: { values: [SETTINGS_SCHEMA] }
     });
@@ -52,7 +52,7 @@ export async function GET(req: Request) {
     // Fetch Header (Row 1) and Data (Row 2)
     const res = await sheets.spreadsheets.values.get({
       spreadsheetId: SHEET_ID,
-      range: "Settings!A1:R2", // Expanded to R for BusinessProfile
+      range: "Settings!A1:S2", // Expanded to S for LogoSize
     });
 
     const rows = res.data.values || [];
@@ -92,38 +92,33 @@ export async function POST(req: Request) {
         const body = await req.json();
         const username = cookies().get("invoicecraft_auth")?.value || "Unknown";
         
-        // A: CompanyName, B: CompanyAddress, C: BankCompanyName, D: BankName, E: BankLabel
-        // F: AccountNumber, G: AccountIban, H: FooterNote, I: SignatureLabel, J: Currency, K: CompanyTrn
-        // L: Theme, M: LogoUrl, N: ShowCompanyName, O: NavbarTitle, P: CompanyEmail, Q: CompanyPhone, R: BusinessProfile
-
-        const values = [
-            body.CompanyName || "",
-            body.CompanyAddress || "",
-            body.BankCompanyName || "",
-            body.BankName || "",
-            body.BankLabel || "",
-            body.AccountNumber || "",
-            body.AccountIban || "",
-            body.FooterNote || "",
-            body.SignatureLabel || "",
-            body.Currency || "",
-            body.CompanyTrn || "",
-            body.Theme || "orange", // Default theme
-            body.LogoUrl || "",
-            body.ShowCompanyName === true || body.ShowCompanyName === "true" ? "true" : "false",
-            body.NavbarTitle || "",
-            body.CompanyEmail || "",
-            body.CompanyPhone || "",
-            body.BusinessProfile || "Product"
-        ];
-
         await sheets.spreadsheets.values.update({
             spreadsheetId: SHEET_ID,
-            // Expanded to R column
-            range: "Settings!A2:R2", 
+            // Expanded to S column
+            range: "Settings!A2:S2", 
             valueInputOption: "USER_ENTERED",
             requestBody: {
-                values: [values]
+                values: [[
+                    body.CompanyName || "",
+                    body.CompanyAddress || "",
+                    body.BankCompanyName || "",
+                    body.BankName || "",
+                    body.BankLabel || "",
+                    body.AccountNumber || "",
+                    body.AccountIban || "",
+                    body.FooterNote || "",
+                    body.SignatureLabel || "",
+                    body.Currency || "",
+                    body.CompanyTrn || "",
+                    body.Theme || "orange",
+                    body.LogoUrl || "",
+                    body.ShowCompanyName === true || body.ShowCompanyName === "true" ? "true" : "false",
+                    body.NavbarTitle || "",
+                    body.CompanyEmail || "",
+                    body.CompanyPhone || "",
+                    body.BusinessProfile || "Product",
+                    body.LogoSize || "80"
+                ]]
             }
         });
 

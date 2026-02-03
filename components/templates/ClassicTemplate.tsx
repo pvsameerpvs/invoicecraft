@@ -34,7 +34,7 @@ function formatDate(dateStr?: string) {
 }
 
 export const ClassicTemplate: React.FC<ClassicTemplateProps> = ({ value }) => {
-  const { logoUrl } = useTheme();
+  const { logoUrl, logoSize } = useTheme();
 
   const rowsPerPage = 12; // Adjusted for Classic template
   const profileConfig = BUSINESS_PROFILES[value.businessProfile || "Product"] || BUSINESS_PROFILES["Product"];
@@ -94,7 +94,8 @@ export const ClassicTemplate: React.FC<ClassicTemplateProps> = ({ value }) => {
                     : (logoUrl || "/logo-js.png")
                 }
                 alt="Logo"
-                className="h-20 w-auto max-w-[250px] object-contain"
+                className="w-auto object-contain"
+                style={{ height: `${logoSize}px`, maxWidth: '300px' }}
               />
 
               <h1 className="mt-4 text-3xl font-semibold tracking-wide">

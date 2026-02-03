@@ -2,13 +2,13 @@
 
 import React, { useEffect, useState } from "react";
 import toast from "react-hot-toast";
-import { Palette, Save, Loader2, Type } from "lucide-react";
+import { Palette, Save, Loader2, Type, Maximize } from "lucide-react";
 import { useTheme } from "@/components/ThemeProvider";
 import { ImageCropper } from "@/components/ImageCropper";
 import { themes } from "@/lib/themes";
 
 export const ThemeSettingsSection = () => {
-    const { currentTheme, setTheme, logoUrl, setLogoUrl, showCompanyName, setShowCompanyName, companyName, navbarTitle, setNavbarTitle } = useTheme();
+    const { currentTheme, setTheme, logoUrl, setLogoUrl, logoSize, setLogoSize, showCompanyName, setShowCompanyName, companyName, navbarTitle, setNavbarTitle } = useTheme();
     const [saving, setSaving] = useState(false);
     const [cropModalOpen, setCropModalOpen] = useState(false);
     const [selectedFileSrc, setSelectedFileSrc] = useState<string | null>(null);
@@ -43,6 +43,7 @@ export const ThemeSettingsSection = () => {
                 ...currentData,
                 Theme: currentTheme,
                 LogoUrl: logoUrl,
+                LogoSize: logoSize,
                 ShowCompanyName: showCompanyName,
                 CompanyName: companyName,
                 NavbarTitle: navbarTitle
@@ -170,46 +171,132 @@ export const ThemeSettingsSection = () => {
 
                         {/* Logo Upload */}
                         <div className="pt-2">
-                             <label className="block text-xs font-semibold text-slate-500 mb-1.5 uppercase">Company Logo</label>
-                             <div className="flex items-center gap-4">
-                                <div className="h-16 w-16 rounded-lg border border-slate-200 bg-slate-50 flex items-center justify-center overflow-hidden shrink-0">
-                                    {logoUrl ? (
-                                        <img src={logoUrl} alt="Logo Preview" className="h-full w-full object-contain" />
-                                    ) : (
-                                        <span className="text-[10px] text-slate-400">No Logo</span>
-                                    )}
+                             <label className="block text-xs font-semibold text-slate-500 mb-2 uppercase tracking-wider">Company Logo</label>
+                             <div className="flex flex-col lg:flex-row items-stretch gap-6 p-4 rounded-2xl border border-slate-100 bg-slate-50/50">
+                                {/* Live Preview of Logo */}
+                                <div className="flex flex-col items-center gap-4 bg-slate-900 rounded-2xl p-6 border border-slate-700 shadow-inner min-w-[260px]">
+                                    <div className="flex items-center justify-center bg-white rounded-xl shadow-2xl p-4 overflow-hidden relative" 
+                                         style={{ width: '220px', height: '160px' }}>
+                                        {logoUrl ? (
+                                            <div className="relative flex items-center justify-center w-full h-full">
+                                                {/* Checkerboard background */}
+                                                <div className="absolute inset-0 z-0 opacity-[0.03]" style={{ backgroundImage: 'conic-gradient(#000 0.25turn, #ccc 0.25turn 0.5turn, #000 0.5turn 0.75turn, #ccc 0.75turn)', backgroundSize: '10px 10px' }} />
+                                                <img 
+                                                    src={logoUrl} 
+                                                    alt="Live Preview" 
+                                                    className="relative z-10 w-auto object-contain transition-all duration-200 ease-out"
+                                                    style={{ height: `${logoSize}px`, maxHeight: '100%', maxWidth: '100%' }}
+                                                />
+                                            </div>
+                                        ) : (
+                                            <div className="flex flex-col items-center gap-2 text-slate-300">
+                                                <Palette className="w-8 h-8 opacity-20" />
+                                                <span className="text-[10px] font-bold uppercase tracking-widest">No Logo</span>
+                                            </div>
+                                        )}
+                                    </div>
+                                    <div className="text-center">
+                                        <div className="text-[10px] font-black text-brand-primary uppercase tracking-[0.2em] mb-1">Live Document Preview</div>
+                                        <div className="text-[9px] text-slate-500 font-medium">As it will appear on PDFs</div>
+                                    </div>
                                 </div>
-                                <div className="flex-1">
-                                    <input 
-                                        type="file"
-                                        accept="image/*"
-                                        onChange={(e) => {
-                                            const file = e.target.files?.[0];
-                                            if (!file) return;
 
-                                            // Client-side validation
-                                            if (file.size > 5 * 1024 * 1024) {
-                                                toast.error("File is too large. Max 5MB.");
-                                                return;
-                                            }
+                                <div className="flex-1 flex flex-col justify-center gap-4">
+                                     {/* Logo Upload Container */}
+                                     <div className="flex flex-col gap-4 p-5 rounded-2xl border border-slate-100 bg-white shadow-sm ring-1 ring-slate-100/50">
+                                        <div className="flex items-center gap-4">
+                                            <div className="relative group shrink-0">
+                                                <div className="h-16 w-16 rounded-xl border border-slate-100 bg-slate-50 flex items-center justify-center overflow-hidden">
+                                                    {logoUrl ? (
+                                                        <img src={logoUrl} alt="Logo" className="h-full w-full object-contain" />
+                                                    ) : (
+                                                        <Palette className="w-5 h-5 text-slate-300" />
+                                                    )}
+                                                </div>
+                                                {logoUrl && (
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => {
+                                                            setSelectedFileSrc(logoUrl);
+                                                            setCropModalOpen(true);
+                                                        }}
+                                                        className="absolute -top-2 -right-2 p-1.5 bg-white rounded-lg shadow-lg border border-slate-100 text-brand-primary opacity-0 group-hover:opacity-100 transition-all hover:scale-110"
+                                                    >
+                                                        <Maximize className="w-3.5 h-3.5" />
+                                                    </button>
+                                                )}
+                                            </div>
+                                            <div className="space-y-1">
+                                                <p className="text-xs font-bold text-slate-700">{logoUrl ? "Logo Selected" : "No Logo Uploaded"}</p>
+                                                <p className="text-[10px] text-slate-400 font-medium leading-tight">PNG or SVG with transparent background works best.</p>
+                                            </div>
+                                        </div>
 
-                                            const reader = new FileReader();
-                                            reader.addEventListener("load", () => {
-                                                setSelectedFileSrc(reader.result?.toString() || null);
-                                                setCropModalOpen(true);
-                                            });
-                                            reader.readAsDataURL(file);
-                                            
-                                            // Reset input to allow selecting same file again
-                                            e.target.value = "";
-                                        }}
-                                        className="block w-full text-xs text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-brand-50 file:text-brand-primary hover:file:bg-brand-100"
-                                    />
-                                    <p className="text-[10px] text-slate-400 mt-1">Recommended: PNG with transparent background.</p>
+                                        <div className="flex flex-wrap gap-2 pt-2 border-t border-slate-50">
+                                            <label className="cursor-pointer bg-brand-primary hover:bg-brand-end text-white text-[11px] font-bold py-2 px-4 rounded-xl shadow-lg shadow-brand-200/50 transition-all active:scale-95 flex items-center gap-2">
+                                                <Save className="w-3.5 h-3.5 rotate-90" />
+                                                <span>Upload New</span>
+                                                <input 
+                                                    type="file"
+                                                    accept="image/*"
+                                                    className="hidden"
+                                                    onChange={(e) => {
+                                                        const file = e.target.files?.[0];
+                                                        if (!file) return;
+                                                        const reader = new FileReader();
+                                                        reader.addEventListener("load", () => {
+                                                            setSelectedFileSrc(reader.result?.toString() || null);
+                                                            setCropModalOpen(true);
+                                                        });
+                                                        reader.readAsDataURL(file);
+                                                        e.target.value = "";
+                                                    }}
+                                                />
+                                            </label>
+                                            {logoUrl && (
+                                                <button 
+                                                    type="button"
+                                                    onClick={() => {
+                                                        setSelectedFileSrc(logoUrl);
+                                                        setCropModalOpen(true);
+                                                    }}
+                                                    className="bg-slate-100 hover:bg-slate-200 text-slate-700 text-[11px] font-bold py-2 px-4 rounded-xl transition-all flex items-center gap-2"
+                                                >
+                                                    <Maximize className="w-3.5 h-3.5" />
+                                                    <span>Crop</span>
+                                                </button>
+                                            )}
+                                        </div>
+                                     </div>
                                 </div>
                              </div>
-                            </div>
+                        </div>
 
+                         {/* Logo Size Adjustment */}
+                         {logoUrl && (
+                            <div className="pt-4 border-t border-slate-100">
+                                <div className="flex items-center justify-between mb-3">
+                                    <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider">Logo Display Size</label>
+                                    <span className="text-xs font-bold text-brand-primary bg-brand-50 px-2 py-1 rounded-lg">{logoSize}px</span>
+                                </div>
+                                <div className="flex items-center gap-4">
+                                    <span className="text-[10px] font-bold text-slate-400">10PX</span>
+                                    <input 
+                                        type="range" 
+                                        min="10" 
+                                        max="100" 
+                                        step="1"
+                                        value={logoSize}
+                                        onChange={(e) => setLogoSize(parseInt(e.target.value))}
+                                        className="flex-1 h-1.5 bg-slate-100 rounded-lg appearance-none cursor-pointer accent-brand-primary"
+                                    />
+                                    <span className="text-[10px] font-bold text-slate-400">100PX</span>
+                                </div>
+                                <p className="text-[10px] text-slate-400 mt-2">
+                                    Adjust how large your logo appears on the tax invoice and quotations.
+                                </p>
+                            </div>
+                         )}
 
                         {/* Navbar Options */}
                         <div className="pt-2 border-t border-slate-100 mt-4">
