@@ -14,15 +14,24 @@ import {
   Settings,
   Building2,
   FileText,
-  Users
+  Users,
+  FilePlus,
+  PlusSquare
 } from "lucide-react";
 import toast from "react-hot-toast";
 import { useUnsavedChanges } from "./providers/UnsavedChangesContext";
+import { useTheme } from "./ThemeProvider";
 
-export function NavigationSidebar() {
+interface NavigationSidebarProps {
+  isMobileOpen?: boolean;
+  onCloseMobile?: () => void;
+}
+
+export function NavigationSidebar({ isMobileOpen, onCloseMobile }: NavigationSidebarProps) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const { logoUrl, logoSize, companyName } = useTheme();
 
   const [isCollapsed, setIsCollapsed] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
@@ -47,6 +56,7 @@ export function NavigationSidebar() {
   const menuItems = [
     { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
     { label: "New Invoice", href: "/invoice", icon: PlusCircle },
+    { label: "New Quotation", href: "/invoice?type=Quotation", icon: PlusSquare },
     { label: "Invoice History", href: "/history", icon: History },
     { label: "Quotation History", href: "/quotations", icon: FileText },
     { label: "Clients", href: "/clients", icon: Users },
@@ -81,30 +91,50 @@ export function NavigationSidebar() {
 
   return (
     <>
+    {/* Mobile Backdrop */}
+    {isMobileOpen && (
+      <div 
+        className="fixed inset-0 z-40 bg-slate-900/40 backdrop-blur-sm md:hidden transition-opacity duration-300"
+        onClick={onCloseMobile}
+      />
+    )}
+
     <aside 
-      className={`relative z-30 flex flex-col border-r border-slate-200 bg-white/50 backdrop-blur-xl transition-all duration-300 ease-in-out ${
-        isCollapsed ? "w-16" : "w-64"
-      } hidden md:flex`}
+      className={`fixed inset-y-0 left-0 z-50 flex flex-col border-r border-slate-200 bg-white shadow-2xl transition-all duration-300 ease-in-out md:relative md:z-30 md:bg-white/50 md:backdrop-blur-xl md:shadow-none ${
+        isMobileOpen ? "translate-x-0 w-64" : "-translate-x-full md:translate-x-0"
+      } ${
+        isCollapsed ? "md:w-16" : "md:w-64"
+      }`}
     >
-      {/* Toggle Button */}
+      {/* Toggle Button - Desktop Only */}
       <button
         onClick={() => setIsCollapsed(!isCollapsed)}
-        className="absolute -right-3 top-6 z-40 flex h-6 w-6 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-500 shadow-sm hover:text-brand-primary"
+        className="absolute -right-3 top-6 z-40 hidden md:flex h-6 w-6 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-500 shadow-sm hover:text-brand-primary"
       >
         {isCollapsed ? <ChevronRight size={14} /> : <ChevronLeft size={14} />}
       </button>
 
-      {/* Header / Logo Area Placeholder or Spacer */}
-      {/* Since Navbar is usually above, this might just be spacing or redundant. 
-          For now, just some top padding nicely. */}
-      <div className="h-4" />
+      {/* Header Area / Logo - Mobile Only */}
+      <div className={`p-4 border-b border-slate-100/50 flex items-center gap-3 md:hidden ${isCollapsed ? "justify-center" : "justify-start"}`}>
+          <img 
+              src={logoUrl || "/logo-js.png"} 
+              alt="Logo" 
+              className={`w-auto object-contain transition-all duration-300 ${isCollapsed && !isMobileOpen ? "h-6" : "h-10"}`}
+          />
+          {(!isCollapsed || isMobileOpen) && (
+             <span className="font-extrabold text-slate-900 truncate tracking-tight text-lg">
+                {companyName || "InvoiceCraft"}
+             </span>
+          )}
+      </div>
+
+      <div className="h-2 md:h-4" />
 
       {/* Nav Items */}
-      <nav className="flex-1 space-y-2 p-2">
+      <nav className="flex-1 space-y-1 p-3 overflow-y-auto">
         {menuItems.map((item) => {
           let isActive = false;
 
-          // Check for query param if present in item.href
           if (item.href.includes("?")) {
               const [basePath, queryString] = item.href.split("?");
               const params = new URLSearchParams(queryString);
@@ -113,15 +143,19 @@ export function NavigationSidebar() {
               
               isActive = pathname === basePath && currentTab === tabParam;
           } else {
-              // Standard path check
               isActive = pathname === item.href || (item.href !== "/" && pathname?.startsWith(item.href) && !searchParams.get("tab"));
           }
           
           return (
             <button
               key={item.href}
-              onClick={() => checkUnsavedChanges(() => router.push(item.href))}
-              className={`group flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all ${
+              onClick={() => {
+                checkUnsavedChanges(() => {
+                  router.push(item.href);
+                  if (onCloseMobile) onCloseMobile();
+                });
+              }}
+              className={`group flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all ${
                 isActive 
                   ? "bg-brand-50 text-brand-primary shadow-sm" 
                   : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
@@ -130,15 +164,14 @@ export function NavigationSidebar() {
             >
               <item.icon 
                 size={20} 
-                className={`${isActive ? "text-brand-primary" : "text-slate-400 group-hover:text-slate-600"}`} 
+                className={`flex-shrink-0 ${isActive ? "text-brand-primary" : "text-slate-400 group-hover:text-slate-600"}`} 
               />
               
-              {!isCollapsed && (
+              {( !isCollapsed || (typeof window !== 'undefined' && window.innerWidth < 768) || isMobileOpen ) && (
                 <span className="truncate">{item.label}</span>
               )}
               
-              {/* Active Indicator Line */}
-              {isActive && !isCollapsed && (
+              {isActive && (!isCollapsed || (typeof window !== 'undefined' && window.innerWidth < 768)) && (
                   <div className="ml-auto h-1.5 w-1.5 rounded-full bg-brand-primary" />
               )}
             </button>
@@ -147,14 +180,14 @@ export function NavigationSidebar() {
       </nav>
 
       {/* Footer / Logout */}
-      <div className="border-t border-slate-100 p-2">
+      <div className="border-t border-slate-100 p-3">
         <button
           onClick={handleLogoutClick}
-          className={`group flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-slate-600 transition-all hover:bg-red-50 hover:text-red-600`}
+          className={`group flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-600 transition-all hover:bg-red-50 hover:text-red-600`}
           title={isCollapsed ? "Logout" : undefined}
         >
-          <LogOut size={20} className="text-slate-400 group-hover:text-red-500" />
-          {!isCollapsed && <span>Logout</span>}
+          <LogOut size={20} className="flex-shrink-0 text-slate-400 group-hover:text-red-500" />
+          {(!isCollapsed || (typeof window !== 'undefined' && window.innerWidth < 768)) && <span>Logout</span>}
         </button>
       </div>
     </aside>

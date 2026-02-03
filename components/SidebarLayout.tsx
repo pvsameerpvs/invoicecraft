@@ -9,6 +9,12 @@ import { UnsavedChangesProvider } from "./providers/UnsavedChangesContext";
 
 export function SidebarLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false);
+
+  // Close mobile menu on route change
+  React.useEffect(() => {
+    setIsMobileMenuOpen(false);
+  }, [pathname]);
 
   // Pages where sidebar should NOT appear
   const noSidebarRoutes = ["/", "/login"]; 
@@ -32,10 +38,10 @@ export function SidebarLayout({ children }: { children: React.ReactNode }) {
       navLabel = "Quotation History";
   } else if (pathname?.startsWith("/activity")) {
       navLabel = "Admin Activity Log";
-      // navVariant = "transparent"; // Keep white for structural consistency in "proper" layout
   } else if (pathname?.startsWith("/profile")) {
       navLabel = "Profile";
-      // navVariant = "transparent";
+  } else if (pathname?.startsWith("/clients")) {
+      navLabel = "Client Directory";
   }
 
   const isInvoicePage = pathname?.startsWith("/invoice");
@@ -44,13 +50,21 @@ export function SidebarLayout({ children }: { children: React.ReactNode }) {
     <UnsavedChangesProvider>
         <div className="flex h-screen flex-col bg-slate-50 overflow-hidden">
         {/* Global Header - Full Width */}
-        <Navbar label={navLabel} variant={navVariant} />
+        <Navbar 
+          label={navLabel} 
+          variant={navVariant} 
+          onToggleMobileMenu={() => setIsMobileMenuOpen(!isMobileMenuOpen)} 
+          isMobileMenuOpen={isMobileMenuOpen}
+        />
 
         <div className="flex flex-1 overflow-hidden">
             {/* Global Sidebar - Below Header */}
             {!isInvoicePage && (
                 <Suspense fallback={<div className="hidden md:flex w-64 bg-white/50 border-r border-slate-200" />}>
-                    <NavigationSidebar />
+                    <NavigationSidebar 
+                      isMobileOpen={isMobileMenuOpen} 
+                      onCloseMobile={() => setIsMobileMenuOpen(false)} 
+                    />
                 </Suspense>
             )}
             

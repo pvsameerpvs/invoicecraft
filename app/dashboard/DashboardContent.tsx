@@ -39,8 +39,8 @@ export default function DashboardContent() {
 
   if (loading) {
     return (
-        <div className="flex-1 bg-slate-50 p-4 md:p-8 overflow-hidden h-full">
-            <div className="max-w-7xl mx-auto space-y-8">
+        <div className="flex-1 bg-slate-50 p-6 md:p-10 h-full">
+            <div className="max-w-7xl mx-auto space-y-12">
                 {/* Header Skeleton */}
                 <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
                     <div className="space-y-2">
